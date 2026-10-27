@@ -121,6 +121,19 @@
         <input id="authPassword" name="password" type="password" autocomplete="current-password" required placeholder="Enter password">
         <p id="authError" class="auth-error" role="alert" aria-live="polite"></p>
         <button type="submit" id="authSubmitButton" class="auth-primary">Login</button>
+        <button type="button" id="forgotPasswordButton" class="auth-forgot-link">Forgot password?</button>
+        <section id="forgotPasswordPanel" class="forgot-password-panel" hidden aria-label="Reset password">
+          <h3 id="forgotPasswordTitle">Reset your password</h3>
+          <label for="resetEmail">Registered email</label><input id="resetEmail" type="email" autocomplete="email" placeholder="Enter your registered email">
+          <button type="button" id="sendResetOtpButton" class="auth-secondary">Send OTP</button>
+          <div id="resetOtpFields" hidden>
+            <label for="resetOtp">Email OTP</label><input id="resetOtp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit OTP">
+            <label for="resetNewPassword">New password</label><input id="resetNewPassword" type="password" autocomplete="new-password" minlength="8" placeholder="At least 8 characters">
+            <button type="button" id="verifyResetOtpButton" class="auth-primary">Verify OTP &amp; reset password</button>
+          </div>
+          <p id="resetPasswordMessage" class="auth-error" role="status" aria-live="polite"></p>
+          <button type="button" id="cancelResetPasswordButton" class="auth-forgot-link">Back to login</button>
+        </section>
       </form>
     </section>
   </section>

@@ -2909,3 +2909,13 @@ body.back-controls-arrow #navPopup .nav-dialog > .nav-popup-back:focus-visible{o
 /* Auth gate state is explicit so a cached/legacy visibility rule cannot leave a blank page. */
 #authGate.auth-gate:not(.hide) { display: grid !important; visibility: visible !important; }
 #authGate.auth-gate.hide { display: none !important; }
+
+/* Password reset controls */
+.auth-forgot-link{display:block;margin:10px auto 0;padding:8px 10px;border:0;background:transparent;color:var(--accent,#e66b2e);font:inherit;font-weight:600;text-decoration:underline;cursor:pointer}
+.forgot-password-panel{margin-top:16px;padding:16px;border:1px solid rgba(120,120,120,.25);border-radius:14px;background:var(--surface,#fff)}
+.forgot-password-panel[hidden]{display:none!important}
+.forgot-password-panel h3{margin:0 0 12px;font-size:1.05rem}
+.forgot-password-panel label{display:block;margin:10px 0 5px}
+.forgot-password-panel input{box-sizing:border-box;width:100%;min-width:0}
+.forgot-password-panel button{max-width:100%;white-space:normal}
+@media(max-width:700px){.forgot-password-panel{padding:12px}.auth-forgot-link{min-height:42px}}

@@ -19,6 +19,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import java.security.SecureRandom;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -34,16 +38,33 @@ public class AuthController {
     private final PasswordHasher passwordHasher;
     private final ReportRepository reports;
     private final CommunityMessageRepository communityMessages;
+    private final PasswordResetTokenRepository resetTokens;
+    private final ObjectProvider<JavaMailSender> mailSenderProvider;
+    private final SecureRandom secureRandom = new SecureRandom();
+
+    @Value("${spring.mail.username:}")
+    private String mailFrom;
+    @Value("${campusfind.reset-otp-minutes:10}")
+    private long resetOtpMinutes;
 
     @Value("${campusfind.owner-username:}")
     private String configuredOwnerUsername;
 
-    public AuthController(UserAccountRepository users, PasswordHasher passwordHasher, ReportRepository reports, CommunityMessageRepository communityMessages) {
-        this.users = users;
-        this.passwordHasher = passwordHasher;
-        this.reports = reports;
-        this.communityMessages = communityMessages;
-    }
+   
+public AuthController(UserAccountRepository users,
+                      PasswordHasher passwordHasher,
+                      ReportRepository reports,
+                      CommunityMessageRepository communityMessages,
+                      PasswordResetTokenRepository resetTokens,
+                      ObjectProvider<JavaMailSender> mailSenderProvider) {
+    this.users = users;
+    this.passwordHasher = passwordHasher;
+    this.reports = reports;
+    this.communityMessages = communityMessages;
+    this.resetTokens = resetTokens;
+    this.mailSenderProvider = mailSenderProvider;
+}
+
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> register(@RequestBody Credentials credentials,
@@ -129,6 +150,76 @@ public class AuthController {
         if (refreshUsernameChangeWindow(account, appNow()) || ownerBootstrapped) users.saveAndFlush(account);
         startSession(request, account);
         return ResponseEntity.ok(userPayload(account));
+    }
+
+
+    public record ForgotPasswordRequest(String email) {}
+    public record ResetPasswordRequest(String email, String otp, String newPassword) {}
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Map<String, Object>> forgotPassword(@RequestBody ForgotPasswordRequest body) {
+        String email = body == null || body.email() == null ? "" : body.email().trim().toLowerCase(Locale.ROOT);
+        if (email.isEmpty() || email.length() > 254 || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+            return error(HttpStatus.BAD_REQUEST, "Enter a valid email address.");
+        }
+        // Do not reveal whether an email is registered.
+        UserAccount account = users.findByEmailKey(email).orElse(null);
+        if (account == null) return ResponseEntity.ok(Map.of("message", "If the email belongs to an account, an OTP has been sent."));
+        JavaMailSender sender = mailSenderProvider.getIfAvailable();
+        if (sender == null || mailFrom == null || mailFrom.isBlank()) {
+            return error(HttpStatus.SERVICE_UNAVAILABLE, "Password reset email is not configured yet. Please try again later.");
+        }
+        String otp = String.format(Locale.ROOT, "%06d", secureRandom.nextInt(1_000_000));
+        PasswordResetToken token = resetTokens.findByEmailKey(email).orElseGet(PasswordResetToken::new);
+        token.setEmailKey(email);
+        token.setOtpHash(passwordHasher.hash(otp));
+        token.setCreatedAt(appNow());
+        token.setExpiresAt(appNow().plusMinutes(Math.max(5, Math.min(resetOtpMinutes, 20))));
+        token.setAttempts(0);
+        resetTokens.saveAndFlush(token);
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(mailFrom);
+            message.setTo(email);
+            message.setSubject("Your CampUs password reset code");
+            message.setText("Your CampUs password reset OTP is: " + otp + "\\n\\nIt expires in " +
+                    Math.max(5, Math.min(resetOtpMinutes, 20)) + " minutes. If you did not request this, ignore this email.");
+            sender.send(message);
+        } catch (Exception ex) {
+            resetTokens.deleteByEmailKey(email);
+            return error(HttpStatus.SERVICE_UNAVAILABLE, "Could not send the reset email. Check the email configuration and try again.");
+        }
+        return ResponseEntity.ok(Map.of("message", "If the email belongs to an account, an OTP has been sent."));
+    }
+
+    @PostMapping("/reset-password")
+    @Transactional
+    public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody ResetPasswordRequest body) {
+        String email = body == null || body.email() == null ? "" : body.email().trim().toLowerCase(Locale.ROOT);
+        String otp = body == null || body.otp() == null ? "" : body.otp().trim();
+        String newPassword = body == null ? null : body.newPassword();
+        if (newPassword == null || newPassword.length() < 8 || newPassword.length() > 200) {
+            return error(HttpStatus.BAD_REQUEST, "New password must be between 8 and 200 characters.");
+        }
+        PasswordResetToken token = resetTokens.findByEmailKey(email).orElse(null);
+        if (token == null || token.getExpiresAt().isBefore(appNow()) || token.getAttempts() >= 5) {
+            if (token != null) resetTokens.delete(token);
+            return error(HttpStatus.BAD_REQUEST, "OTP is invalid or expired. Request a new OTP.");
+        }
+        if (!otp.matches("\\d{6}") || !passwordHasher.matches(otp, token.getOtpHash())) {
+            token.setAttempts(token.getAttempts() + 1);
+            resetTokens.save(token);
+            return error(HttpStatus.BAD_REQUEST, "OTP is invalid or expired. Request a new OTP.");
+        }
+        UserAccount account = users.findByEmailKey(email).orElse(null);
+        if (account == null) {
+            resetTokens.delete(token);
+            return error(HttpStatus.BAD_REQUEST, "OTP is invalid or expired. Request a new OTP.");
+        }
+        account.setPasswordHash(passwordHasher.hash(newPassword));
+        users.saveAndFlush(account);
+        resetTokens.delete(token);
+        return ResponseEntity.ok(Map.of("message", "Password reset successfully. You can now log in."));
     }
 
     @GetMapping("/me")

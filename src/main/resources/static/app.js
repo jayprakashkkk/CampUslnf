@@ -62,10 +62,13 @@ function closeTopUntrackedUiLayer(){
 window.addEventListener('popstate',()=>{
  if(ignoreCampusUiPopstate){ignoreCampusUiPopstate=false;return;}
  const layer=campusUiHistoryStack.pop();
- if(layer){closeCampusUiLayerFromBack(layer);return;}
- // From the main app, browser/device Back returns to the intro screen.
- // Keep overlay Back behavior unchanged, and only restore the guard while
- // the intro is already visible so a Back press doesn't get swallowed in-app.
+ if(layer){
+   closeCampusUiLayerFromBack(layer);
+   // Re-arm the same-URL guard after every intercepted Back action. Without
+   // this, the next Back can leave the site or appear to stop working.
+   pushCampusBackGuard();
+   return;
+ }
  if(closeTopUntrackedUiLayer()){pushCampusBackGuard();return;}
  const intro=document.getElementById('firstVisitIntro');
  if(intro && intro.hidden){
@@ -74,6 +77,7 @@ window.addEventListener('popstate',()=>{
    document.body.classList.add('intro-open');
    resetCampusScrollToTop();
    intro.scrollTop=0;
+   pushCampusBackGuard();
    return;
  }
  pushCampusBackGuard();
@@ -609,6 +613,52 @@ async function initAuth() {
     showAuthGate();
   }
 }
+
+
+let resetOtpRequested=false;
+$('forgotPasswordButton')?.addEventListener('click',()=>{
+  const panel=$('forgotPasswordPanel');
+  panel.hidden=false;
+  $('resetPasswordMessage').textContent='';
+  $('resetEmail').value=$('authEmail')?.value||'';
+  $('resetOtpFields').hidden=true;
+  resetOtpRequested=false;
+});
+$('cancelResetPasswordButton')?.addEventListener('click',()=>{
+  $('forgotPasswordPanel').hidden=true;
+  $('resetPasswordMessage').textContent='';
+});
+$('sendResetOtpButton')?.addEventListener('click',async()=>{
+  const email=$('resetEmail').value.trim();
+  const msg=$('resetPasswordMessage'),btn=$('sendResetOtpButton');
+  msg.textContent='';
+  if(!email||!$('resetEmail').checkValidity()){msg.textContent='Please enter a valid registered email.';return;}
+  btn.disabled=true;btn.textContent='Sending…';
+  try{
+    const r=await fetch('/api/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({email})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){msg.textContent=d.message||'Could not send OTP. Please try again.';return;}
+    resetOtpRequested=true;$('resetOtpFields').hidden=false;
+    msg.textContent=d.message||'If the email belongs to an account, an OTP has been sent.';
+  }catch{msg.textContent='Could not connect. Please try again.';}
+  finally{btn.disabled=false;btn.textContent='Resend OTP';}
+});
+$('verifyResetOtpButton')?.addEventListener('click',async()=>{
+  const email=$('resetEmail').value.trim(),otp=$('resetOtp').value.trim(),password=$('resetNewPassword').value;
+  const msg=$('resetPasswordMessage'),btn=$('verifyResetOtpButton');
+  msg.textContent='';
+  if(!/^\d{6}$/.test(otp)){msg.textContent='Enter the 6-digit OTP.';return;}
+  if(password.length<8){msg.textContent='New password must be at least 8 characters.';return;}
+  btn.disabled=true;btn.textContent='Resetting…';
+  try{
+    const r=await fetch('/api/auth/reset-password',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({email,otp,newPassword:password})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){msg.textContent=d.message||'OTP invalid or expired. Request a new OTP.';return;}
+    msg.textContent='Password reset successfully. You can now log in.';
+    $('authUsername').value=email;$('authPassword').value='';$('resetOtpFields').hidden=true;
+  }catch{msg.textContent='Could not connect. Please try again.';}
+  finally{btn.disabled=false;btn.textContent='Verify OTP & reset password';}
+});
 
 $('showLoginButton')?.addEventListener('click',()=>chooseAuthMode('login'));
 $('showRegisterButton')?.addEventListener('click',()=>chooseAuthMode('register'));
