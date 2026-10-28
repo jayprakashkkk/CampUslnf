@@ -497,6 +497,11 @@ function chooseAuthMode(mode) {
     pushCampusUiLayer('authForm');
   }
 
+  // Leaving password reset always returns to the normal auth form state.
+  $('authGate')?.classList.remove('auth-reset-mode');
+  const resetPanel = $('forgotPasswordPanel');
+  if (resetPanel) resetPanel.hidden = true;
+
   authMode = mode;
   $('authChoices').classList.add('hide');
   $('authFormPanel').classList.remove('hide');
@@ -505,6 +510,10 @@ function chooseAuthMode(mode) {
 
   const creating = mode === 'register';
   const fields = $('authRegisterFields');
+  const forgotButton = $('forgotPasswordButton');
+
+  // Password recovery is available only from Login, never from registration.
+  if (forgotButton) forgotButton.hidden = creating;
 
   if (fields) {
     fields.hidden = !creating;
@@ -619,22 +628,28 @@ let resetOtpRequested=false;
 
 $('forgotPasswordButton')?.addEventListener('click', () => {
   const panel = $('forgotPasswordPanel');
+  const gate = $('authGate');
+  if (!panel || !gate) return;
 
+  // Reset starts from Login and displays only the dedicated recovery panel.
+  authMode = 'login';
   panel.hidden = false;
-  $('authGate').classList.add('auth-reset-mode');
+  gate.classList.add('auth-reset-mode');
 
   $('resetPasswordMessage').textContent = '';
   $('resetEmail').value = $('authEmail')?.value || '';
   $('resetOtpFields').hidden = true;
   resetOtpRequested = false;
-
   $('forgotPasswordTitle').textContent = 'Reset your password';
+  $('resetEmail').focus();
 });
 
 $('cancelResetPasswordButton')?.addEventListener('click', () => {
-  $('forgotPasswordPanel').hidden = true;
-  $('authGate').classList.remove('auth-reset-mode');
+  const panel = $('forgotPasswordPanel');
+  if (panel) panel.hidden = true;
+  $('authGate')?.classList.remove('auth-reset-mode');
   $('resetPasswordMessage').textContent = '';
+  chooseAuthMode('login');
 });
 
 $('sendResetOtpButton')?.addEventListener('click',async()=>{
