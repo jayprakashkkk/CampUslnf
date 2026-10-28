@@ -2910,12 +2910,60 @@ body.back-controls-arrow #navPopup .nav-dialog > .nav-popup-back:focus-visible{o
 #authGate.auth-gate:not(.hide) { display: grid !important; visibility: visible !important; }
 #authGate.auth-gate.hide { display: none !important; }
 
-/* Password reset controls */
-.auth-forgot-link{display:block;margin:10px auto 0;padding:8px 10px;border:0;background:transparent;color:var(--accent,#e66b2e);font:inherit;font-weight:600;text-decoration:underline;cursor:pointer}
-.forgot-password-panel{margin-top:16px;padding:16px;border:1px solid rgba(120,120,120,.25);border-radius:14px;background:var(--surface,#fff)}
-.forgot-password-panel[hidden]{display:none!important}
-.forgot-password-panel h3{margin:0 0 12px;font-size:1.05rem}
-.forgot-password-panel label{display:block;margin:10px 0 5px}
-.forgot-password-panel input{box-sizing:border-box;width:100%;min-width:0}
-.forgot-password-panel button{max-width:100%;white-space:normal}
-@media(max-width:700px){.forgot-password-panel{padding:12px}.auth-forgot-link{min-height:42px}}
+
+/* Show only the password-reset screen */
+#authGate.auth-reset-mode #authWelcomeTitle,
+#authGate.auth-reset-mode .auth-kicker,
+#authGate.auth-reset-mode #authFormTitle,
+#authGate.auth-reset-mode #authChoices,
+#authGate.auth-reset-mode #authForm > :not(#forgotPasswordPanel) {
+  display: none !important;
+}
+
+
+/* Fix: respect hidden attribute on password reset panel */
+#forgotPasswordPanel[hidden],
+#resetOtpFields[hidden] {
+  display: none !important;
+}
+
+/* Forgot Password should be a separate screen */
+#authGate.auth-reset-mode #authWelcomeTitle,
+#authGate.auth-reset-mode #authFormTitle,
+#authGate.auth-reset-mode #authChoices,
+#authGate.auth-reset-mode #authForm > :not(#forgotPasswordPanel) {
+  display: none !important;
+}
+
+/* Keep the reset panel visible in reset mode */
+#authGate.auth-reset-mode #forgotPasswordPanel {
+  display: block !important;
+}
+/* Forgot password: hide login and registration fields */
+#authGate.auth-reset-mode #authForm > :not(#forgotPasswordPanel) {
+  display: none !important;
+}
+
+/* Keep reset form visible */
+#authGate.auth-reset-mode #forgotPasswordPanel {
+  display: block !important;
+}
+
+/* Respect hidden attributes */
+#forgotPasswordPanel[hidden],
+#resetOtpFields[hidden] {
+  display: none !important;
+}
+/* Forgot password: separate screen */
+#authGate.auth-reset-mode #authForm > :not(#forgotPasswordPanel) {
+  display: none !important;
+}
+
+#authGate.auth-reset-mode #forgotPasswordPanel {
+  display: block !important;
+}
+
+#forgotPasswordPanel[hidden],
+#resetOtpFields[hidden] {
+  display: none !important;
+}
