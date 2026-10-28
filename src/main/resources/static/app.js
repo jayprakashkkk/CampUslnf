@@ -616,18 +616,27 @@ async function initAuth() {
 
 
 let resetOtpRequested=false;
-$('forgotPasswordButton')?.addEventListener('click',()=>{
-  const panel=$('forgotPasswordPanel');
-  panel.hidden=false;
-  $('resetPasswordMessage').textContent='';
-  $('resetEmail').value=$('authEmail')?.value||'';
-  $('resetOtpFields').hidden=true;
-  resetOtpRequested=false;
+
+$('forgotPasswordButton')?.addEventListener('click', () => {
+  const panel = $('forgotPasswordPanel');
+
+  panel.hidden = false;
+  $('authGate').classList.add('auth-reset-mode');
+
+  $('resetPasswordMessage').textContent = '';
+  $('resetEmail').value = $('authEmail')?.value || '';
+  $('resetOtpFields').hidden = true;
+  resetOtpRequested = false;
+
+  $('forgotPasswordTitle').textContent = 'Reset your password';
 });
-$('cancelResetPasswordButton')?.addEventListener('click',()=>{
-  $('forgotPasswordPanel').hidden=true;
-  $('resetPasswordMessage').textContent='';
+
+$('cancelResetPasswordButton')?.addEventListener('click', () => {
+  $('forgotPasswordPanel').hidden = true;
+  $('authGate').classList.remove('auth-reset-mode');
+  $('resetPasswordMessage').textContent = '';
 });
+
 $('sendResetOtpButton')?.addEventListener('click',async()=>{
   const email=$('resetEmail').value.trim();
   const msg=$('resetPasswordMessage'),btn=$('sendResetOtpButton');
