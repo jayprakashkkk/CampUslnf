@@ -13,76 +13,164 @@ function resetCampusScrollToTop(){
   };
   requestAnimationFrame(()=>requestAnimationFrame(reset));
 }
-// Add a same-URL history entry for each in-app overlay so the browser/device Back
-// button dismisses the top overlay instead of navigating away from CampUs.
-const campusUiHistoryStack=[];
-let ignoreCampusUiPopstate=false, campusUiToken=0;
-function pushCampusBackGuard(){
- const state=history.state&&typeof history.state==='object'?history.state:{};
- history.pushState({...state,campusFindBackGuard:true,campusFindGuardToken:++campusUiToken},'',location.href);
+// Shared Back navigation for all current and future CampUs screens.
+const campusUiHistoryStack = [];
+let campusUiToken = 0;
+let campusBackHandling = false;
+
+function pushCampusBackGuard() {
+  const state = history.state && typeof history.state === 'object'
+    ? history.state
+    : {};
+
+  history.replaceState(
+    { ...state, campusFindBackGuard: true },
+    '',
+    location.href
+  );
 }
-function installCampusBackGuard(){
- const state=history.state&&typeof history.state==='object'?history.state:{};
- history.replaceState({...state,campusFindBackGuard:true},'',location.href);
- pushCampusBackGuard();
+
+function installCampusBackGuard() {
+  const state = history.state && typeof history.state === 'object'
+    ? history.state
+    : {};
+
+  history.replaceState(
+    { ...state, campusFindBackGuard: true },
+    '',
+    location.href
+  );
+
+  history.pushState(
+    { ...history.state, campusFindBackGuard: true, campusFindGuardToken: ++campusUiToken },
+    '',
+    location.href
+  );
 }
-function pushCampusUiLayer(layer){
- if(campusUiHistoryStack[campusUiHistoryStack.length-1]===layer)return;
- campusUiHistoryStack.push(layer);
- const state=history.state&&typeof history.state==='object'?history.state:{};
- history.pushState({...state,campusFindUiLayer:layer,campusFindUiToken:++campusUiToken},'',location.href);
+
+function pushCampusUiLayer(layer) {
+  if (campusUiHistoryStack[campusUiHistoryStack.length - 1] === layer) {
+    return;
+  }
+
+  campusUiHistoryStack.push(layer);
+
+  const state = history.state && typeof history.state === 'object'
+    ? history.state
+    : {};
+
+  history.pushState(
+    {
+      ...state,
+      campusFindUiLayer: layer,
+      campusFindUiToken: ++campusUiToken
+    },
+    '',
+    location.href
+  );
 }
-function finishCampusUiLayer(layer,fromPopstate=false){
- if(fromPopstate)return;
- const last=campusUiHistoryStack[campusUiHistoryStack.length-1];
- if(last===layer){campusUiHistoryStack.pop();ignoreCampusUiPopstate=true;history.back();return;}
- const index=campusUiHistoryStack.lastIndexOf(layer);if(index>=0)campusUiHistoryStack.splice(index,1);
+
+function finishCampusUiLayer(layer, fromPopstate = false) {
+  if (fromPopstate) return;
+
+  const last = campusUiHistoryStack[campusUiHistoryStack.length - 1];
+
+  if (last === layer) {
+    campusUiHistoryStack.pop();
+    history.back();
+    return;
+  }
+
+  const index = campusUiHistoryStack.lastIndexOf(layer);
+  if (index >= 0) campusUiHistoryStack.splice(index, 1);
 }
-function closeCampusUiLayerFromBack(layer){
- if(layer==='profileEditor')closeProfileEditorPage(true);
- else if(layer==='publicProfile')closeChatUserProfile(true);
- else if(layer==='communityChat')closeCommunityChat(true);
- else if(layer==='reportForm')closeForm(true);
- else if(layer==='navPopup')closeNavPopup(true);
- else if(layer==='authForm')backToAuthChoices(true);
- else if(layer==='phoneMenu')closeMenu(true);
- else if(layer==='profileDropdown')closeProfileDropdown(true);
+
+function closeCampusUiLayerFromBack(layer) {
+  if (layer === 'profileEditor') closeProfileEditorPage(true);
+  else if (layer === 'publicProfile') closeChatUserProfile(true);
+  else if (layer === 'communityChat') closeCommunityChat(true);
+  else if (layer === 'reportForm') closeForm(true);
+  else if (layer === 'navPopup') closeNavPopup(true);
+  else if (layer === 'authForm') backToAuthChoices(true);
+  else if (layer === 'phoneMenu') closeMenu(true);
+  else if (layer === 'profileDropdown') closeProfileDropdown(true);
 }
-function closeTopUntrackedUiLayer(){
- if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage(true);return true;}
- if($('communityProfilePage')&&!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile(true);return true;}
- if(communityChatOpen){closeCommunityChat(true);return true;}
- if($('modal')&&!$('modal').classList.contains('hide')){closeForm(true);return true;}
- if($('navPopup')&&!$('navPopup').classList.contains('hide')){closeNavPopup(true);return true;}
- if($('authFormPanel')&&!$('authFormPanel').classList.contains('hide')){backToAuthChoices(true);return true;}
- if(menuOpen){closeMenu(true);return true;}
- if(profileMenuOpen){closeProfileDropdown(true);return true;}
- return false;
+
+function closeTopUntrackedUiLayer() {
+  if ($('profileEditorPage') && !$('profileEditorPage').classList.contains('hide')) {
+    closeProfileEditorPage(true);
+    return true;
+  }
+
+  if ($('communityProfilePage') && !$('communityProfilePage').classList.contains('hide')) {
+    closeChatUserProfile(true);
+    return true;
+  }
+
+  if (communityChatOpen) {
+    closeCommunityChat(true);
+    return true;
+  }
+
+  if ($('modal') && !$('modal').classList.contains('hide')) {
+    closeForm(true);
+    return true;
+  }
+
+  if ($('navPopup') && !$('navPopup').classList.contains('hide')) {
+    closeNavPopup(true);
+    return true;
+  }
+
+  if ($('authFormPanel') && !$('authFormPanel').classList.contains('hide')) {
+    backToAuthChoices(true);
+    return true;
+  }
+
+  if (menuOpen) {
+    closeMenu(true);
+    return true;
+  }
+
+  if (profileMenuOpen) {
+    closeProfileDropdown(true);
+    return true;
+  }
+
+  return false;
 }
-window.addEventListener('popstate',()=>{
- if(ignoreCampusUiPopstate){ignoreCampusUiPopstate=false;return;}
- const layer=campusUiHistoryStack.pop();
- if(layer){
-   closeCampusUiLayerFromBack(layer);
-   // Re-arm the same-URL guard after every intercepted Back action. Without
-   // this, the next Back can leave the site or appear to stop working.
-   pushCampusBackGuard();
-   return;
- }
- if(closeTopUntrackedUiLayer()){pushCampusBackGuard();return;}
- const intro=document.getElementById('firstVisitIntro');
- if(intro && intro.hidden){
-   intro.hidden=false;
-   intro.style.display='block';
-   document.body.classList.add('intro-open');
-   resetCampusScrollToTop();
-   intro.scrollTop=0;
-   pushCampusBackGuard();
-   return;
- }
- pushCampusBackGuard();
+
+window.addEventListener('popstate', () => {
+  if (campusBackHandling) return;
+  campusBackHandling = true;
+
+  try {
+    const layer = campusUiHistoryStack.pop();
+
+    if (layer) {
+      closeCampusUiLayerFromBack(layer);
+    } else if (!closeTopUntrackedUiLayer()) {
+      const intro = document.getElementById('firstVisitIntro');
+
+      if (intro && intro.hidden) {
+        intro.hidden = false;
+        intro.style.display = 'block';
+        document.body.classList.add('intro-open');
+        resetCampusScrollToTop();
+        intro.scrollTop = 0;
+      }
+    }
+  } finally {
+    // Restore a same-URL history entry so another Back gesture can be handled.
+    setTimeout(() => {
+      installCampusBackGuard();
+      campusBackHandling = false;
+    }, 0);
+  }
 });
+
 installCampusBackGuard();
+
 function openForm(type){$('form').reset();$('name').value=currentUser?.displayName||currentUser?.username||'';$('phone').value=currentUser?.phone||'';$('photoPreview').src='';$('photoPreview').classList.add('hide');$('type').value=type;$('formTitle').textContent=type==='LOST'?'Report a lost item':'Report a found item';pushCampusUiLayer('reportForm');$('modal').classList.remove('hide');$('error').textContent=''}
 function closeForm(fromPopstate=false){const wasOpen=!$('modal').classList.contains('hide');$('modal').classList.add('hide');if(wasOpen)finishCampusUiLayer('reportForm',fromPopstate)}
 function filterType(type,btn){chosenType=type;document.querySelectorAll('.type-tabs .tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');load()}
@@ -320,7 +408,62 @@ function showNavPopup(page){
  }
  $('navPopup').classList.remove('hide');
 }
-function closeNavPopup(fromPopstate=false){if(!$('navPopup').classList.contains('hide')){$('navPopup').classList.add('hide');activeNavPopup='';finishCampusUiLayer('navPopup',fromPopstate);}}
+function closeNavPopup(fromPopstate = false) {
+  const popup = $('navPopup');
+  if (!popup || popup.classList.contains('hide')) return;
+
+  popup.classList.add('hide');
+  activeNavPopup = '';
+  finishCampusUiLayer('navPopup', fromPopstate);
+}
+
+// Right-swipe on the popup closes it without affecting its form controls.
+(function enableNavPopupSwipeBack() {
+  let startX = null;
+  let startY = null;
+
+  document.addEventListener('touchstart', event => {
+    const popup = $('navPopup');
+
+    if (!popup || popup.classList.contains('hide') ||
+        event.touches.length !== 1) {
+      startX = null;
+      return;
+    }
+
+    const target = event.target;
+    if (!target.closest || !target.closest('#navPopup') ||
+        target.closest('input, textarea, select, button, a, [contenteditable="true"]')) {
+      startX = null;
+      return;
+    }
+
+    startX = event.touches[0].clientX;
+    startY = event.touches[0].clientY;
+  }, { passive: true });
+
+  document.addEventListener('touchend', event => {
+    if (startX === null || !event.changedTouches.length) return;
+
+    const dx = event.changedTouches[0].clientX - startX;
+    const dy = event.changedTouches[0].clientY - startY;
+    const popup = $('navPopup');
+
+    if (popup && !popup.classList.contains('hide') &&
+        dx > 80 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      closeNavPopup();
+    }
+
+    startX = null;
+    startY = null;
+  }, { passive: true });
+
+  document.addEventListener('touchcancel', () => {
+    startX = null;
+    startY = null;
+  }, { passive: true });
+})();
+
 const avatarLabels=['Blue-Hair Hero','Silver-Hair Ranger','Sunshine Hoodie','Forest Adventurer','Violet-Hair Star','Headphone Gamer','Pink Star','Crimson Hero','Midnight Ninja','Golden Explorer','Cat-Eared Mage','Fox-Eared Friend','Pocket Robot','Tiny Dragon','Panda Hoodie','Frog Hoodie','Friendly Ghost','Moon Witch','Space Explorer','Neon Gamer','Creative Artist','Campus DJ','Pink Bun Star','Beanie Friend','Glasses Scholar','Silver Knight','Starlight Witch','Teal-Hair Hero','Wise Owl','Happy Sunflower'];
 function openProfileEditorPage(){
  closeMenu();closeProfileDropdown();
