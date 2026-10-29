@@ -509,12 +509,20 @@ function chooseAuthMode(mode) {
   $('authForm').reset();
 
   const creating = mode === 'register';
-  
   const fields = $('authRegisterFields');
   const forgotButton = $('forgotPasswordButton');
 
   // Password recovery is available only from Login, never from registration.
-  if (forgotButton) forgotButton.hidden = creating;
+  // Show Forgot Password only on Login.
+if (forgotButton) {
+  forgotButton.hidden = creating;
+
+  if (creating) {
+    forgotButton.style.setProperty('display', 'none', 'important');
+  } else {
+    forgotButton.style.removeProperty('display');
+  }
+}
 
   if (fields) {
     fields.hidden = !creating;

@@ -464,6 +464,33 @@ function setAuthGateVisibility(visible) {
   gate.style.setProperty('display', visible ? 'grid' : 'none', 'important');
 }
 
+function showAuthGate() {
+  stopNotificationPolling();
+  currentUser = null;
+  document.body.classList.add('auth-locked');
+  setAuthGateVisibility(true);
+
+  closeMenu();
+  closeProfileDropdown();
+  closeNavPopup();
+  closeProfileEditorPage();
+
+  const fields = $('authRegisterFields');
+  if (fields) {
+    fields.hidden = true;
+    ['authFullName', 'authCourse', 'authEmail'].forEach(id => {
+      const field = $(id);
+      field.disabled = true;
+      field.required = false;
+    });
+  }
+
+  $('authChoices').classList.remove('hide');
+  $('authFormPanel').classList.add('hide');
+  $('authError').textContent = '';
+  $('authPassword').value = '';
+  authMode = 'login';
+}
 
 function chooseAuthMode(mode) {
   if ($('authFormPanel').classList.contains('hide')) {
@@ -472,12 +499,10 @@ function chooseAuthMode(mode) {
 
   // Leaving password reset always returns to the normal auth form state.
   $('authGate')?.classList.remove('auth-reset-mode');
-
   const resetPanel = $('forgotPasswordPanel');
   if (resetPanel) resetPanel.hidden = true;
 
   authMode = mode;
-
   $('authChoices').classList.add('hide');
   $('authFormPanel').classList.remove('hide');
   $('authError').textContent = '';
@@ -487,30 +512,26 @@ function chooseAuthMode(mode) {
   const fields = $('authRegisterFields');
   const forgotButton = $('forgotPasswordButton');
 
+  // Password recovery is available only from Login, never from registration.
   // Show Forgot Password only on Login.
-  if (forgotButton) {
-    forgotButton.hidden = creating;
+if (forgotButton) {
+  forgotButton.hidden = creating;
 
-    if (creating) {
-      forgotButton.style.setProperty('display', 'none', 'important');
-    } else {
-      forgotButton.style.removeProperty('display');
-    }
+  if (creating) {
+    forgotButton.style.setProperty('display', 'none', 'important');
+  } else {
+    forgotButton.style.removeProperty('display');
   }
+}
 
-  // Registration-only fields.
   if (fields) {
     fields.hidden = !creating;
 
     ['authFullName', 'authCourse', 'authEmail'].forEach(id => {
       const field = $(id);
-
       field.disabled = !creating;
       field.required = creating;
-
-      if (!creating) {
-        field.value = '';
-      }
+      if (!creating) field.value = '';
     });
   }
 
@@ -531,7 +552,6 @@ function chooseAuthMode(mode) {
 
   $(creating ? 'authFullName' : 'authUsername').focus();
 }
-
 
 function backToAuthChoices(fromPopstate = false) {
   const wasOpen = !$('authFormPanel').classList.contains('hide');
