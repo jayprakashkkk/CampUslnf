@@ -916,14 +916,89 @@ $('communityChatOverlay').addEventListener('click',e=>{if(e.target===$('communit
 function clearChatReply(){chatReplyTarget=null;$('chatReplyPreview').classList.add('hide');$('chatReplyText').textContent='';}
 function setChatReply(msg){chatReplyTarget=msg;$('chatReplyText').textContent=`${msg.displayName}: ${msg.message}`;$('chatReplyPreview').classList.remove('hide');$('communityChatInput').focus();}
 function chatTime(value){try{return new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit'}).format(new Date(value))}catch{return ''}}
-function renderCommunityMessages(items,forceBottom){
- const box=$('chatMessages'),nearBottom=box.scrollHeight-box.scrollTop-box.clientHeight<90;
- if(!items.length){box.innerHTML='<div class="empty">No messages yet. Say hello to your campus community! 👋</div>';lastChatSignature='';return}
- const signature=items.map(m=>`${m.id}:${m.message}:${m.replyText||''}`).join('|');if(signature===lastChatSignature)return;lastChatSignature=signature;
- box.innerHTML=items.map(m=>{const mine=!!m.mine;const fullName=String(m.displayName||m.username||'CampUs user').trim();const username=String(m.username||'');const initial=fullName.charAt(0).toUpperCase()||'?';const avatar=`<button type="button" class="chat-avatar chat-avatar-button" aria-label="View ${esc(fullName)}'s profile" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${avatarInner(m.avatarId,fullName,m.profileImageUrl)}</button>`;const authorRole=roleLabel(m.role);const authorLine=authorRole?`<button type="button" class="chat-author-role" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${esc(fullName)} ${roleBadgeMarkup(m.role)}</button>`:'';return `<div class="chat-row ${mine?'mine':'theirs'}" data-message-id="${m.id}">${mine?'':avatar}<div class="chat-message-stack">${authorLine}<div class="chat-bubble" role="group" aria-label="Chat message">${m.replyText?`<div class="chat-quoted"><b>${esc(m.replyName||'Reply')}</b><br>${esc(m.replyText)}</div>`:''}<div class="chat-text">${esc(m.message)}</div><div class="chat-time">${chatTime(m.createdAt)}</div><div class="chat-actions"><button type="button" onclick="replyToChatMessage(${m.id})">↩ Reply</button>${m.canDelete?`<button type="button" onclick="deleteChatMessage(${m.id})">Delete</button>`:''}</div></div></div></div>`}).join('');
- box.querySelectorAll('.chat-row').forEach(row=>{const bubble=row.querySelector('.chat-bubble');bubble.addEventListener('click',e=>{if(e.target.closest('button'))return;/* Phones use swipe-to-reply; never expose Reply/Delete controls on a simple tap. */if(window.matchMedia('(max-width: 700px)').matches)return;row.classList.toggle('actions-open')});bubble.addEventListener('contextmenu',e=>{e.preventDefault();/* Context menu action buttons are for tablet/laptop only. */if(window.matchMedia('(max-width: 700px)').matches)return;row.classList.toggle('actions-open')});let sx=0,sy=0;row.addEventListener('touchstart',e=>{sx=e.changedTouches[0].clientX;sy=e.changedTouches[0].clientY},{passive:true});row.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.4){const id=Number(row.dataset.messageId),msg=items.find(x=>x.id===id);if(msg){row.classList.remove('actions-open');setChatReply(msg)}}},{passive:true});});
- if(forceBottom||nearBottom)box.scrollTop=box.scrollHeight;
+
+function renderCommunityMessages(items, forceBottom) {
+ const box = $('chatMessages');
+ const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 90;
+
+ if (!items.length) {
+  box.innerHTML = '<div class="empty">No messages yet. Say hello to your campus community! 👋</div>';
+  lastChatSignature = '';
+  return;
+ }
+
+ const signature = items.map(m => `${m.id}:${m.message}:${m.replyText || ''}`).join('|');
+ if (signature === lastChatSignature) return;
+ lastChatSignature = signature;
+
+ box.innerHTML = items.map(m => {
+  const mine = !!m.mine;
+  const fullName = String(m.displayName || m.username || 'CampUs user').trim();
+  const username = String(m.username || '');
+  const avatar = `<button type="button" class="chat-avatar chat-avatar-button" aria-label="View ${esc(fullName)}'s profile" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${avatarInner(m.avatarId, fullName, m.profileImageUrl)}</button>`;
+
+  const authorLine = !mine
+   ? `<button type="button" class="chat-author-role" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${esc(fullName)}${roleLabel(m.role) ? ' ' + roleBadgeMarkup(m.role) : ''}</button>`
+   : '';
+
+  return `<div class="chat-row ${mine ? 'mine' : 'theirs'}" data-message-id="${m.id}">
+   ${avatar}
+   <div class="chat-message-stack">
+    ${authorLine}
+    <div class="chat-bubble" role="group" aria-label="Chat message">
+     ${m.replyText ? `<div class="chat-quoted"><b>${esc(m.replyName || 'Reply')}</b><br>${esc(m.replyText)}</div>` : ''}
+     <div class="chat-text">${esc(m.message)}</div>
+     <div class="chat-time">${chatTime(m.createdAt)}</div>
+     <div class="chat-actions">
+      <button type="button" onclick="replyToChatMessage(${m.id})">↩ Reply</button>
+      ${m.canDelete ? `<button type="button" onclick="deleteChatMessage(${m.id})">Delete</button>` : ''}
+     </div>
+    </div>
+   </div>
+  </div>`;
+ }).join('');
+
+ box.querySelectorAll('.chat-row').forEach(row => {
+  const bubble = row.querySelector('.chat-bubble');
+
+  bubble.addEventListener('click', e => {
+   if (e.target.closest('button')) return;
+   if (window.matchMedia('(max-width: 700px)').matches) return;
+   row.classList.toggle('actions-open');
+  });
+
+  bubble.addEventListener('contextmenu', e => {
+   e.preventDefault();
+   if (window.matchMedia('(max-width: 700px)').matches) return;
+   row.classList.toggle('actions-open');
+  });
+
+  let sx = 0, sy = 0;
+
+  row.addEventListener('touchstart', e => {
+   sx = e.changedTouches[0].clientX;
+   sy = e.changedTouches[0].clientY;
+  }, { passive: true });
+
+  row.addEventListener('touchend', e => {
+   const dx = e.changedTouches[0].clientX - sx;
+   const dy = e.changedTouches[0].clientY - sy;
+
+   if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+    const id = Number(row.dataset.messageId);
+    const msg = items.find(x => x.id === id);
+
+    if (msg) {
+     row.classList.remove('actions-open');
+     setChatReply(msg);
+    }
+   }
+  }, { passive: true });
+ });
+
+ if (forceBottom || nearBottom) box.scrollTop = box.scrollHeight;
 }
+
 async function loadCommunityMessages(forceBottom){try{const r=await fetch('/api/community-chat',{headers:{'Accept':'application/json'}});if(r.status===401){$('chatMessages').innerHTML='<div class="chat-unavailable"><div class="chat-unavailable-icon" aria-hidden="true">💬</div><h3>Community chat is ready</h3><p>Connect the Java backend and sign in to load campus messages and send replies.</p><button type="button" class="light" onclick="loadCommunityMessages(true)">Try again</button></div>';return}if(!r.ok)throw new Error('Chat service is unavailable');const items=await r.json();renderCommunityMessages(items,forceBottom)}catch{$('chatMessages').innerHTML='<div class="chat-unavailable"><div class="chat-unavailable-icon" aria-hidden="true">💬</div><h3>Chat page is ready</h3><p>Messages and sending will be available when the Java backend is connected.</p><button type="button" class="light" onclick="loadCommunityMessages(true)">Retry connection</button></div>';}}
 async function replyToChatMessage(id){try{const r=await fetch('/api/community-chat');const items=await r.json();const msg=items.find(x=>x.id===id);if(msg)setChatReply(msg)}catch{toast('Could not open reply. Try again.')}}
 async function deleteChatMessage(id){if(!confirm('Delete this message? You can only delete your own messages within 10 minutes.'))return;try{const r=await fetch(`/api/community-chat/${id}`,{method:'DELETE'});const data=await r.json().catch(()=>({}));if(!r.ok)throw Error(data.message||'Could not delete message.');lastChatSignature='';await loadCommunityMessages(false);toast('Message deleted')}catch(e){toast(e.message||'Could not delete message')}}
