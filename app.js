@@ -1092,6 +1092,14 @@ syncResponsiveBackControls();
   const intro=document.getElementById('firstVisitIntro');
   const continueButton=document.getElementById('introContinue');
   if(!intro||!continueButton)return;
+  try{
+    if(localStorage.getItem('campus_intro_seen')==='true'){
+      intro.hidden=true;
+      intro.style.display='none';
+      document.body.classList.remove('intro-open');
+      return;
+    }
+  }catch{}
   intro.hidden=false;
   intro.style.display='block';
   document.body.classList.add('intro-open');
@@ -1128,6 +1136,7 @@ syncResponsiveBackControls();
   }else{revealItems.forEach(item=>item.classList.add('is-visible'));}
   
 function dismissIntro() {
+  try{localStorage.setItem('campus_intro_seen','true');}catch{}
   intro.hidden = true;
   intro.style.display = 'none';
   document.body.classList.remove('intro-open');
