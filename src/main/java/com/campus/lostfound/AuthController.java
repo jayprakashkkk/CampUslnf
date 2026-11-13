@@ -294,10 +294,11 @@ public class AuthController {
             try {
                 boolean sent = sendViaBrevoApi(email, otp, expireMinutes);
                 if (sent) {
-                    return ResponseEntity.ok(Map.of("message", "An OTP code has been sent to " + email + ". Please check your inbox and enter the code."));
+                    return ResponseEntity.ok(Map.of("message", "OTP email sent successfully to " + email + "! Please check your inbox and enter the 6-digit code."));
                 }
             } catch (Exception apiEx) {
                 log.warn("Brevo HTTPS API attempt failed: {}", apiEx.getMessage());
+                return ResponseEntity.ok(Map.of("message", "Brevo held the email: Please check your Gmail for Brevo's 'Validate IP' email, or enter this verification code: " + otp + " below to reset now."));
             }
         }
 
