@@ -1,5 +1,15 @@
 // Universal API Base configuration for Cloudflare Pages + Railway
-const CAMPUS_API_BASE = (typeof window !== 'undefined' && (window.CAMPUS_API_BASE || localStorage.getItem('CAMPUS_API_BASE'))) || '';
+const CAMPUS_API_BASE = (function() {
+  if (typeof window === 'undefined') return '';
+  if (window.CAMPUS_API_BASE) return window.CAMPUS_API_BASE;
+  const stored = localStorage.getItem('CAMPUS_API_BASE');
+  if (stored) return stored;
+  if (window.location.hostname.includes('pages.dev')) {
+    return 'https://campuslnf-production.up.railway.app';
+  }
+  return '';
+})();
+
 const _origFetch = window.fetch;
 window.fetch = function(input, init) {
   let url = typeof input === 'string' ? input : (input instanceof Request ? input.url : String(input));
