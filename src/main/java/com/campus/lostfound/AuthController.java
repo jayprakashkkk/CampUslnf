@@ -26,6 +26,13 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import java.security.SecureRandom;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +61,8 @@ public class AuthController {
     private String mailSenderName;
     @Value("${campusfind.mail.from:${spring.mail.username:}}")
     private String mailFromAddress;
+    @Value("${brevo.api.key:${BREVO_API_KEY:${spring.mail.password:}}}")
+    private String brevoApiKey;
     @Value("${campusfind.reset-otp-minutes:10}")
     private long resetOtpMinutes;
 
@@ -164,6 +173,95 @@ public class AuthController {
     public record ForgotPasswordRequest(String email) {}
     public record ResetPasswordRequest(String email, String otp, String newPassword) {}
 
+    private String buildEmailHtml(String otp, int expireMinutes) {
+        return """
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="utf-8"></head>
+            <body style="margin: 0; padding: 24px 12px; background-color: #FFF8EF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+              <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 20px; border: 1px solid #F1D7C2; overflow: hidden; box-shadow: 0 8px 30px rgba(88,56,28,0.08);">
+                <div style="background: linear-gradient(135deg, #E8944B 0%%, #D0813B 100%%); padding: 32px 24px; text-align: center; color: #ffffff;">
+                  <h1 style="margin: 0; font-size: 30px; font-weight: 900; letter-spacing: -0.5px;">Camp<span style="color: #FFE6D0;">Us</span></h1>
+                  <p style="margin: 6px 0 0; font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; opacity: 0.92;">Campus Lost &amp; Found Hub</p>
+                </div>
+                <div style="padding: 32px 24px; text-align: center;">
+                  <h2 style="margin: 0 0 12px; color: #2D2319; font-size: 20px; font-weight: 800;">Reset Your Password</h2>
+                  <p style="margin: 0 0 24px; color: #6D5E52; font-size: 14px; line-height: 1.6;">
+                    We received a request to reset the password for your CampUs account. Use this verification code below:
+                  </p>
+                  <div style="display: inline-block; padding: 16px 36px; background: #FFF4E5; border: 2px dashed #E8944B; border-radius: 14px; margin-bottom: 24px;">
+                    <span style="font-size: 36px; font-weight: 900; letter-spacing: 10px; color: #D0813B; font-family: monospace;">%s</span>
+                  </div>
+                  <p style="margin: 0 0 8px; color: #8C786A; font-size: 13px;">
+                    ⏱️ This code expires in <strong>%d minutes</strong>.
+                  </p>
+                  <p style="margin: 20px 0 0; padding-top: 20px; border-top: 1px solid #F6ECE4; color: #A8998C; font-size: 12px; line-height: 1.5;">
+                    If you didn't request a password reset, you can safely ignore this email. Your account remains secure.
+                  </p>
+                </div>
+              </div>
+            </body>
+            </html>
+        """.formatted(otp, expireMinutes);
+    }
+
+    private boolean sendViaBrevoApi(String toEmail, String otp, int expireMinutes) throws Exception {
+        if (brevoApiKey == null || brevoApiKey.isBlank()) {
+            throw new IllegalStateException("BREVO_API_KEY is not configured in Railway.");
+        }
+        String cleanKey = brevoApiKey.trim();
+        if (cleanKey.startsWith("xsmtpsib-")) {
+            throw new IllegalArgumentException("The key provided is an SMTP Key ('xsmtpsib-...'). Brevo REST API requires an API Key starting with 'xkeysib-'. In Brevo, go to 'SMTP & API' -> 'API Keys' tab -> 'Generate a new API key', and set it as BREVO_API_KEY in Railway.");
+        }
+
+        String fromEmail = (mailFromAddress != null && !mailFromAddress.isBlank())
+                ? mailFromAddress.trim() : (mailFrom != null ? mailFrom.trim() : "");
+        if (fromEmail.isBlank()) {
+            throw new IllegalStateException("MAIL_FROM sender email address is not configured in Railway.");
+        }
+        String senderName = (mailSenderName != null && !mailSenderName.isBlank())
+                ? mailSenderName.trim() : "CampUs | Lost & Found";
+
+        String html = buildEmailHtml(otp, expireMinutes);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("sender", Map.of("name", senderName, "email", fromEmail));
+        payload.put("to", List.of(Map.of("email", toEmail)));
+        payload.put("subject", "Your CampUs Password Reset Code: " + otp);
+        payload.put("htmlContent", html);
+
+        String json = new ObjectMapper().writeValueAsString(payload);
+
+        HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(6))
+                .build();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
+                .header("api-key", cleanKey)
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
+                .timeout(Duration.ofSeconds(8))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() >= 200 && response.statusCode() < 300) {
+            log.info("Brevo HTTPS API email sent successfully to {} (status: {})", toEmail, response.statusCode());
+            return true;
+        } else {
+            String respBody = response.body();
+            log.error("Brevo HTTPS API returned error status {}: {}", response.statusCode(), respBody);
+            if (response.statusCode() == 401) {
+                throw new RuntimeException("Brevo API Key is invalid (status 401). Please verify your BREVO_API_KEY from Brevo -> SMTP & API -> API Keys tab.");
+            }
+            if (response.statusCode() == 400 && respBody != null && (respBody.contains("sender") || respBody.contains("unauthorized"))) {
+                throw new RuntimeException("Sender email '" + fromEmail + "' is not authorized in Brevo. Please add and verify it in Brevo -> Senders & IP.");
+            }
+            throw new RuntimeException("Brevo API error (" + response.statusCode() + "): " + respBody);
+        }
+    }
+
     @PostMapping("/forgot-password")
     @Transactional
     public ResponseEntity<Map<String, Object>> forgotPassword(@RequestBody ForgotPasswordRequest body) {
@@ -171,7 +269,6 @@ public class AuthController {
         if (email.isEmpty() || email.length() > 254 || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
             return error(HttpStatus.BAD_REQUEST, "Enter a valid email address.");
         }
-        // Do not reveal whether an email is registered.
         UserAccount account = users.findByEmailKey(email).orElse(null);
         if (account == null) return ResponseEntity.ok(Map.of("message", "If the email belongs to an account, an OTP has been sent."));
         String otp = String.format(Locale.ROOT, "%06d", secureRandom.nextInt(1_000_000));
@@ -183,6 +280,22 @@ public class AuthController {
         token.setAttempts(0);
         resetTokens.saveAndFlush(token);
 
+        int expireMinutes = (int) Math.max(5, Math.min(resetOtpMinutes, 20));
+
+        // 1. First try Brevo HTTPS API (Port 443 - immune to Railway SMTP port blocks!)
+        if (brevoApiKey != null && !brevoApiKey.isBlank()) {
+            try {
+                boolean sent = sendViaBrevoApi(email, otp, expireMinutes);
+                if (sent) {
+                    return ResponseEntity.ok(Map.of("message", "An OTP code has been sent to " + email + ". Please check your inbox and enter the code."));
+                }
+            } catch (Exception apiEx) {
+                log.warn("Brevo HTTPS API attempt failed: {}", apiEx.getMessage());
+                return error(HttpStatus.BAD_GATEWAY, "Could not send OTP email via Brevo: " + apiEx.getMessage());
+            }
+        }
+
+        // 2. Fallback to JavaMailSender (SMTP)
         JavaMailSender sender = mailSenderProvider.getIfAvailable();
         String effectiveFrom = (mailFromAddress != null && !mailFromAddress.isBlank()) ? mailFromAddress.trim() : (mailFrom != null ? mailFrom.trim() : "");
         if (sender != null && !effectiveFrom.isBlank()) {
@@ -194,47 +307,17 @@ public class AuthController {
                 helper.setTo(email);
                 helper.setSubject("Your CampUs Password Reset Code: " + otp);
 
-                int expireMinutes = (int) Math.max(5, Math.min(resetOtpMinutes, 20));
-                String html = """
-                    <!DOCTYPE html>
-                    <html>
-                    <head><meta charset="utf-8"></head>
-                    <body style="margin: 0; padding: 24px 12px; background-color: #FFF8EF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-                      <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 20px; border: 1px solid #F1D7C2; overflow: hidden; box-shadow: 0 8px 30px rgba(88,56,28,0.08);">
-                        <div style="background: linear-gradient(135deg, #E8944B 0%%, #D0813B 100%%); padding: 32px 24px; text-align: center; color: #ffffff;">
-                          <h1 style="margin: 0; font-size: 30px; font-weight: 900; letter-spacing: -0.5px;">Camp<span style="color: #FFE6D0;">Us</span></h1>
-                          <p style="margin: 6px 0 0; font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; opacity: 0.92;">Campus Lost &amp; Found Hub</p>
-                        </div>
-                        <div style="padding: 32px 24px; text-align: center;">
-                          <h2 style="margin: 0 0 12px; color: #2D2319; font-size: 20px; font-weight: 800;">Reset Your Password</h2>
-                          <p style="margin: 0 0 24px; color: #6D5E52; font-size: 14px; line-height: 1.6;">
-                            We received a request to reset the password for your CampUs account. Use this verification code below:
-                          </p>
-                          <div style="display: inline-block; padding: 16px 36px; background: #FFF4E5; border: 2px dashed #E8944B; border-radius: 14px; margin-bottom: 24px;">
-                            <span style="font-size: 36px; font-weight: 900; letter-spacing: 10px; color: #D0813B; font-family: monospace;">%s</span>
-                          </div>
-                          <p style="margin: 0 0 8px; color: #8C786A; font-size: 13px;">
-                            ⏱️ This code expires in <strong>%d minutes</strong>.
-                          </p>
-                          <p style="margin: 20px 0 0; padding-top: 20px; border-top: 1px solid #F6ECE4; color: #A8998C; font-size: 12px; line-height: 1.5;">
-                            If you didn't request a password reset, you can safely ignore this email. Your account remains secure.
-                          </p>
-                        </div>
-                      </div>
-                    </body>
-                    </html>
-                """.formatted(otp, expireMinutes);
-
+                String html = buildEmailHtml(otp, expireMinutes);
                 helper.setText(html, true);
                 sender.send(mimeMessage);
                 return ResponseEntity.ok(Map.of("message", "An OTP code has been sent to " + email + ". Please check your inbox and enter the code."));
             } catch (Exception ex) {
                 log.error("Could not send email via SMTP to {}: {}", email, ex.getMessage(), ex);
-                return error(HttpStatus.BAD_GATEWAY, "Could not send OTP email via Brevo. (" + ex.getMessage() + ")");
+                return error(HttpStatus.BAD_GATEWAY, "Could not deliver email via SMTP: " + ex.getMessage());
             }
         }
 
-        return error(HttpStatus.SERVICE_UNAVAILABLE, "Email SMTP service is not configured. Add MAIL_USERNAME and MAIL_PASSWORD in Railway.");
+        return error(HttpStatus.SERVICE_UNAVAILABLE, "Email service is not configured. Add BREVO_API_KEY (or MAIL_PASSWORD) and MAIL_FROM in Railway.");
     }
 
     @PostMapping("/reset-password")
