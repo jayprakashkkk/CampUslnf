@@ -34,6 +34,7 @@ public class CommunityChatController {
         HttpSession s=request.getSession(false); if(s==null||!(s.getAttribute(AuthController.SESSION_USER_ID) instanceof Long id)) return ResponseEntity.status(401).body(Map.of("message","Please log in to send a message."));
         String text=body==null||body.message()==null?"":body.message().trim(); if(text.isEmpty())return ResponseEntity.badRequest().body(Map.of("message","Write a message first."));if(text.length()>2000)return ResponseEntity.badRequest().body(Map.of("message","Message must be 2000 characters or fewer."));
         UserAccount u=users.findById(id).orElse(null);if(u==null)return ResponseEntity.status(401).body(Map.of("message","Please log in again."));
+        if(u.isCommunityMuted())return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message","Your account has been muted from community chat."));
         String replyText=body.replyText()==null?null:body.replyText().trim();if(replyText!=null&&replyText.length()>2000)replyText=replyText.substring(0,2000);
         CommunityMessage saved=messages.save(new CommunityMessage(u.getUsername(),u.getDisplayName(),text,replyText,body.replyName()));
         notificationService.notifyCommunityMessage(u, saved);

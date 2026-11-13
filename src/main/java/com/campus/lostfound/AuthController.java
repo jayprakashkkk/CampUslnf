@@ -50,21 +50,14 @@ public class AuthController {
     @Value("${campusfind.owner-username:}")
     private String configuredOwnerUsername;
 
-   
-public AuthController(UserAccountRepository users,
-                      PasswordHasher passwordHasher,
-                      ReportRepository reports,
-                      CommunityMessageRepository communityMessages,
-                      PasswordResetTokenRepository resetTokens,
-                      ObjectProvider<JavaMailSender> mailSenderProvider) {
-    this.users = users;
-    this.passwordHasher = passwordHasher;
-    this.reports = reports;
-    this.communityMessages = communityMessages;
-    this.resetTokens = resetTokens;
-    this.mailSenderProvider = mailSenderProvider;
-}
-
+    public AuthController(UserAccountRepository users, PasswordHasher passwordHasher, ReportRepository reports, CommunityMessageRepository communityMessages, PasswordResetTokenRepository resetTokens, ObjectProvider<JavaMailSender> mailSenderProvider) {
+        this.users = users;
+        this.passwordHasher = passwordHasher;
+        this.reports = reports;
+        this.communityMessages = communityMessages;
+        this.resetTokens = resetTokens;
+        this.mailSenderProvider = mailSenderProvider;
+    }
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> register(@RequestBody Credentials credentials,
@@ -139,9 +132,9 @@ public AuthController(UserAccountRepository users,
         if (username.isEmpty() || password == null || password.isEmpty()) {
             return error(HttpStatus.BAD_REQUEST, "Enter your username and password.");
         }
-        UserAccount account = username.contains("@")
-                ? users.findByEmailKey(username).orElse(null)
-                : users.findByUsernameKey(username).orElse(null);
+        UserAccount account = users.findByUsernameKey(username)
+                .or(() -> users.findByEmailKey(username))
+                .orElse(null);
         if (account == null || !passwordHasher.matches(password, account.getPasswordHash())) {
             return error(HttpStatus.UNAUTHORIZED, "Incorrect username or password. Please try again.");
         }
@@ -157,6 +150,7 @@ public AuthController(UserAccountRepository users,
     public record ResetPasswordRequest(String email, String otp, String newPassword) {}
 
     @PostMapping("/forgot-password")
+    @Transactional
     public ResponseEntity<Map<String, Object>> forgotPassword(@RequestBody ForgotPasswordRequest body) {
         String email = body == null || body.email() == null ? "" : body.email().trim().toLowerCase(Locale.ROOT);
         if (email.isEmpty() || email.length() > 254 || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {

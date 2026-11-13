@@ -1,52 +1,50 @@
-# CampUs / CampusFind — Restored Spring Boot + PostgreSQL-ready project
+# CampUs — Full-Stack Spring Boot + Railway Production Project
 
-This project combines the latest CampUs frontend with the Spring Boot backend recovered from `CampusFind(3).zip`.
+CampUs is a full-stack campus Lost & Found and community platform built with Spring Boot (Java 17), PostgreSQL, and a responsive frontend.
 
-## Restored backend files
-- `pom.xml` — Maven / Spring Boot dependencies.
-- `src/main/java/com/campus/lostfound/` — REST API controllers, entities, repositories, session login, reports, community chat, notifications, and profile/role logic.
-- `src/main/resources/application.properties` — base Spring configuration.
-- `src/main/resources/application-local.properties` — local H2 file database for development.
-- `src/main/resources/application-prod.properties` — hosted PostgreSQL configuration.
+## Project Structure
+- `pom.xml` — Maven & Spring Boot dependencies (Web, Data JPA, Mail, PostgreSQL, H2).
+- `Dockerfile` & `railway.json` — Production deployment configuration for Railway.
+- `src/main/java/com/campus/lostfound/` — REST controllers, entities, repositories, authentication, chat, and notification services.
+- `src/main/resources/application.properties` — Base configuration & Railway reverse proxy settings.
+- `src/main/resources/application-local.properties` — Local H2 file database profile.
+- `src/main/resources/application-prod.properties` — Production profile for PostgreSQL.
+- `src/main/resources/static/` — Frontend served directly by Spring Boot.
+- `frontend-source/` — Standalone copy of the frontend files.
 
-## What was updated
-- Replaced the static frontend with the latest CampUs UI, including the university-email field on Create Account and the removed in-form Back button.
-- Added email/email-key fields to the user entity. New registrations require a valid, unique email address and persist it in the database.
-- Login accepts either the username or the registered email address.
-- Existing accounts remain compatible because email columns are nullable for older rows; old accounts without email will need their email added before they can use email login.
-
-## Run locally
+## Running Locally
 Requirements: Java 17+ and Maven 3.6+.
 
 ```bash
 mvn spring-boot:run
 ```
+Open [http://localhost:8080](http://localhost:8080).
+By default, the `local` profile uses a local H2 database file stored at `./data/campusfind.mv.db`.
 
-Open `http://localhost:8080`. Local development uses a file-backed H2 database at `./data/campusfind.mv.db`, so data persists between restarts on that computer. This local file is not the hosted production database.
+## Deploying to Railway (Recommended)
 
-## Use a real hosted database in production
-The production profile is already configured for PostgreSQL, but you still need to create a managed PostgreSQL database (for example, on Neon, Supabase Database, or your hosting provider). The database is **not** created by this ZIP and no database password is included.
+1. **Push this repository to GitHub** (see instructions below).
+2. Go to [Railway](https://railway.com/) and create a **New Project**.
+3. Select **Deploy from GitHub repo** and choose your repository.
+4. In the same project, click **+ New** > **Database** > **Add PostgreSQL**.
+5. Railway will automatically link the database by providing `DATABASE_URL`.
+   - The app's `DatabaseConfig` automatically detects Railway's `DATABASE_URL`, parses it, and connects via HikariCP!
+6. In your Web Service settings, set the following environment variables under **Variables**:
+   ```text
+   SPRING_PROFILES_ACTIVE=prod
+   JPA_DDL_AUTO=update
+   CAMPUSFIND_OWNER_USERNAME=your-username
+   ```
+7. Click **Generate Domain** under Settings > Networking to get your public URL (e.g. `https://campus-production.up.railway.app`).
 
-Set these environment variables on the backend hosting service:
+## Features & Fixes
+- **Authentication**: Registration with university email, login by username OR email, server-side session management, PBKDF2 password hashing.
+- **Forgot Password**: 6-digit email OTP password recovery.
+- **Community Chat**: Real-time polling campus chat with swipe/tap to reply, message deletion within 10 minutes, user roles (Owner, Admin, Leader, Moderator, Member), and custom avatars.
+- **Lost & Found Reports**: Create lost/found listings with compressed image uploads, search, filters, and status tracking (Open, Matched, Returned).
+- **CORS & Proxy Support**: Built-in `CorsConfig` and `server.forward-headers-strategy=framework` for smooth deployment on Railway.
 
-```text
-SPRING_PROFILES_ACTIVE=prod
-SPRING_DATASOURCE_URL=jdbc:postgresql://HOST:5432/DATABASE?sslmode=require
-SPRING_DATASOURCE_USERNAME=YOUR_DATABASE_USERNAME
-SPRING_DATASOURCE_PASSWORD=YOUR_DATABASE_PASSWORD
-JPA_DDL_AUTO=update
-CAMPUSFIND_OWNER_USERNAME=your-owner-username
-```
-
-Replace `HOST`, `DATABASE`, and credentials with the exact values from your database provider. Keep credentials in the hosting provider's private environment settings; do not commit them to GitHub or send them in chat. The Dockerfile builds the app for Java 17 and starts the Spring Boot server. The app reads the host-provided `PORT` value.
-
-For a public website, the Java backend must run on a backend-capable host (such as Render or Railway); Netlify alone does not run Spring Boot. Either serve the frontend from this same Spring Boot app, or configure the Netlify frontend to call the hosted backend URL and configure CORS accordingly. This ZIP's frontend currently uses relative `/api/...` paths, so serving frontend and API from the same Spring Boot origin is the straightforward setup.
-
-## Important limitations
-- The original H2 database file was not found in the earlier local search, and this ZIP does not contain it. Existing local accounts/reports cannot be migrated unless that database file is recovered.
-- Passwords are hashed; the app uses server-side sessions.
-- The recovered backend does not yet implement email OTP / forgot-password endpoints. That needs a separate feature before advertising password recovery as available.
-- Before sharing publicly, configure HTTPS, backups, SMTP and password recovery, request rate limiting, and review access controls. Test with a non-production database first.
-
-## API smoke check
-After the app starts, open `http://localhost:8080/api/health`. It should return a small JSON response with `status: ok`.
+## Health Check
+Verify backend status at:
+`http://localhost:8080/api/health` or `https://your-app.up.railway.app/api/health`
+Response: `{"status": "ok", "application": "CampUs"}`

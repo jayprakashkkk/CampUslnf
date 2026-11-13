@@ -13,164 +13,76 @@ function resetCampusScrollToTop(){
   };
   requestAnimationFrame(()=>requestAnimationFrame(reset));
 }
-// Shared Back navigation for all current and future CampUs screens.
-const campusUiHistoryStack = [];
-let campusUiToken = 0;
-let campusBackHandling = false;
-
-function pushCampusBackGuard() {
-  const state = history.state && typeof history.state === 'object'
-    ? history.state
-    : {};
-
-  history.replaceState(
-    { ...state, campusFindBackGuard: true },
-    '',
-    location.href
-  );
+// Add a same-URL history entry for each in-app overlay so the browser/device Back
+// button dismisses the top overlay instead of navigating away from CampUs.
+const campusUiHistoryStack=[];
+let ignoreCampusUiPopstate=false, campusUiToken=0;
+function pushCampusBackGuard(){
+ const state=history.state&&typeof history.state==='object'?history.state:{};
+ history.pushState({...state,campusFindBackGuard:true,campusFindGuardToken:++campusUiToken},'',location.href);
 }
-
-function installCampusBackGuard() {
-  const state = history.state && typeof history.state === 'object'
-    ? history.state
-    : {};
-
-  history.replaceState(
-    { ...state, campusFindBackGuard: true },
-    '',
-    location.href
-  );
-
-  history.pushState(
-    { ...history.state, campusFindBackGuard: true, campusFindGuardToken: ++campusUiToken },
-    '',
-    location.href
-  );
+function installCampusBackGuard(){
+ const state=history.state&&typeof history.state==='object'?history.state:{};
+ history.replaceState({...state,campusFindBackGuard:true},'',location.href);
+ pushCampusBackGuard();
 }
-
-function pushCampusUiLayer(layer) {
-  if (campusUiHistoryStack[campusUiHistoryStack.length - 1] === layer) {
-    return;
-  }
-
-  campusUiHistoryStack.push(layer);
-
-  const state = history.state && typeof history.state === 'object'
-    ? history.state
-    : {};
-
-  history.pushState(
-    {
-      ...state,
-      campusFindUiLayer: layer,
-      campusFindUiToken: ++campusUiToken
-    },
-    '',
-    location.href
-  );
+function pushCampusUiLayer(layer){
+ if(campusUiHistoryStack[campusUiHistoryStack.length-1]===layer)return;
+ campusUiHistoryStack.push(layer);
+ const state=history.state&&typeof history.state==='object'?history.state:{};
+ history.pushState({...state,campusFindUiLayer:layer,campusFindUiToken:++campusUiToken},'',location.href);
 }
-
-function finishCampusUiLayer(layer, fromPopstate = false) {
-  if (fromPopstate) return;
-
-  const last = campusUiHistoryStack[campusUiHistoryStack.length - 1];
-
-  if (last === layer) {
-    campusUiHistoryStack.pop();
-    history.back();
-    return;
-  }
-
-  const index = campusUiHistoryStack.lastIndexOf(layer);
-  if (index >= 0) campusUiHistoryStack.splice(index, 1);
+function finishCampusUiLayer(layer,fromPopstate=false){
+ if(fromPopstate)return;
+ const last=campusUiHistoryStack[campusUiHistoryStack.length-1];
+ if(last===layer){campusUiHistoryStack.pop();ignoreCampusUiPopstate=true;history.back();return;}
+ const index=campusUiHistoryStack.lastIndexOf(layer);if(index>=0)campusUiHistoryStack.splice(index,1);
 }
-
-function closeCampusUiLayerFromBack(layer) {
-  if (layer === 'profileEditor') closeProfileEditorPage(true);
-  else if (layer === 'publicProfile') closeChatUserProfile(true);
-  else if (layer === 'communityChat') closeCommunityChat(true);
-  else if (layer === 'reportForm') closeForm(true);
-  else if (layer === 'navPopup') closeNavPopup(true);
-  else if (layer === 'authForm') backToAuthChoices(true);
-  else if (layer === 'phoneMenu') closeMenu(true);
-  else if (layer === 'profileDropdown') closeProfileDropdown(true);
+function closeCampusUiLayerFromBack(layer){
+ if(layer==='profileEditor')closeProfileEditorPage(true);
+ else if(layer==='publicProfile')closeChatUserProfile(true);
+ else if(layer==='communityChat')closeCommunityChat(true);
+ else if(layer==='reportForm')closeForm(true);
+ else if(layer==='navPopup')closeNavPopup(true);
+ else if(layer==='authForm')backToAuthChoices(true);
+ else if(layer==='phoneMenu')closeMenu(true);
+ else if(layer==='profileDropdown')closeProfileDropdown(true);
 }
-
-function closeTopUntrackedUiLayer() {
-  if ($('profileEditorPage') && !$('profileEditorPage').classList.contains('hide')) {
-    closeProfileEditorPage(true);
-    return true;
-  }
-
-  if ($('communityProfilePage') && !$('communityProfilePage').classList.contains('hide')) {
-    closeChatUserProfile(true);
-    return true;
-  }
-
-  if (communityChatOpen) {
-    closeCommunityChat(true);
-    return true;
-  }
-
-  if ($('modal') && !$('modal').classList.contains('hide')) {
-    closeForm(true);
-    return true;
-  }
-
-  if ($('navPopup') && !$('navPopup').classList.contains('hide')) {
-    closeNavPopup(true);
-    return true;
-  }
-
-  if ($('authFormPanel') && !$('authFormPanel').classList.contains('hide')) {
-    backToAuthChoices(true);
-    return true;
-  }
-
-  if (menuOpen) {
-    closeMenu(true);
-    return true;
-  }
-
-  if (profileMenuOpen) {
-    closeProfileDropdown(true);
-    return true;
-  }
-
-  return false;
+function closeTopUntrackedUiLayer(){
+ if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage(true);return true;}
+ if($('communityProfilePage')&&!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile(true);return true;}
+ if(communityChatOpen){closeCommunityChat(true);return true;}
+ if($('modal')&&!$('modal').classList.contains('hide')){closeForm(true);return true;}
+ if($('navPopup')&&!$('navPopup').classList.contains('hide')){closeNavPopup(true);return true;}
+ if($('authFormPanel')&&!$('authFormPanel').classList.contains('hide')){backToAuthChoices(true);return true;}
+ if(menuOpen){closeMenu(true);return true;}
+ if(profileMenuOpen){closeProfileDropdown(true);return true;}
+ return false;
 }
-
-window.addEventListener('popstate', () => {
-  if (campusBackHandling) return;
-  campusBackHandling = true;
-
-  try {
-    const layer = campusUiHistoryStack.pop();
-
-    if (layer) {
-      closeCampusUiLayerFromBack(layer);
-    } else if (!closeTopUntrackedUiLayer()) {
-      const intro = document.getElementById('firstVisitIntro');
-
-      if (intro && intro.hidden) {
-        intro.hidden = false;
-        intro.style.display = 'block';
-        document.body.classList.add('intro-open');
-        resetCampusScrollToTop();
-        intro.scrollTop = 0;
-      }
-    }
-  } finally {
-    // Restore a same-URL history entry so another Back gesture can be handled.
-    setTimeout(() => {
-      installCampusBackGuard();
-      campusBackHandling = false;
-    }, 0);
-  }
+window.addEventListener('popstate',()=>{
+ if(ignoreCampusUiPopstate){ignoreCampusUiPopstate=false;return;}
+ const layer=campusUiHistoryStack.pop();
+ if(layer){
+   closeCampusUiLayerFromBack(layer);
+   // Re-arm the same-URL guard after every intercepted Back action. Without
+   // this, the next Back can leave the site or appear to stop working.
+   pushCampusBackGuard();
+   return;
+ }
+ if(closeTopUntrackedUiLayer()){pushCampusBackGuard();return;}
+ const intro=document.getElementById('firstVisitIntro');
+ if(intro && intro.hidden){
+   intro.hidden=false;
+   intro.style.display='block';
+   document.body.classList.add('intro-open');
+   resetCampusScrollToTop();
+   intro.scrollTop=0;
+   pushCampusBackGuard();
+   return;
+ }
+ pushCampusBackGuard();
 });
-
 installCampusBackGuard();
-
 function openForm(type){$('form').reset();$('name').value=currentUser?.displayName||currentUser?.username||'';$('phone').value=currentUser?.phone||'';$('photoPreview').src='';$('photoPreview').classList.add('hide');$('type').value=type;$('formTitle').textContent=type==='LOST'?'Report a lost item':'Report a found item';pushCampusUiLayer('reportForm');$('modal').classList.remove('hide');$('error').textContent=''}
 function closeForm(fromPopstate=false){const wasOpen=!$('modal').classList.contains('hide');$('modal').classList.add('hide');if(wasOpen)finishCampusUiLayer('reportForm',fromPopstate)}
 function filterType(type,btn){chosenType=type;document.querySelectorAll('.type-tabs .tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');load()}
@@ -269,7 +181,7 @@ $('grid').innerHTML=rows.map(r=>{
 catch{$('grid').innerHTML='<div class="empty"><b>Backend not connected</b><p>Start the Java app, then refresh this page.</p></div>'}}
 $('photo').addEventListener('change',()=>{const file=$('photo').files[0];if(!file){$('photoPreview').src='';$('photoPreview').classList.add('hide');return}if(!file.type.startsWith('image/')){toast('Please choose an image file.');$('photo').value='';return}const reader=new FileReader();reader.onload=()=>{$('photoPreview').src=reader.result;$('photoPreview').classList.remove('hide')};reader.onerror=()=>{toast('Could not read the photo. Please try another image.');$('photo').value='';$('photoPreview').src='';$('photoPreview').classList.add('hide')};reader.readAsDataURL(file)});
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeForm()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeForm()});
-$('form').addEventListener('submit',async e=>{e.preventDefault();const file=$('photo').files[0];let imageData=null;if(file){try{imageData=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)})}catch{$('error').textContent='Could not read the photo. Please try another image.';return}}
+$('form').addEventListener('submit',async e=>{e.preventDefault();const file=$('photo').files[0];let imageData=null;if(file){try{imageData=await compressProfileImage(file,1200,1200,0.8)}catch{try{imageData=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)})}catch{$('error').textContent='Could not read the photo. Please try another image.';return}}}
 let payload={imageData,type:$('type').value,title:$('title').value.trim(),category:$('category').value,location:$('location').value.trim(),itemDate:$('itemDate').value||null,reporterName:$('name').value.trim(),reporterPhone:$('phone').value.trim(),description:$('description').value.trim()};
 try{let res=await fetch('/api/reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!res.ok){let d=await res.json().catch(()=>({}));throw Error(d.message||'Please check the form and try again.')}const created=await res.json().catch(()=>null);$('form').reset();$('photoPreview').src='';$('photoPreview').classList.add('hide');closeForm();toast('Report submitted. Thanks for helping your campus! 💜');load()}catch(err){$('error').textContent=err.message||'Could not submit report.'}});
 async function updateStatus(id,status){try{let r=await fetch(`/api/reports/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});if(!r.ok)throw 0;toast('Status updated');load()}catch{toast('Could not update status')}}
@@ -408,62 +320,7 @@ function showNavPopup(page){
  }
  $('navPopup').classList.remove('hide');
 }
-function closeNavPopup(fromPopstate = false) {
-  const popup = $('navPopup');
-  if (!popup || popup.classList.contains('hide')) return;
-
-  popup.classList.add('hide');
-  activeNavPopup = '';
-  finishCampusUiLayer('navPopup', fromPopstate);
-}
-
-// Right-swipe on the popup closes it without affecting its form controls.
-(function enableNavPopupSwipeBack() {
-  let startX = null;
-  let startY = null;
-
-  document.addEventListener('touchstart', event => {
-    const popup = $('navPopup');
-
-    if (!popup || popup.classList.contains('hide') ||
-        event.touches.length !== 1) {
-      startX = null;
-      return;
-    }
-
-    const target = event.target;
-    if (!target.closest || !target.closest('#navPopup') ||
-        target.closest('input, textarea, select, button, a, [contenteditable="true"]')) {
-      startX = null;
-      return;
-    }
-
-    startX = event.touches[0].clientX;
-    startY = event.touches[0].clientY;
-  }, { passive: true });
-
-  document.addEventListener('touchend', event => {
-    if (startX === null || !event.changedTouches.length) return;
-
-    const dx = event.changedTouches[0].clientX - startX;
-    const dy = event.changedTouches[0].clientY - startY;
-    const popup = $('navPopup');
-
-    if (popup && !popup.classList.contains('hide') &&
-        dx > 80 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-      closeNavPopup();
-    }
-
-    startX = null;
-    startY = null;
-  }, { passive: true });
-
-  document.addEventListener('touchcancel', () => {
-    startX = null;
-    startY = null;
-  }, { passive: true });
-})();
-
+function closeNavPopup(fromPopstate=false){if(!$('navPopup').classList.contains('hide')){$('navPopup').classList.add('hide');activeNavPopup='';finishCampusUiLayer('navPopup',fromPopstate);}}
 const avatarLabels=['Blue-Hair Hero','Silver-Hair Ranger','Sunshine Hoodie','Forest Adventurer','Violet-Hair Star','Headphone Gamer','Pink Star','Crimson Hero','Midnight Ninja','Golden Explorer','Cat-Eared Mage','Fox-Eared Friend','Pocket Robot','Tiny Dragon','Panda Hoodie','Frog Hoodie','Friendly Ghost','Moon Witch','Space Explorer','Neon Gamer','Creative Artist','Campus DJ','Pink Bun Star','Beanie Friend','Glasses Scholar','Silver Knight','Starlight Witch','Teal-Hair Hero','Wise Owl','Happy Sunflower'];
 function openProfileEditorPage(){
  closeMenu();closeProfileDropdown();
@@ -640,11 +497,6 @@ function chooseAuthMode(mode) {
     pushCampusUiLayer('authForm');
   }
 
-  // Leaving password reset always returns to the normal auth form state.
-  $('authGate')?.classList.remove('auth-reset-mode');
-  const resetPanel = $('forgotPasswordPanel');
-  if (resetPanel) resetPanel.hidden = true;
-
   authMode = mode;
   $('authChoices').classList.add('hide');
   $('authFormPanel').classList.remove('hide');
@@ -653,19 +505,6 @@ function chooseAuthMode(mode) {
 
   const creating = mode === 'register';
   const fields = $('authRegisterFields');
-  const forgotButton = $('forgotPasswordButton');
-
-  // Password recovery is available only from Login, never from registration.
-  // Show Forgot Password only on Login.
-if (forgotButton) {
-  forgotButton.hidden = creating;
-
-  if (creating) {
-    forgotButton.style.setProperty('display', 'none', 'important');
-  } else {
-    forgotButton.style.removeProperty('display');
-  }
-}
 
   if (fields) {
     fields.hidden = !creating;
@@ -777,33 +616,18 @@ async function initAuth() {
 
 
 let resetOtpRequested=false;
-
-$('forgotPasswordButton')?.addEventListener('click', () => {
-  const panel = $('forgotPasswordPanel');
-  const gate = $('authGate');
-  if (!panel || !gate) return;
-
-  // Reset starts from Login and displays only the dedicated recovery panel.
-  authMode = 'login';
-  panel.hidden = false;
-  gate.classList.add('auth-reset-mode');
-
-  $('resetPasswordMessage').textContent = '';
-  $('resetEmail').value = $('authEmail')?.value || '';
-  $('resetOtpFields').hidden = true;
-  resetOtpRequested = false;
-  $('forgotPasswordTitle').textContent = 'Reset your password';
-  $('resetEmail').focus();
+$('forgotPasswordButton')?.addEventListener('click',()=>{
+  const panel=$('forgotPasswordPanel');
+  panel.hidden=false;
+  $('resetPasswordMessage').textContent='';
+  $('resetEmail').value=$('authEmail')?.value||'';
+  $('resetOtpFields').hidden=true;
+  resetOtpRequested=false;
 });
-
-$('cancelResetPasswordButton')?.addEventListener('click', () => {
-  const panel = $('forgotPasswordPanel');
-  if (panel) panel.hidden = true;
-  $('authGate')?.classList.remove('auth-reset-mode');
-  $('resetPasswordMessage').textContent = '';
-  chooseAuthMode('login');
+$('cancelResetPasswordButton')?.addEventListener('click',()=>{
+  $('forgotPasswordPanel').hidden=true;
+  $('resetPasswordMessage').textContent='';
 });
-
 $('sendResetOtpButton')?.addEventListener('click',async()=>{
   const email=$('resetEmail').value.trim();
   const msg=$('resetPasswordMessage'),btn=$('sendResetOtpButton');
@@ -914,19 +738,110 @@ function closeCommunityChat(fromPopstate=false){if(!communityChatOpen)return;com
 $('communityChatOverlay').addEventListener('click',e=>{if(e.target===$('communityChatOverlay'))closeCommunityChat()});
 function clearChatReply(){chatReplyTarget=null;$('chatReplyPreview').classList.add('hide');$('chatReplyText').textContent='';}
 function setChatReply(msg){chatReplyTarget=msg;$('chatReplyText').textContent=`${msg.displayName}: ${msg.message}`;$('chatReplyPreview').classList.remove('hide');$('communityChatInput').focus();}
-function chatTime(value){try{return new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit'}).format(new Date(value))}catch{return ''}}
+let cachedCommunityMessages=[];
+function chatTime(value){
+  try{
+    if(!value)return '';
+    let d=new Date(value);
+    if(isNaN(d.getTime())&&typeof value==='string')d=new Date(value.replace(' ','T'));
+    if(isNaN(d.getTime()))return '';
+    return new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit'}).format(d);
+  }catch{return ''}
+}
 function renderCommunityMessages(items,forceBottom){
  const box=$('chatMessages'),nearBottom=box.scrollHeight-box.scrollTop-box.clientHeight<90;
  if(!items.length){box.innerHTML='<div class="empty">No messages yet. Say hello to your campus community! 👋</div>';lastChatSignature='';return}
- const signature=items.map(m=>`${m.id}:${m.message}:${m.replyText||''}`).join('|');if(signature===lastChatSignature)return;lastChatSignature=signature;
- box.innerHTML=items.map(m=>{const mine=!!m.mine;const fullName=String(m.displayName||m.username||'CampUs user').trim();const username=String(m.username||'');const initial=fullName.charAt(0).toUpperCase()||'?';const avatar=`<button type="button" class="chat-avatar chat-avatar-button" aria-label="View ${esc(fullName)}'s profile" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${avatarInner(m.avatarId,fullName,m.profileImageUrl)}</button>`;const authorRole=roleLabel(m.role);const authorLine=authorRole?`<button type="button" class="chat-author-role" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${esc(fullName)} ${roleBadgeMarkup(m.role)}</button>`:'';return `<div class="chat-row ${mine?'mine':'theirs'}" data-message-id="${m.id}">${mine?'':avatar}<div class="chat-message-stack">${authorLine}<div class="chat-bubble" role="group" aria-label="Chat message">${m.replyText?`<div class="chat-quoted"><b>${esc(m.replyName||'Reply')}</b><br>${esc(m.replyText)}</div>`:''}<div class="chat-text">${esc(m.message)}</div><div class="chat-time">${chatTime(m.createdAt)}</div><div class="chat-actions"><button type="button" onclick="replyToChatMessage(${m.id})">↩ Reply</button>${m.canDelete?`<button type="button" onclick="deleteChatMessage(${m.id})">Delete</button>`:''}</div></div></div></div>`}).join('');
- box.querySelectorAll('.chat-row').forEach(row=>{const bubble=row.querySelector('.chat-bubble');bubble.addEventListener('click',e=>{if(e.target.closest('button'))return;/* Phones use swipe-to-reply; never expose Reply/Delete controls on a simple tap. */if(window.matchMedia('(max-width: 700px)').matches)return;row.classList.toggle('actions-open')});bubble.addEventListener('contextmenu',e=>{e.preventDefault();/* Context menu action buttons are for tablet/laptop only. */if(window.matchMedia('(max-width: 700px)').matches)return;row.classList.toggle('actions-open')});let sx=0,sy=0;row.addEventListener('touchstart',e=>{sx=e.changedTouches[0].clientX;sy=e.changedTouches[0].clientY},{passive:true});row.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.4){const id=Number(row.dataset.messageId),msg=items.find(x=>x.id===id);if(msg){row.classList.remove('actions-open');setChatReply(msg)}}},{passive:true});});
+ const signature=items.map(m=>`${m.id}:${m.username}:${m.displayName}:${m.role}:${m.message}:${m.replyText||''}`).join('|');
+ if(signature===lastChatSignature)return;
+ lastChatSignature=signature;
+ box.innerHTML=items.map(m=>{
+   const mine=!!m.mine;
+   const fullName=String(m.displayName||m.username||'CampUs user').trim();
+   const username=String(m.username||'');
+   const avatar=`<button type="button" class="chat-avatar chat-avatar-button" aria-label="View ${esc(fullName)}'s profile" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${avatarInner(m.avatarId,fullName,m.profileImageUrl)}</button>`;
+   const authorRole=roleLabel(m.role);
+   const authorLine=authorRole?`<button type="button" class="chat-author-role" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${esc(fullName)} ${roleBadgeMarkup(m.role)}</button>`:'';
+   return `<div class="chat-row ${mine?'mine':'theirs'}" data-message-id="${m.id}">${mine?'':avatar}<div class="chat-message-stack">${authorLine}<div class="chat-bubble" role="group" aria-label="Chat message">${m.replyText?`<div class="chat-quoted"><b>${esc(m.replyName||'Reply')}</b><br>${esc(m.replyText)}</div>`:''}<div class="chat-text">${esc(m.message)}</div><div class="chat-time">${chatTime(m.createdAt)}</div><div class="chat-actions"><button type="button" onclick="replyToChatMessage(${m.id})">↩ Reply</button>${m.canDelete?`<button type="button" onclick="deleteChatMessage(${m.id})">Delete</button>`:''}</div></div></div></div>`
+ }).join('');
+ box.querySelectorAll('.chat-row').forEach(row=>{
+   const bubble=row.querySelector('.chat-bubble');
+   bubble.addEventListener('click',e=>{
+     if(e.target.closest('button'))return;
+     row.classList.toggle('actions-open');
+   });
+   bubble.addEventListener('contextmenu',e=>{
+     e.preventDefault();
+     row.classList.toggle('actions-open');
+   });
+   let sx=0,sy=0;
+   row.addEventListener('touchstart',e=>{sx=e.changedTouches[0].clientX;sy=e.changedTouches[0].clientY},{passive:true});
+   row.addEventListener('touchend',e=>{
+     const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
+     if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.3){
+       const id=Number(row.dataset.messageId),msg=items.find(x=>x.id===id);
+       if(msg){row.classList.remove('actions-open');setChatReply(msg)}
+     }
+   },{passive:true});
+ });
  if(forceBottom||nearBottom)box.scrollTop=box.scrollHeight;
 }
-async function loadCommunityMessages(forceBottom){try{const r=await fetch('/api/community-chat',{headers:{'Accept':'application/json'}});if(r.status===401){$('chatMessages').innerHTML='<div class="chat-unavailable"><div class="chat-unavailable-icon" aria-hidden="true">💬</div><h3>Community chat is ready</h3><p>Connect the Java backend and sign in to load campus messages and send replies.</p><button type="button" class="light" onclick="loadCommunityMessages(true)">Try again</button></div>';return}if(!r.ok)throw new Error('Chat service is unavailable');const items=await r.json();renderCommunityMessages(items,forceBottom)}catch{$('chatMessages').innerHTML='<div class="chat-unavailable"><div class="chat-unavailable-icon" aria-hidden="true">💬</div><h3>Chat page is ready</h3><p>Messages and sending will be available when the Java backend is connected.</p><button type="button" class="light" onclick="loadCommunityMessages(true)">Retry connection</button></div>';}}
-async function replyToChatMessage(id){try{const r=await fetch('/api/community-chat');const items=await r.json();const msg=items.find(x=>x.id===id);if(msg)setChatReply(msg)}catch{toast('Could not open reply. Try again.')}}
-async function deleteChatMessage(id){if(!confirm('Delete this message? You can only delete your own messages within 10 minutes.'))return;try{const r=await fetch(`/api/community-chat/${id}`,{method:'DELETE'});const data=await r.json().catch(()=>({}));if(!r.ok)throw Error(data.message||'Could not delete message.');lastChatSignature='';await loadCommunityMessages(false);toast('Message deleted')}catch(e){toast(e.message||'Could not delete message')}}
-$('communityChatForm').addEventListener('submit',async e=>{e.preventDefault();const input=$('communityChatInput'),message=input.value.trim();if(!message)return;const sendButton=$('communityChatForm').querySelector('button[type="submit"]');sendButton.disabled=true;try{const r=await fetch('/api/community-chat',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({message,replyText:chatReplyTarget?.message||null,replyName:chatReplyTarget?.displayName||null})});const data=await r.json().catch(()=>({}));if(!r.ok)throw Error(data.message||'Could not send message.');input.value='';clearChatReply();lastChatSignature='';await loadCommunityMessages(true)}catch(err){toast(err.message||'Could not send message')}finally{sendButton.disabled=false;input.focus()}});
+async function loadCommunityMessages(forceBottom){
+  try{
+    const r=await fetch('/api/community-chat',{headers:{'Accept':'application/json'}});
+    if(r.status===401){
+      $('chatMessages').innerHTML='<div class="chat-unavailable"><div class="chat-unavailable-icon" aria-hidden="true">💬</div><h3>Community chat is ready</h3><p>Connect the Java backend and sign in to load campus messages and send replies.</p><button type="button" class="light" onclick="loadCommunityMessages(true)">Try again</button></div>';
+      return;
+    }
+    if(!r.ok)throw new Error('Chat service is unavailable');
+    const items=await r.json();
+    cachedCommunityMessages=Array.isArray(items)?items:[];
+    renderCommunityMessages(cachedCommunityMessages,forceBottom);
+  }catch{
+    $('chatMessages').innerHTML='<div class="chat-unavailable"><div class="chat-unavailable-icon" aria-hidden="true">💬</div><h3>Chat page is ready</h3><p>Messages and sending will be available when the Java backend is connected.</p><button type="button" class="light" onclick="loadCommunityMessages(true)">Retry connection</button></div>';
+  }
+}
+function replyToChatMessage(id){
+  const msg=cachedCommunityMessages.find(x=>x.id===id);
+  if(msg){setChatReply(msg);return;}
+  fetch('/api/community-chat').then(r=>r.json()).then(items=>{
+    cachedCommunityMessages=Array.isArray(items)?items:[];
+    const found=cachedCommunityMessages.find(x=>x.id===id);
+    if(found)setChatReply(found);
+  }).catch(()=>toast('Could not open reply. Try again.'));
+}
+async function deleteChatMessage(id){
+  if(!confirm('Delete this message? You can only delete your own messages within 10 minutes.'))return;
+  try{
+    const r=await fetch(`/api/community-chat/${id}`,{method:'DELETE'});
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok)throw Error(data.message||'Could not delete message.');
+    lastChatSignature='';
+    await loadCommunityMessages(false);
+    toast('Message deleted');
+  }catch(e){toast(e.message||'Could not delete message');}
+}
+$('communityChatForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const input=$('communityChatInput'),message=input.value.trim();
+  if(!message)return;
+  const sendButton=$('communityChatForm').querySelector('button[type="submit"]');
+  sendButton.disabled=true;
+  try{
+    const r=await fetch('/api/community-chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({message,replyText:chatReplyTarget?.message||null,replyName:chatReplyTarget?.displayName||null})
+    });
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok)throw Error(data.message||'Could not send message.');
+    input.value='';
+    input.style.height='auto';
+    clearChatReply();
+    lastChatSignature='';
+    await loadCommunityMessages(true);
+  }catch(err){toast(err.message||'Could not send message');}
+  finally{sendButton.disabled=false;input.focus();}
+});
 
 // Full-screen public profile, opened from a chat avatar or a report author.
 let profileLoadToken=0, profileLastName='', profileLastUsername='';
@@ -1033,7 +948,21 @@ document.addEventListener('click',event=>{
 });
 
 // Return/Enter sends the message; Shift+Enter inserts a line break.
-$('communityChatInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();$('communityChatForm').requestSubmit();}});
+$('communityChatInput')?.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){
+    e.preventDefault();
+    const form=$('communityChatForm');
+    if(typeof form.requestSubmit==='function'){
+      form.requestSubmit();
+    }else{
+      form.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));
+    }
+  }
+});
+$('communityChatInput')?.addEventListener('input',function(){
+  this.style.height='auto';
+  this.style.height=Math.min(this.scrollHeight,120)+'px';
+});
 // Keep the full-screen chat fitted to the visible viewport when the phone keyboard opens.
 window.addEventListener('resize',syncChatViewport,{passive:true});
 if(window.visualViewport){window.visualViewport.addEventListener('resize',syncChatViewport,{passive:true});window.visualViewport.addEventListener('scroll',syncChatViewport,{passive:true});}

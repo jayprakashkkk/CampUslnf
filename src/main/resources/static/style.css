@@ -412,12 +412,12 @@ header.community-profile-topbar{position:relative;top:auto;left:auto;right:auto;
 
 /* Chat always uses a left back arrow instead of a close X. */
 .chat-topbar .chat-back{
-  position:absolute;left:0;top:50%;transform:translateY(-50%);z-index:2;
+  position:relative;left:auto;top:auto;transform:none;z-index:2;
   width:42px;height:42px;border:0;border-radius:50%;background:#fff5ec;color:#c67c3b;
   font-size:28px;line-height:1;display:grid;place-items:center;cursor:pointer;
 }
 .chat-topbar .chat-back:hover{background:#ffeee0}
-@media(max-width:700px){.chat-topbar .chat-back{width:34px;height:34px;font-size:24px;left:0}}
+@media(max-width:700px){.chat-topbar .chat-back{width:34px;height:34px;font-size:24px;left:auto}}
 
 
 /* Desktop and landscape-tablet dialogs use a close X at top-right; portrait mobile/tablet keeps Back at left. */
@@ -2777,7 +2777,7 @@ body.back-controls-arrow #navPopup .nav-dialog > .nav-popup-back{
   box-shadow:none!important;cursor:pointer!important;flex:0 0 44px!important;
 }
 body.back-controls-arrow .x{left:14px!important;right:auto!important;top:14px!important;transform:none!important;z-index:12!important}
-body.back-controls-arrow .chat-topbar .chat-back{left:0!important;right:auto!important;top:50%!important;transform:translateY(-50%)!important}
+body.back-controls-arrow .chat-topbar .chat-back{position:relative!important;left:auto!important;right:auto!important;top:auto!important;transform:none!important}
 body.back-controls-arrow .community-profile-topbar .community-profile-back,
 body.back-controls-arrow .profile-editor-topbar .profile-editor-back{position:relative!important;left:auto!important;right:auto!important;top:auto!important;transform:none!important;z-index:5!important}
 body.back-controls-arrow #navPopup .nav-dialog > .nav-popup-back{left:14px!important;right:auto!important;top:14px!important}
@@ -2906,32 +2906,16 @@ body.back-controls-arrow #navPopup .nav-dialog > .nav-popup-back:focus-visible{o
 
 
 
-/* Auth gate visibility and dedicated password-recovery screen. */
-#authGate.auth-gate:not(.hide) {
-  display: grid !important;
-  visibility: visible !important;
-}
-#authGate.auth-gate.hide {
-  display: none !important;
-}
+/* Auth gate state is explicit so a cached/legacy visibility rule cannot leave a blank page. */
+#authGate.auth-gate:not(.hide) { display: grid !important; visibility: visible !important; }
+#authGate.auth-gate.hide { display: none !important; }
 
-/* Respect native hidden states even when component styles set display. */
-#forgotPasswordPanel[hidden],
-#resetOtpFields[hidden],
-#forgotPasswordButton[hidden] {
-  display: none !important;
-}
-
-/* In reset mode, keep only the recovery panel visible inside the auth card. */
-#authGate.auth-reset-mode #authWelcomeTitle,
-#authGate.auth-reset-mode .auth-kicker,
-#authGate.auth-reset-mode #authChoices,
-#authGate.auth-reset-mode #authFormTitle {
-  display: none !important;
-}
-#authGate.auth-reset-mode #authForm > :not(#forgotPasswordPanel) {
-  display: none !important;
-}
-#authGate.auth-reset-mode #forgotPasswordPanel {
-  display: block !important;
-}
+/* Password reset controls */
+.auth-forgot-link{display:block;margin:10px auto 0;padding:8px 10px;border:0;background:transparent;color:var(--accent,#e66b2e);font:inherit;font-weight:600;text-decoration:underline;cursor:pointer}
+.forgot-password-panel{margin-top:16px;padding:16px;border:1px solid rgba(120,120,120,.25);border-radius:14px;background:var(--surface,#fff)}
+.forgot-password-panel[hidden]{display:none!important}
+.forgot-password-panel h3{margin:0 0 12px;font-size:1.05rem}
+.forgot-password-panel label{display:block;margin:10px 0 5px}
+.forgot-password-panel input{box-sizing:border-box;width:100%;min-width:0}
+.forgot-password-panel button{max-width:100%;white-space:normal}
+@media(max-width:700px){.forgot-password-panel{padding:12px}.auth-forgot-link{min-height:42px}}

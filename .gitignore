@@ -1,8 +1,11 @@
 target/
 data/*.mv.db
 data/*.lock.db
+data/*.trace.db
 .DS_Store
-
+Thumbs.db
+.idea/
+*.iml
+.vscode/
 .env
-.env.*
-!.env.production.example
+*.log
