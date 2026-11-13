@@ -227,20 +227,14 @@ public class AuthController {
 
                 helper.setText(html, true);
                 sender.send(mimeMessage);
-                return ResponseEntity.ok(Map.of("message", "An OTP code has been sent from CampUs to your email inbox."));
+                return ResponseEntity.ok(Map.of("message", "An OTP code has been sent to " + email + ". Please check your inbox and enter the code."));
             } catch (Exception ex) {
-                log.warn("Could not send email via SMTP to {}: {}", email, ex.getMessage());
-                return ResponseEntity.ok(Map.of(
-                        "message", "SMTP delivery issue: " + ex.getMessage() + ". Your OTP code is: " + otp,
-                        "devOtp", otp
-                ));
+                log.error("Could not send email via SMTP to {}: {}", email, ex.getMessage(), ex);
+                return error(HttpStatus.BAD_GATEWAY, "Could not send OTP email via Brevo. (" + ex.getMessage() + ")");
             }
         }
 
-        return ResponseEntity.ok(Map.of(
-                "message", "Email SMTP not configured yet. Your verification OTP is: " + otp,
-                "devOtp", otp
-        ));
+        return error(HttpStatus.SERVICE_UNAVAILABLE, "Email SMTP service is not configured. Add MAIL_USERNAME and MAIL_PASSWORD in Railway.");
     }
 
     @PostMapping("/reset-password")

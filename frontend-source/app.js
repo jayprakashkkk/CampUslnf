@@ -695,8 +695,9 @@ $('sendResetOtpButton')?.addEventListener('click',async()=>{
     const d=await r.json().catch(()=>({}));
     if(!r.ok){msg.textContent=d.message||'Could not send OTP. Please try again.';return;}
     resetOtpRequested=true;$('resetOtpFields').hidden=false;
-    if(d.devOtp&&$('resetOtp'))$('resetOtp').value=d.devOtp;
-    msg.textContent=d.message||'If the email belongs to an account, an OTP has been sent.';
+    if($('resetOtp'))$('resetOtp').value='';
+    msg.textContent=d.message||'An OTP has been sent to your email. Please check your inbox and enter it below.';
+    $('resetOtp')?.focus();
   }catch(err){
     if(err && err.name === 'AbortError') {
       msg.textContent='Request timed out. Please try clicking Resend OTP.';
