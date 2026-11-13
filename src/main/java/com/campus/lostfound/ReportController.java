@@ -32,7 +32,10 @@ public class ReportController {
                             @RequestParam(required = false, defaultValue = "false") boolean mine) {
         requireLogin(request);
         String username = AuthController.currentUsername(request);
+        UserAccount currentAcc = currentUser(request);
+        String userCollege = currentAcc == null ? "CU" : currentAcc.getCollege();
         List<Report> results = repo.findAll().stream()
+                .filter(x -> x.getCollege() == null || x.getCollege().equalsIgnoreCase(userCollege))
                 .filter(x -> type == null || type.isBlank() || x.getType().equalsIgnoreCase(type))
                 .filter(x -> q == null || q.isBlank() ||
                         ((x.getTitle() + " " + x.getCategory() + " " + x.getLocation() + " " + x.getDescription())
@@ -73,6 +76,8 @@ public class ReportController {
         r.setStatus("OPEN");
         r.setId(null);
         r.setAccountUsername(AuthController.currentUsername(request));
+        UserAccount currentAcc = currentUser(request);
+        r.setCollege(currentAcc == null ? "CU" : currentAcc.getCollege());
         Report saved = repo.save(r);
         users.findByUsernameKey(r.getAccountUsername().toLowerCase(java.util.Locale.ROOT))
                 .ifPresent(actor -> notificationService.notifyReportCreated(saved, actor));
@@ -100,6 +105,12 @@ public class ReportController {
         if (!AuthController.isLoggedIn(request)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please log in to continue.");
         }
+    }
+
+    private UserAccount currentUser(HttpServletRequest request) {
+        if (!AuthController.isLoggedIn(request)) return null;
+        Object id = request.getSession(false).getAttribute(AuthController.SESSION_USER_ID);
+        return id instanceof Long userId ? users.findById(userId).orElse(null) : null;
     }
 
     private boolean blank(String value) { return value == null || value.isBlank(); }

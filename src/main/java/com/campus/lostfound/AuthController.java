@@ -68,6 +68,10 @@ public class AuthController {
         String email = credentials == null || credentials.email() == null ? "" : credentials.email().trim().toLowerCase(Locale.ROOT);
         String displayName = credentials == null || credentials.displayName() == null ? "" : credentials.displayName().trim();
         String course = credentials == null || credentials.course() == null ? "" : credentials.course().trim();
+        String college = credentials == null || credentials.college() == null ? "CU" : credentials.college().trim().toUpperCase(Locale.ROOT);
+        if (!List.of("CGC_UNIV", "CU", "CGC_LANDRAN", "LPU").contains(college)) {
+            college = "CU";
+        }
         if (email.isEmpty()) return error(HttpStatus.BAD_REQUEST, "Please enter your email address.");
         if (email.length() > 254 || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
             return error(HttpStatus.BAD_REQUEST, "Please enter a valid email address.");
@@ -109,6 +113,7 @@ public class AuthController {
         account.setPasswordHash(passwordHasher.hash(password));
         account.setDisplayName(displayName);
         account.setCourse(course);
+        account.setCollege(college);
         account.setPhone("");
         applyConfiguredOwner(account);
         try {
@@ -230,6 +235,8 @@ public class AuthController {
         body.put("displayName", displayName == null ? String.valueOf(username) : String.valueOf(displayName));
         body.put("phone", "");
         body.put("course", "");
+        body.put("college", "CU");
+        body.put("collegeName", "CU (Chandigarh University)");
         body.put("avatarId", "");
         body.put("profileImageData", "");
         body.put("bannerImageData", "");
@@ -241,6 +248,8 @@ public class AuthController {
                 body.put("email", account.getEmail());
                 body.put("phone", account.getPhone());
                 body.put("course", account.getCourse());
+                body.put("college", account.getCollege());
+                body.put("collegeName", collegeDisplayName(account.getCollege()));
                 body.put("avatarId", account.getAvatarId());
                 boolean ownerBootstrapped = applyConfiguredOwner(account);
                 body.put("profileImageData", canUseCustomProfilePhoto(account) ? account.getProfileImageData() : "");
@@ -410,6 +419,8 @@ public class AuthController {
         body.put("email", account.getEmail());
         body.put("displayName", account.getDisplayName());
         body.put("course", account.getCourse());
+        body.put("college", account.getCollege());
+        body.put("collegeName", collegeDisplayName(account.getCollege()));
         body.put("phone", account.getPhone());
         body.put("avatarId", account.getAvatarId());
         body.put("profileImageData", canUseCustomProfilePhoto(account) ? account.getProfileImageData() : "");
@@ -503,6 +514,16 @@ public class AuthController {
         return ResponseEntity.status(status).body(body);
     }
 
-    public record Credentials(String username, String password, String displayName, String course, String email) {}
+    public static String collegeDisplayName(String code) {
+        if (code == null) return "CU (Chandigarh University)";
+        return switch (code.toUpperCase(Locale.ROOT)) {
+            case "CGC_UNIV" -> "CGC University";
+            case "CGC_LANDRAN" -> "CGC Landran";
+            case "LPU" -> "LPU (Lovely Professional University)";
+            default -> "CU (Chandigarh University)";
+        };
+    }
+
+    public record Credentials(String username, String password, String displayName, String course, String email, String college) {}
     public record Profile(String displayName, String username, String phone, String course, String avatarId, String profileImageData, String bannerImageData) {}
 }

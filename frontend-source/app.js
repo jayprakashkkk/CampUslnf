@@ -475,13 +475,18 @@ function showAuthGate() {
   closeNavPopup();
   closeProfileEditorPage();
 
+  const badge = $('campusCollegeBadge');
+  if (badge) badge.hidden = true;
+
   const fields = $('authRegisterFields');
   if (fields) {
     fields.hidden = true;
-    ['authFullName', 'authCourse', 'authEmail'].forEach(id => {
+    ['authFullName', 'authCollege', 'authCourse', 'authEmail'].forEach(id => {
       const field = $(id);
-      field.disabled = true;
-      field.required = false;
+      if (field) {
+        field.disabled = true;
+        field.required = false;
+      }
     });
   }
 
@@ -509,11 +514,13 @@ function chooseAuthMode(mode) {
   if (fields) {
     fields.hidden = !creating;
 
-    ['authFullName', 'authCourse', 'authEmail'].forEach(id => {
+    ['authFullName', 'authCollege', 'authCourse', 'authEmail'].forEach(id => {
       const field = $(id);
-      field.disabled = !creating;
-      field.required = creating;
-      if (!creating) field.value = '';
+      if (field) {
+        field.disabled = !creating;
+        field.required = creating;
+        if (!creating) field.value = '';
+      }
     });
   }
 
@@ -553,10 +560,12 @@ function backToAuthChoices(fromPopstate = false) {
   if (fields) {
     fields.hidden = true;
 
-    ['authFullName', 'authCourse', 'authEmail'].forEach(id => {
+    ['authFullName', 'authCollege', 'authCourse', 'authEmail'].forEach(id => {
       const field = $(id);
-      field.disabled = true;
-      field.required = false;
+      if (field) {
+        field.disabled = true;
+        field.required = false;
+      }
     });
   }
 
@@ -573,6 +582,8 @@ function enterApp(user) {
     displayName: user.displayName || user.username,
     phone: user.phone || '',
     course: user.course || '',
+    college: user.college || 'CU',
+    collegeName: user.collegeName || 'CU (Chandigarh University)',
     avatarId: validAvatarId(user.avatarId),
     profileImageData: user.profileImageData || '',
     bannerImageData: user.bannerImageData || '',
@@ -583,6 +594,16 @@ function enterApp(user) {
     usernameChangeWindowResetsAt:
       user.usernameChangeWindowResetsAt || ''
   };
+
+  const badge = $('campusCollegeBadge');
+  if (badge) {
+    badge.textContent = currentUser.collegeName;
+    badge.hidden = false;
+  }
+  const chatSubtitle = $('chatCampusSubtitle');
+  if (chatSubtitle) {
+    chatSubtitle.textContent = 'CampUs · ' + currentUser.collegeName;
+  }
 
   document.body.classList.remove('auth-locked');
   setAuthGateVisibility(false);
@@ -667,11 +688,13 @@ $('authForm')?.addEventListener('submit',async event=>{
   const username=$('authUsername').value.trim().toLowerCase();
   const password=$('authPassword').value;
   const displayName=$('authFullName').value.trim();
+  const college=$('authCollege')?.value||'CU';
   const course=$('authCourse').value.trim();
   const email=$('authEmail').value.trim();
   $('authError').textContent='';
   const isRegister=authMode==='register';
   if(isRegister&&!displayName){$('authError').textContent='Please enter your full name.';$('authFullName').focus();return;}
+  if(isRegister&&!college){$('authError').textContent='Please select your college.';$('authCollege').focus();return;}
   if(isRegister&&!course){$('authError').textContent='Please enter your course.';$('authCourse').focus();return;}
   if(isRegister&&!email){$('authError').textContent='Please enter your email address.';$('authEmail').focus();return;}
   if(isRegister&&!$('authEmail').checkValidity()){$('authError').textContent='Please enter a valid email address.';$('authEmail').focus();return;}
@@ -682,7 +705,7 @@ $('authForm')?.addEventListener('submit',async event=>{
   try{
     const response=await fetch(isRegister?'/api/auth/register':'/api/auth/login',{
       method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
-      body:JSON.stringify(isRegister?{username,password,displayName,course,email}:{username,password})
+      body:JSON.stringify(isRegister?{username,password,displayName,course,email,college}:{username,password})
     });
     const data=await response.json().catch(()=>({}));
     if(!response.ok){$('authError').textContent=data.message||(isRegister?'Could not create account. Please try again.':'Incorrect username or password. Please try again.');return;}
@@ -698,6 +721,7 @@ $('authForm')?.addEventListener('submit',async event=>{
 async function logout(){
   stopNotificationPolling();
   closeMenu();closeProfileDropdown();closeNavPopup();closeProfileEditorPage();closeForm();
+  const badge=$('campusCollegeBadge');if(badge)badge.hidden=true;
   try{await fetch('/api/auth/logout',{method:'POST'});}catch{/* The local gate still closes access if the server is unavailable. */}
   showAuthGate();
   backToAuthChoices();

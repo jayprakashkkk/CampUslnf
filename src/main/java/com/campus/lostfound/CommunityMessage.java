@@ -13,11 +13,16 @@ public class CommunityMessage {
     @Column(nullable=false, length=2000) private String message;
     @Column(length=2000) private String replyText;
     @Column(length=100) private String replyName;
+    @Column(length=100) private String college = "CU";
     @Column(nullable=false) private LocalDateTime createdAt;
     protected CommunityMessage() {}
     public CommunityMessage(String username, String displayName, String message, String replyText, String replyName) {
-        this.username=username; this.displayName=displayName; this.message=message; this.replyText=replyText; this.replyName=replyName; this.createdAt=LocalDateTime.now();
+        this(username, displayName, message, replyText, replyName, "CU");
+    }
+    public CommunityMessage(String username, String displayName, String message, String replyText, String replyName, String college) {
+        this.username=username; this.displayName=displayName; this.message=message; this.replyText=replyText; this.replyName=replyName;
+        this.college=(college==null||college.isBlank())?"CU":college; this.createdAt=LocalDateTime.now();
     }
     public Long getId(){return id;} public String getUsername(){return username;} public void setUsername(String username){this.username=username;} public String getDisplayName(){return displayName;} public void setDisplayName(String displayName){this.displayName=displayName;}
-    public String getMessage(){return message;} public String getReplyText(){return replyText;} public String getReplyName(){return replyName;} public LocalDateTime getCreatedAt(){return createdAt;}
+    public String getMessage(){return message;} public String getReplyText(){return replyText;} public String getReplyName(){return replyName;} public String getCollege(){return college==null||college.isBlank()?"CU":college;} public void setCollege(String college){this.college=college;} public LocalDateTime getCreatedAt(){return createdAt;}
 }

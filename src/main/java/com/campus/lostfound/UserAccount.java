@@ -42,6 +42,9 @@ public class UserAccount {
     @Column(name = "course", length = 100)
     private String course;
 
+    @Column(name = "college", length = 100)
+    private String college = "CU";
+
     @Column(name = "avatar_id", length = 20)
     private String avatarId;
 
@@ -89,6 +92,8 @@ public class UserAccount {
     public void setPhone(String phone) { this.phone = phone; }
     public String getCourse() { return course == null ? "" : course; }
     public void setCourse(String course) { this.course = course; }
+    public String getCollege() { return college == null || college.isBlank() ? "CU" : college; }
+    public void setCollege(String college) { this.college = college == null || college.isBlank() ? "CU" : college; }
     public String getAvatarId() { return avatarId == null ? "" : avatarId; }
     public void setAvatarId(String avatarId) { this.avatarId = avatarId; }
     public String getProfileImageData() { return profileImageData == null ? "" : profileImageData; }

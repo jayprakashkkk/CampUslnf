@@ -26,6 +26,7 @@ public class NotificationService {
         List<CampusNotification> batch = new ArrayList<>();
         for (UserAccount recipient : users.findAll()) {
             if (recipient.getId() == null || recipient.getId().equals(actor.getId())) continue;
+            if (!recipient.getCollege().equalsIgnoreCase(actor.getCollege())) continue;
             // Item-post notifications are independent of the community-chat mute setting.
             batch.add(new CampusNotification(recipient.getId(), type, title, message,
                     actor.getUsername(), actor.getDisplayName(), report.getId()));
@@ -41,6 +42,7 @@ public class NotificationService {
         List<CampusNotification> batch = new ArrayList<>();
         for (UserAccount recipient : users.findAll()) {
             if (recipient.getId() == null || recipient.getId().equals(actor.getId()) || recipient.isCommunityMuted()) continue;
+            if (!recipient.getCollege().equalsIgnoreCase(actor.getCollege())) continue;
             batch.add(new CampusNotification(recipient.getId(), "CHAT", "New community message",
                     actor.getDisplayName() + ": " + snippet, actor.getUsername(), actor.getDisplayName(), null));
         }

@@ -22,10 +22,18 @@ public class CommunityChatController {
     public ResponseEntity<?> list(HttpServletRequest request){
         if(!AuthController.isLoggedIn(request)) return ResponseEntity.status(401).body(Map.of("message","Please log in to use community chat."));
         Long currentId=(Long)request.getSession(false).getAttribute(AuthController.SESSION_USER_ID);
-        String current=users.findById(currentId).map(UserAccount::getUsername).orElse("");
-        List<Map<String,Object>> result=messages.findTop200ByOrderByCreatedAtAsc().stream().map(m->{
+        UserAccount currentAcc=users.findById(currentId).orElse(null);
+        String current=currentAcc==null?"":currentAcc.getUsername();
+        String userCollege=currentAcc==null?"CU":currentAcc.getCollege();
+        List<CommunityMessage> source = messages.findTop200ByCollegeOrderByCreatedAtAsc(userCollege);
+        if (source.isEmpty() && "CU".equalsIgnoreCase(userCollege)) {
+            source = messages.findTop200ByOrderByCreatedAtAsc().stream()
+                    .filter(m -> m.getCollege() == null || m.getCollege().equalsIgnoreCase("CU"))
+                    .toList();
+        }
+        List<Map<String,Object>> result=source.stream().map(m->{
             UserAccount author=users.findByUsernameKey(m.getUsername().toLowerCase(java.util.Locale.ROOT)).orElse(null);
-            Map<String,Object> x=new LinkedHashMap<>(); x.put("id",m.getId());x.put("username",m.getUsername());x.put("displayName",author==null?m.getDisplayName():author.getDisplayName());x.put("avatarId",author==null?"":author.getAvatarId());x.put("profileImageUrl",author==null||!AuthController.canUseCustomProfilePhoto(author)||author.getProfileImageData().isBlank()?"":"/api/users/"+org.springframework.web.util.UriUtils.encodePathSegment(author.getUsername(),java.nio.charset.StandardCharsets.UTF_8)+"/photo");x.put("role",author==null?"MEMBER":author.getRole());x.put("message",m.getMessage());x.put("replyText",m.getReplyText());x.put("replyName",m.getReplyName());x.put("createdAt",m.getCreatedAt());x.put("mine",m.getUsername().equalsIgnoreCase(current));x.put("canDelete",m.getUsername().equalsIgnoreCase(current)&&m.getCreatedAt().isAfter(LocalDateTime.now().minusMinutes(10)));return x;
+            Map<String,Object> x=new LinkedHashMap<>(); x.put("id",m.getId());x.put("username",m.getUsername());x.put("displayName",author==null?m.getDisplayName():author.getDisplayName());x.put("avatarId",author==null?"":author.getAvatarId());x.put("profileImageUrl",author==null||!AuthController.canUseCustomProfilePhoto(author)||author.getProfileImageData().isBlank()?"":"/api/users/"+org.springframework.web.util.UriUtils.encodePathSegment(author.getUsername(),java.nio.charset.StandardCharsets.UTF_8)+"/photo");x.put("role",author==null?"MEMBER":author.getRole());x.put("college",m.getCollege());x.put("message",m.getMessage());x.put("replyText",m.getReplyText());x.put("replyName",m.getReplyName());x.put("createdAt",m.getCreatedAt());x.put("mine",m.getUsername().equalsIgnoreCase(current));x.put("canDelete",m.getUsername().equalsIgnoreCase(current)&&m.getCreatedAt().isAfter(LocalDateTime.now().minusMinutes(10)));return x;
         }).toList();
         return ResponseEntity.ok(result);
     }
@@ -36,7 +44,7 @@ public class CommunityChatController {
         UserAccount u=users.findById(id).orElse(null);if(u==null)return ResponseEntity.status(401).body(Map.of("message","Please log in again."));
         if(u.isCommunityMuted())return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("message","Your account has been muted from community chat."));
         String replyText=body.replyText()==null?null:body.replyText().trim();if(replyText!=null&&replyText.length()>2000)replyText=replyText.substring(0,2000);
-        CommunityMessage saved=messages.save(new CommunityMessage(u.getUsername(),u.getDisplayName(),text,replyText,body.replyName()));
+        CommunityMessage saved=messages.save(new CommunityMessage(u.getUsername(),u.getDisplayName(),text,replyText,body.replyName(),u.getCollege()));
         notificationService.notifyCommunityMessage(u, saved);
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id",saved.getId()));
     }

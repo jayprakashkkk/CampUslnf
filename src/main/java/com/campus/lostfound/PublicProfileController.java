@@ -56,6 +56,8 @@ public class PublicProfileController {
             row.put("username", account.getUsername());
             row.put("displayName", account.getDisplayName());
             row.put("course", account.getCourse());
+            row.put("college", account.getCollege());
+            row.put("collegeName", AuthController.collegeDisplayName(account.getCollege()));
             row.put("role", account.getRole());
             row.put("avatarId", account.getAvatarId());
             row.put("profileImageUrl", AuthController.canUseCustomProfilePhoto(account)
@@ -108,6 +110,8 @@ public class PublicProfileController {
         result.put("username", account.getUsername());
         result.put("displayName", account.getDisplayName());
         result.put("course", account.getCourse());
+        result.put("college", account.getCollege());
+        result.put("collegeName", AuthController.collegeDisplayName(account.getCollege()));
         result.put("avatarInitial", firstInitial(account.getDisplayName()));
         result.put("avatarId", account.getAvatarId());
         result.put("profileImageUrl", !AuthController.canUseCustomProfilePhoto(account) || account.getProfileImageData().isBlank() ? "" : imageUrl(account.getUsername(), "photo"));
@@ -177,6 +181,8 @@ public class PublicProfileController {
                     row.put("username", account.getUsername());
                     row.put("displayName", account.getDisplayName());
                     row.put("course", account.getCourse());
+            row.put("college", account.getCollege());
+            row.put("collegeName", AuthController.collegeDisplayName(account.getCollege()));
                     row.put("role", account.getRole());
                     return row;
                 }).toList();
