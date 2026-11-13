@@ -59,7 +59,7 @@ public class AuthController {
     private String mailFrom;
     @Value("${campusfind.mail.sender-name:CampUs | Lost & Found}")
     private String mailSenderName;
-    @Value("${campusfind.mail.from:${BREVO_SENDER_EMAIL:${MAIL_FROM:${spring.mail.username:}}}}")
+    @Value("${campusfind.mail.from:${BREVO_SENDER_EMAIL:${MAIL_FROM:${spring.mail.username:jayprakashkumar209@gmail.com}}}}")
     private String mailFromAddress;
     @Value("${brevo.api.key:${BREVO_API_KEY:${spring.mail.password:}}}")
     private String brevoApiKey;
