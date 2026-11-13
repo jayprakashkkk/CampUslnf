@@ -507,6 +507,7 @@ function chooseAuthMode(mode) {
   $('authFormPanel').classList.remove('hide');
   $('authError').textContent = '';
   $('authForm').reset();
+  resetPasswordVisibility('toggleAuthPassword', 'authPassword');
 
   const creating = mode === 'register';
   const fields = $('authRegisterFields');
@@ -680,6 +681,41 @@ $('verifyResetOtpButton')?.addEventListener('click',async()=>{
   }catch{msg.textContent='Could not connect. Please try again.';}
   finally{btn.disabled=false;btn.textContent='Verify OTP & reset password';}
 });
+
+function resetPasswordVisibility(buttonId, inputId) {
+  const btn = $(buttonId);
+  const input = $(inputId);
+  if (!btn || !input) return;
+  input.type = 'password';
+  btn.setAttribute('aria-label', 'Show password');
+  btn.setAttribute('title', 'Show password');
+  const eyeShow = btn.querySelector('.eye-show');
+  const eyeHide = btn.querySelector('.eye-hide');
+  if (eyeShow && eyeHide) {
+    eyeShow.style.display = 'block';
+    eyeHide.style.display = 'none';
+  }
+}
+
+function setupPasswordToggle(buttonId, inputId) {
+  const btn = $(buttonId);
+  const input = $(inputId);
+  if (!btn || !input) return;
+  btn.addEventListener('click', () => {
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+    btn.setAttribute('title', isPassword ? 'Hide password' : 'Show password');
+    const eyeShow = btn.querySelector('.eye-show');
+    const eyeHide = btn.querySelector('.eye-hide');
+    if (eyeShow && eyeHide) {
+      eyeShow.style.display = isPassword ? 'none' : 'block';
+      eyeHide.style.display = isPassword ? 'block' : 'none';
+    }
+  });
+}
+setupPasswordToggle('toggleAuthPassword', 'authPassword');
+setupPasswordToggle('toggleResetPassword', 'resetNewPassword');
 
 $('showLoginButton')?.addEventListener('click',()=>chooseAuthMode('login'));
 $('showRegisterButton')?.addEventListener('click',()=>chooseAuthMode('register'));

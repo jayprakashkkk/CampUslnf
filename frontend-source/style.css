@@ -216,6 +216,10 @@ body.auth-locked > main { display:none !important; }
 #authForm{display:grid;gap:8px}
 #authForm label{margin-top:5px;color:var(--ink);font-size:12px;font-weight:800}
 #authForm input{width:100%;min-height:47px;padding:12px 13px;border:1px solid #f2e7de;border-radius:11px;background:#fff;color:var(--ink);font:inherit;outline:none}
+.password-input-wrap{position:relative;display:flex;align-items:center;width:100%}
+.password-input-wrap input{width:100%;padding-right:44px!important}
+.password-toggle-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;padding:6px;display:flex;align-items:center;justify-content:center;color:#8c786a;border-radius:6px;transition:color .15s,background-color .15s}
+.password-toggle-btn:hover{color:var(--p);background:#e8944b15}
 #authForm input:focus{border-color:var(--p);box-shadow:0 0 0 3px #e8944b1c}
 #authForm .auth-primary{margin-top:6px}
 .auth-error{min-height:0;margin:0;color:#b42318;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
