@@ -59,7 +59,7 @@ public class AuthController {
     private String mailFrom;
     @Value("${campusfind.mail.sender-name:CampUs | Lost & Found}")
     private String mailSenderName;
-    @Value("${campusfind.mail.from:${spring.mail.username:}}")
+    @Value("${campusfind.mail.from:${BREVO_SENDER_EMAIL:${MAIL_FROM:${spring.mail.username:}}}}")
     private String mailFromAddress;
     @Value("${brevo.api.key:${BREVO_API_KEY:${spring.mail.password:}}}")
     private String brevoApiKey;
@@ -210,14 +210,21 @@ public class AuthController {
             throw new IllegalStateException("BREVO_API_KEY is not configured in Railway.");
         }
         String cleanKey = brevoApiKey.trim();
+        if ((cleanKey.startsWith("\"") && cleanKey.endsWith("\"")) || (cleanKey.startsWith("'") && cleanKey.endsWith("'"))) {
+            cleanKey = cleanKey.substring(1, cleanKey.length() - 1).trim();
+        }
+
         if (cleanKey.startsWith("xsmtpsib-")) {
             throw new IllegalArgumentException("The key provided is an SMTP Key ('xsmtpsib-...'). Brevo REST API requires an API Key starting with 'xkeysib-'. In Brevo, go to 'SMTP & API' -> 'API Keys' tab -> 'Generate a new API key', and set it as BREVO_API_KEY in Railway.");
         }
 
         String fromEmail = (mailFromAddress != null && !mailFromAddress.isBlank())
                 ? mailFromAddress.trim() : (mailFrom != null ? mailFrom.trim() : "");
+        if ((fromEmail.startsWith("\"") && fromEmail.endsWith("\"")) || (fromEmail.startsWith("'") && fromEmail.endsWith("'"))) {
+            fromEmail = fromEmail.substring(1, fromEmail.length() - 1).trim();
+        }
         if (fromEmail.isBlank()) {
-            throw new IllegalStateException("MAIL_FROM sender email address is not configured in Railway.");
+            throw new IllegalStateException("Sender email is not configured. Please set BREVO_SENDER_EMAIL or MAIL_FROM in Railway.");
         }
         String senderName = (mailSenderName != null && !mailSenderName.isBlank())
                 ? mailSenderName.trim() : "CampUs | Lost & Found";
@@ -253,7 +260,7 @@ public class AuthController {
             String respBody = response.body();
             log.error("Brevo HTTPS API returned error status {}: {}", response.statusCode(), respBody);
             if (response.statusCode() == 401) {
-                throw new RuntimeException("Brevo API Key is invalid (status 401). Please verify your BREVO_API_KEY from Brevo -> SMTP & API -> API Keys tab.");
+                throw new RuntimeException("Brevo API Key is invalid or unauthorized (status 401: " + respBody + "). Please generate a fresh API key in Brevo -> 'SMTP & API' -> 'API Keys' tab.");
             }
             if (response.statusCode() == 400 && respBody != null && (respBody.contains("sender") || respBody.contains("unauthorized"))) {
                 throw new RuntimeException("Sender email '" + fromEmail + "' is not authorized in Brevo. Please add and verify it in Brevo -> Senders & IP.");
