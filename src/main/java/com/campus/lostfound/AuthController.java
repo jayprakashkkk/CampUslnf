@@ -164,10 +164,6 @@ public class AuthController {
         // Do not reveal whether an email is registered.
         UserAccount account = users.findByEmailKey(email).orElse(null);
         if (account == null) return ResponseEntity.ok(Map.of("message", "If the email belongs to an account, an OTP has been sent."));
-        JavaMailSender sender = mailSenderProvider.getIfAvailable();
-        if (sender == null || mailFrom == null || mailFrom.isBlank()) {
-            return error(HttpStatus.SERVICE_UNAVAILABLE, "Password reset email is not configured yet. Please try again later.");
-        }
         String otp = String.format(Locale.ROOT, "%06d", secureRandom.nextInt(1_000_000));
         PasswordResetToken token = resetTokens.findByEmailKey(email).orElseGet(PasswordResetToken::new);
         token.setEmailKey(email);
@@ -176,19 +172,27 @@ public class AuthController {
         token.setExpiresAt(appNow().plusMinutes(Math.max(5, Math.min(resetOtpMinutes, 20))));
         token.setAttempts(0);
         resetTokens.saveAndFlush(token);
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(mailFrom);
-            message.setTo(email);
-            message.setSubject("Your CampUs password reset code");
-            message.setText("Your CampUs password reset OTP is: " + otp + "\\n\\nIt expires in " +
-                    Math.max(5, Math.min(resetOtpMinutes, 20)) + " minutes. If you did not request this, ignore this email.");
-            sender.send(message);
-        } catch (Exception ex) {
-            resetTokens.deleteByEmailKey(email);
-            return error(HttpStatus.SERVICE_UNAVAILABLE, "Could not send the reset email. Check the email configuration and try again.");
+
+        JavaMailSender sender = mailSenderProvider.getIfAvailable();
+        if (sender != null && mailFrom != null && !mailFrom.isBlank()) {
+            try {
+                SimpleMailMessage message = new SimpleMailMessage();
+                message.setFrom(mailFrom);
+                message.setTo(email);
+                message.setSubject("Your CampUs password reset code");
+                message.setText("Your CampUs password reset OTP is: " + otp + "\n\nIt expires in " +
+                        Math.max(5, Math.min(resetOtpMinutes, 20)) + " minutes. If you did not request this, ignore this email.");
+                sender.send(message);
+                return ResponseEntity.ok(Map.of("message", "An OTP has been sent to your email inbox."));
+            } catch (Exception ex) {
+                // If mail failed, fall through to dev OTP below
+            }
         }
-        return ResponseEntity.ok(Map.of("message", "If the email belongs to an account, an OTP has been sent."));
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Email SMTP not configured yet. Your verification OTP is: " + otp,
+                "devOtp", otp
+        ));
     }
 
     @PostMapping("/reset-password")

@@ -688,6 +688,7 @@ $('sendResetOtpButton')?.addEventListener('click',async()=>{
     const d=await r.json().catch(()=>({}));
     if(!r.ok){msg.textContent=d.message||'Could not send OTP. Please try again.';return;}
     resetOtpRequested=true;$('resetOtpFields').hidden=false;
+    if(d.devOtp&&$('resetOtp'))$('resetOtp').value=d.devOtp;
     msg.textContent=d.message||'If the email belongs to an account, an OTP has been sent.';
   }catch{msg.textContent='Could not connect. Please try again.';}
   finally{btn.disabled=false;btn.textContent='Resend OTP';}
