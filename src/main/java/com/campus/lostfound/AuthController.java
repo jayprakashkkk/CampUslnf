@@ -169,6 +169,28 @@ public class AuthController {
         return ResponseEntity.ok(userPayload(account));
     }
 
+    @GetMapping("/check-username")
+    public ResponseEntity<Map<String, Object>> checkUsername(@org.springframework.web.bind.annotation.RequestParam(name = "username", defaultValue = "") String username,
+                                                             HttpServletRequest request) {
+        String clean = username == null ? "" : username.trim().toLowerCase(Locale.ROOT);
+        if (clean.isEmpty()) {
+            return ResponseEntity.ok(Map.of("available", false, "message", "Username cannot be empty."));
+        }
+        if (clean.length() > 50) {
+            return ResponseEntity.ok(Map.of("available", false, "message", "Username must be 50 characters or fewer."));
+        }
+        if (!clean.matches("^[a-z0-9_.]+$")) {
+            return ResponseEntity.ok(Map.of("available", false, "message", "Username can only contain letters, numbers, underscores, and dots."));
+        }
+        HttpSession session = request.getSession(false);
+        Long currentUserId = (session != null && session.getAttribute(SESSION_USER_ID) instanceof Long uid) ? uid : null;
+        UserAccount existing = users.findByUsernameKey(clean).orElse(null);
+        boolean available = (existing == null || (currentUserId != null && existing.getId().equals(currentUserId)));
+        if (!available) {
+            return ResponseEntity.ok(Map.of("available", false, "message", "This username is already taken. Please choose another."));
+        }
+        return ResponseEntity.ok(Map.of("available", true, "message", "Username is available."));
+    }
 
     public record ForgotPasswordRequest(String email) {}
     public record ResetPasswordRequest(String email, String otp, String newPassword) {}
@@ -269,18 +291,35 @@ public class AuthController {
         }
     }
 
+    private String maskEmail(String email) {
+        if (email == null || !email.contains("@")) return email;
+        int at = email.indexOf('@');
+        String name = email.substring(0, at);
+        String domain = email.substring(at);
+        if (name.length() <= 2) return name.charAt(0) + "*" + domain;
+        return name.charAt(0) + "***" + name.charAt(name.length() - 1) + domain;
+    }
+
     @PostMapping("/forgot-password")
     @Transactional
     public ResponseEntity<Map<String, Object>> forgotPassword(@RequestBody ForgotPasswordRequest body) {
-        String email = body == null || body.email() == null ? "" : body.email().trim().toLowerCase(Locale.ROOT);
-        if (email.isEmpty() || email.length() > 254 || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
-            return error(HttpStatus.BAD_REQUEST, "Enter a valid email address.");
+        String input = body == null || body.email() == null ? "" : body.email().trim().toLowerCase(Locale.ROOT);
+        if (input.isEmpty()) {
+            return error(HttpStatus.BAD_REQUEST, "Please enter your registered email or username.");
         }
-        UserAccount account = users.findByEmailKey(email).orElse(null);
-        if (account == null) return ResponseEntity.ok(Map.of("message", "If the email belongs to an account, an OTP has been sent."));
+        UserAccount account = users.findByEmailKey(input)
+                .or(() -> users.findByUsernameKey(input))
+                .orElse(null);
+        if (account == null) {
+            return error(HttpStatus.NOT_FOUND, "No account found with this email or username. Please check your spelling.");
+        }
+        String toEmail = account.getEmail();
+        if (toEmail == null || toEmail.isBlank() || !toEmail.contains("@")) {
+            return error(HttpStatus.BAD_REQUEST, "This account does not have a registered email address on file.");
+        }
         String otp = String.format(Locale.ROOT, "%06d", secureRandom.nextInt(1_000_000));
-        PasswordResetToken token = resetTokens.findByEmailKey(email).orElseGet(PasswordResetToken::new);
-        token.setEmailKey(email);
+        PasswordResetToken token = resetTokens.findByEmailKey(toEmail).orElseGet(PasswordResetToken::new);
+        token.setEmailKey(toEmail);
         token.setOtpHash(passwordHasher.hash(otp));
         token.setCreatedAt(appNow());
         token.setExpiresAt(appNow().plusMinutes(Math.max(5, Math.min(resetOtpMinutes, 20))));
@@ -292,13 +331,22 @@ public class AuthController {
         // 1. First try Brevo HTTPS API (Port 443 - immune to Railway SMTP port blocks!)
         if (brevoApiKey != null && !brevoApiKey.isBlank()) {
             try {
-                boolean sent = sendViaBrevoApi(email, otp, expireMinutes);
+                boolean sent = sendViaBrevoApi(toEmail, otp, expireMinutes);
                 if (sent) {
-                    return ResponseEntity.ok(Map.of("message", "OTP email sent successfully to " + email + "! Please check your inbox and enter the 6-digit code."));
+                    return ResponseEntity.ok(Map.of(
+                        "success", true,
+                        "email", toEmail,
+                        "message", "An OTP has been sent to " + maskEmail(toEmail) + ". Please check your inbox and enter the 6-digit code."
+                    ));
                 }
             } catch (Exception apiEx) {
                 log.warn("Brevo HTTPS API attempt failed: {}", apiEx.getMessage());
-                return ResponseEntity.ok(Map.of("message", "Brevo held the email: Please check your Gmail for Brevo's 'Validate IP' email, or enter this verification code: " + otp + " below to reset now."));
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "email", toEmail,
+                    "otpCode", otp,
+                    "message", "Brevo IP authorization held the email. Your verification code is: " + otp + ". Enter it below to reset now."
+                ));
             }
         }
 
@@ -311,51 +359,67 @@ public class AuthController {
                 MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
                 String displayName = (mailSenderName != null && !mailSenderName.isBlank()) ? mailSenderName.trim() : "CampUs | Lost & Found";
                 helper.setFrom(new InternetAddress(effectiveFrom, displayName, "UTF-8"));
-                helper.setTo(email);
+                helper.setTo(toEmail);
                 helper.setSubject("Your CampUs Password Reset Code: " + otp);
 
                 String html = buildEmailHtml(otp, expireMinutes);
                 helper.setText(html, true);
                 sender.send(mimeMessage);
-                return ResponseEntity.ok(Map.of("message", "An OTP code has been sent to " + email + ". Please check your inbox and enter the code."));
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "email", toEmail,
+                    "message", "An OTP has been sent to " + maskEmail(toEmail) + ". Please check your inbox and enter the 6-digit code."
+                ));
             } catch (Exception ex) {
-                log.error("Could not send email via SMTP to {}: {}", email, ex.getMessage(), ex);
+                log.error("Could not send email via SMTP to {}: {}", toEmail, ex.getMessage(), ex);
             }
         }
 
         // 3. Resilient fallback: If external email server is restricted, blocked by IP, or unconfigured,
         // provide the verification code directly so the user is never stuck!
-        return ResponseEntity.ok(Map.of("message", "Verification code: " + otp + " (Valid for " + expireMinutes + " mins). Please enter it below to set your new password."));
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "email", toEmail,
+            "otpCode", otp,
+            "message", "Verification code: " + otp + " (Valid for " + expireMinutes + " mins). Please enter it below to set your new password."
+        ));
     }
 
     @PostMapping("/reset-password")
     @Transactional
     public ResponseEntity<Map<String, Object>> resetPassword(@RequestBody ResetPasswordRequest body) {
-        String email = body == null || body.email() == null ? "" : body.email().trim().toLowerCase(Locale.ROOT);
+        String input = body == null || body.email() == null ? "" : body.email().trim().toLowerCase(Locale.ROOT);
         String otp = body == null || body.otp() == null ? "" : body.otp().trim();
         String newPassword = body == null ? null : body.newPassword();
-        if (newPassword == null || newPassword.length() < 8 || newPassword.length() > 200) {
-            return error(HttpStatus.BAD_REQUEST, "New password must be between 8 and 200 characters.");
+        if (newPassword == null || newPassword.length() < 6 || newPassword.length() > 200) {
+            return error(HttpStatus.BAD_REQUEST, "New password must be between 6 and 200 characters.");
         }
-        PasswordResetToken token = resetTokens.findByEmailKey(email).orElse(null);
+        UserAccount account = users.findByEmailKey(input)
+                .or(() -> users.findByUsernameKey(input))
+                .orElse(null);
+        String emailKey = account != null ? account.getEmailKey() : input;
+        PasswordResetToken token = resetTokens.findByEmailKey(emailKey).orElse(null);
         if (token == null || token.getExpiresAt().isBefore(appNow()) || token.getAttempts() >= 5) {
             if (token != null) resetTokens.delete(token);
-            return error(HttpStatus.BAD_REQUEST, "OTP is invalid or expired. Request a new OTP.");
+            return error(HttpStatus.BAD_REQUEST, "OTP is invalid or expired. Please request a new OTP.");
         }
         if (!otp.matches("\\d{6}") || !passwordHasher.matches(otp, token.getOtpHash())) {
             token.setAttempts(token.getAttempts() + 1);
             resetTokens.save(token);
-            return error(HttpStatus.BAD_REQUEST, "OTP is invalid or expired. Request a new OTP.");
+            int remaining = 5 - token.getAttempts();
+            return error(HttpStatus.BAD_REQUEST, "Incorrect OTP code. " + remaining + " attempts remaining.");
         }
-        UserAccount account = users.findByEmailKey(email).orElse(null);
+        if (account == null) {
+            account = users.findByEmailKey(emailKey).orElse(null);
+        }
         if (account == null) {
             resetTokens.delete(token);
-            return error(HttpStatus.BAD_REQUEST, "OTP is invalid or expired. Request a new OTP.");
+            return error(HttpStatus.BAD_REQUEST, "Account not found.");
         }
         account.setPasswordHash(passwordHasher.hash(newPassword));
         users.saveAndFlush(account);
         resetTokens.delete(token);
-        return ResponseEntity.ok(Map.of("message", "Password reset successfully. You can now log in."));
+        return ResponseEntity.ok(Map.of("message", "Password reset successfully! You can now log in with your new password."));
     }
 
     @GetMapping("/me")

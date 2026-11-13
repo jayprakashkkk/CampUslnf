@@ -1,17 +1,15 @@
 // Universal API Base configuration for Cloudflare Pages + Railway
+const RAILWAY_BACKEND = 'https://campuslnf-production.up.railway.app';
 const CAMPUS_API_BASE = (function() {
   if (typeof window === 'undefined') return '';
   if (window.CAMPUS_API_BASE) return window.CAMPUS_API_BASE;
   const stored = localStorage.getItem('CAMPUS_API_BASE');
   if (stored) return stored;
-  if (window.location.hostname.includes('pages.dev')) {
-    return 'https://campuslnf-production.up.railway.app';
-  }
   return '';
 })();
 
 const _origFetch = window.fetch;
-window.fetch = function(input, init) {
+window.fetch = async function(input, init) {
   let url = typeof input === 'string' ? input : (input instanceof Request ? input.url : String(input));
   init = init || {};
   if (url.startsWith('/api/')) {
@@ -20,6 +18,20 @@ window.fetch = function(input, init) {
     }
     if (!init.credentials) {
       init.credentials = 'include';
+    }
+    try {
+      const response = await _origFetch.call(this, url, init);
+      if (response.status === 404 && !url.includes('railway.app') && window.location.hostname.includes('pages.dev')) {
+        const fallbackUrl = RAILWAY_BACKEND + (url.startsWith('/') ? url : '/' + url);
+        return await _origFetch.call(this, fallbackUrl, init);
+      }
+      return response;
+    } catch (err) {
+      if (!url.includes('railway.app') && window.location.hostname.includes('pages.dev')) {
+        const fallbackUrl = RAILWAY_BACKEND + (url.startsWith('/') ? url : '/' + url);
+        return await _origFetch.call(this, fallbackUrl, init);
+      }
+      throw err;
     }
   }
   return _origFetch.call(this, url, init);
@@ -180,30 +192,188 @@ async function toggleCommunityMute(){
  finally{if(button)button.disabled=false;}
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&currentUser)refreshNotifications()});
+function timeAgo(dateString) {
+  if (!dateString) return 'Recently';
+  try {
+    const s = String(dateString).trim();
+    let d = new Date(s.includes('T') ? s : s.replace(' ', 'T'));
+    if (isNaN(d.getTime())) return dateString;
+    const diff = Math.floor((Date.now() - d.getTime()) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  } catch {
+    return dateString;
+  }
+}
+
+function categoryEmoji(category) {
+  const cat = String(category || '').toLowerCase();
+  if (cat.includes('elect')) return '📱';
+  if (cat.includes('id')) return '🪪';
+  if (cat.includes('key')) return '🔑';
+  if (cat.includes('wallet') || cat.includes('purse')) return '👛';
+  if (cat.includes('book') || cat.includes('stationery')) return '📚';
+  if (cat.includes('cloth')) return '👕';
+  if (cat.includes('bottle')) return '💧';
+  return '🏷️';
+}
+
+function askAboutItemInChat(reportId, title) {
+  openCommunityChat();
+  const input = $('communityChatInput');
+  if (input) {
+    input.value = `Hi everyone, regarding the "${title}" posted on CampUs — is this still available or has anyone claimed it?`;
+    input.focus();
+  }
+}
+
+function viewFullImage(src) {
+  const box = $('imageLightbox');
+  const img = $('lightboxImg');
+  if (box && img) {
+    img.src = src;
+    box.classList.remove('hide');
+  }
+}
+
+function closeLightbox() {
+  const box = $('imageLightbox');
+  if (box) box.classList.add('hide');
+}
+
+function setFormType(type) {
+  const t = $('type');
+  if (t) t.value = type;
+  const lostBtn = $('modalTypeLost');
+  const foundBtn = $('modalTypeFound');
+  const title = $('formTitle');
+  if (type === 'LOST') {
+    if (lostBtn) {
+      lostBtn.style.background = '#FEECE9';
+      lostBtn.style.color = '#E05A47';
+      lostBtn.style.borderColor = '#E05A47';
+    }
+    if (foundBtn) {
+      foundBtn.style.background = '#ffffff';
+      foundBtn.style.color = '#79512E';
+      foundBtn.style.borderColor = '#EFE6DC';
+    }
+    if (title) title.textContent = 'Report a Lost Item';
+  } else {
+    if (foundBtn) {
+      foundBtn.style.background = '#E8F8F0';
+      foundBtn.style.color = '#2E9D64';
+      foundBtn.style.borderColor = '#2E9D64';
+    }
+    if (lostBtn) {
+      lostBtn.style.background = '#ffffff';
+      lostBtn.style.color = '#79512E';
+      lostBtn.style.borderColor = '#EFE6DC';
+    }
+    if (title) title.textContent = 'Report a Found Item';
+  }
+}
+
+function filterByCategory(cat) {
+  const catInput = $('filterCategory');
+  if (catInput) catInput.value = cat;
+  document.querySelectorAll('.category-chip').forEach(chip => {
+    const text = chip.textContent;
+    chip.classList.toggle('active', (cat === '' && text.includes('All')) || text.includes(cat));
+  });
+  load();
+}
+
+function switchNavTab(tab) {
+  document.querySelectorAll('.bottom-nav-item').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.nav === tab);
+  });
+  if (tab === 'feed') {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    myReportsOnly = false;
+    statFilter = '';
+    load();
+  } else if (tab === 'explore') {
+    const search = $('boardSearch');
+    if (search) {
+      search.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      search.focus();
+    }
+  } else if (tab === 'chat') {
+    openCommunityChat();
+  } else if (tab === 'profile') {
+    openDesktopProfile();
+  }
+}
+
+function openOwnProfileTab() {
+  openDesktopProfile();
+}
+
 function normWords(s){return String(s||'').toLowerCase().replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(w=>w.length>2&&!['the','and','for','with','item','lost','found'].includes(w))}
 function matchScore(a,b){const aw=new Set(normWords((a.title||'')+' '+(a.description||''))),bw=new Set(normWords((b.title||'')+' '+(b.description||'')));const common=[...aw].filter(w=>bw.has(w)).length;const sameTitle=String(a.title||'').trim().toLowerCase()===String(b.title||'').trim().toLowerCase();const sameCat=String(a.category||'').toLowerCase()===String(b.category||'').toLowerCase();if(sameTitle)return 10+(sameCat?2:0);if(common===0)return 0;return common+(sameCat?1:0)}
 function bestMatch(r,all){return all.filter(x=>x.type!==r.type&&x.status!=='RETURNED').map(x=>({item:x,score:matchScore(r,x)})).filter(x=>x.score>=2).sort((a,b)=>b.score-a.score)[0]?.item||null}
-function updatePoster(all){const returned=all.filter(x=>String(x.status||'').toUpperCase()==='RETURNED').sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));if(!returned.length){$('matchIcon').textContent='⌕';$('matchName').textContent='No items returned yet';$('matchMeta').textContent='Successfully returned items will appear here';$('matchBadge').textContent='WAITING FOR RETURN';$('matchBadge').classList.remove('match-yes');return}const item=returned[0];$('matchIcon').textContent=String(item.category||'').toLowerCase().includes('id')?'🪪':String(item.category||'').toLowerCase().includes('electronic')?'🎧':'✓';$('matchName').textContent=item.title||'Returned item';$('matchMeta').textContent=`Returned · ${item.location||'Location not specified'}${item.itemDate?' · '+item.itemDate:''}`;$('matchBadge').textContent='SUCCESSFULLY RETURNED';$('matchBadge').classList.add('match-yes')}
-function clearFilters(){['q','filterCategory','filterLocation','dateFrom','dateTo'].forEach(id=>{const field=$(id);if(field)field.value=''});if($('boardSearch'))$('boardSearch').value='';chosenType='';statFilter='';myReportsOnly=false;document.querySelectorAll('.stats button').forEach(x=>x.classList.remove('selected'));document.querySelectorAll('.type-tabs .tab').forEach(x=>x.classList.toggle('active',x.textContent.trim()==='All items'));if($('myReports'))$('myReports').textContent='My reports';load()}
-function filterStats(which){statFilter=which;chosenType='';myReportsOnly=false;document.querySelectorAll('.stats > div').forEach(x=>x.classList.toggle('selected',x.dataset.stat===which));document.querySelectorAll('.type-tabs .tab').forEach(x=>x.classList.toggle('active',x.textContent.trim()==='All items'));load();document.getElementById('board').scrollIntoView({behavior:'smooth',block:'start'});}
-function toggleMyReports(){statFilter='';document.querySelectorAll('.stats > div').forEach(x=>x.classList.remove('selected'));myReportsOnly=!myReportsOnly;if($('myReports'))$('myReports').textContent=myReportsOnly?'Show all reports':'My reports';load()}
+function updatePoster(all){const returned=all.filter(x=>String(x.status||'').toUpperCase()==='RETURNED').sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));if(!returned.length){if($('matchIcon'))$('matchIcon').textContent='⌕';if($('matchName'))$('matchName').textContent='No items returned yet';if($('matchMeta'))$('matchMeta').textContent='Successfully returned items will appear here';if($('matchBadge')){$('matchBadge').textContent='WAITING FOR RETURN';$('matchBadge').classList.remove('match-yes');}return}const item=returned[0];if($('matchIcon'))$('matchIcon').textContent=String(item.category||'').toLowerCase().includes('id')?'🪪':String(item.category||'').toLowerCase().includes('electronic')?'🎧':'✓';if($('matchName'))$('matchName').textContent=item.title||'Returned item';if($('matchMeta'))$('matchMeta').textContent=`Returned · ${item.location||'Location not specified'}${item.itemDate?' · '+item.itemDate:''}`;if($('matchBadge')){$('matchBadge').textContent='SUCCESSFULLY RETURNED';$('matchBadge').classList.add('match-yes');}}
+function clearFilters(){['q','filterCategory','filterLocation','dateFrom','dateTo'].forEach(id=>{const field=$(id);if(field)field.value=''});if($('boardSearch'))$('boardSearch').value='';chosenType='';statFilter='';myReportsOnly=false;document.querySelectorAll('.status-tab').forEach(x=>x.classList.toggle('active',x.dataset.tabStatus==='ALL'));document.querySelectorAll('.category-chip').forEach(c=>c.classList.toggle('active',c.textContent.includes('All')));if($('myReports'))$('myReports').textContent='My reports';load()}
+function filterStats(which){statFilter=which;chosenType='';myReportsOnly=false;document.querySelectorAll('.status-tab').forEach(x=>x.classList.toggle('active',x.dataset.tabStatus===which));load();const board=$('board');if(board)board.scrollIntoView({behavior:'smooth',block:'start'});}
+function toggleMyReports(){statFilter='';myReportsOnly=!myReportsOnly;if($('myReports'))$('myReports').textContent=myReportsOnly?'Show all reports':'My reports';load()}
 function showMyReports(e){if(e)e.preventDefault();showNavPopup('myReports')}
-function passesFilters(r){const q=$('q').value.trim().toLowerCase(),cat=$('filterCategory').value,loc=$('filterLocation').value.trim().toLowerCase(),from=$('dateFrom').value,to=$('dateTo').value;const text=[r.title,r.category,r.location,r.description].join(' ').toLowerCase();if(q&&!text.includes(q))return false;if(cat&&r.category!==cat)return false;if(loc&&!String(r.location||'').toLowerCase().includes(loc))return false;if(from&&r.itemDate&&r.itemDate<from)return false;if(to&&r.itemDate&&r.itemDate>to)return false;return true}
-async function load(){try{const allRes=await fetch(myReportsOnly?'/api/reports?mine=true':'/api/reports');if(!allRes.ok){if(allRes.status===401){$('total').textContent='0';$('lost').textContent='0';$('found').textContent='0';$('returned').textContent='0';$('resultCount').textContent='Backend connection required';$('grid').innerHTML='<div class="empty"><b>Welcome to CampUs</b><p>The website is open. Connect the CampUs backend to load reports and enable submissions.</p></div>';return}throw 0}const all=await allRes.json();updatePoster(all);$('total').textContent=all.length;$('lost').textContent=all.filter(x=>x.type==='LOST').length;$('found').textContent=all.filter(x=>x.type==='FOUND').length;$('returned').textContent=all.filter(x=>x.status==='RETURNED').length;let rows=all.filter(r=>(!chosenType||r.type===chosenType)&&(!statFilter||statFilter==='ALL'||(statFilter==='LOST'&&r.type==='LOST')||(statFilter==='FOUND'&&r.type==='FOUND')||(statFilter==='RETURNED'&&r.status==='RETURNED'))&&passesFilters(r));$('resultCount').textContent=`${rows.length} report${rows.length===1?'':'s'} shown`;if(!rows.length){const hasSearch=$('q').value.trim()||$('filterCategory').value||$('filterLocation').value.trim()||$('dateFrom').value||$('dateTo').value||chosenType;const heading=myReportsOnly?'You have not submitted any reports yet':(hasSearch?'No matching reports found':'No lost or found items reported yet');const message=myReportsOnly?'Reports submitted from your account will appear here.':(hasSearch?'Try changing your search or filters, or clear them to see all reports.':'When someone reports a lost or found item, it will appear here. You can report the first item using the buttons above.');$('grid').innerHTML=`<div class="empty"><b>${heading}</b><p>${message}</p>${hasSearch?'<button onclick="clearFilters()">Clear filters</button>':''}</div>`;return}
+function passesFilters(r){const q=($('q')?.value||'').trim().toLowerCase(),cat=$('filterCategory')?.value||'',loc=($('filterLocation')?.value||'').trim().toLowerCase(),from=$('dateFrom')?.value||'',to=$('dateTo')?.value||'';const text=[r.title,r.category,r.location,r.description].join(' ').toLowerCase();if(q&&!text.includes(q))return false;if(cat&&r.category!==cat)return false;if(loc&&!String(r.location||'').toLowerCase().includes(loc))return false;if(from&&r.itemDate&&r.itemDate<from)return false;if(to&&r.itemDate&&r.itemDate>to)return false;return true}
+async function load(){try{const allRes=await fetch(myReportsOnly?'/api/reports?mine=true':'/api/reports');if(!allRes.ok){if(allRes.status===401){$('total').textContent='0';$('lost').textContent='0';$('found').textContent='0';$('returned').textContent='0';$('resultCount').textContent='Backend connection required';$('grid').innerHTML='<div class="empty"><b>Welcome to CampUs</b><p>The website is open. Connect the CampUs backend to load reports and enable submissions.</p></div>';return}throw 0}const all=await allRes.json();updatePoster(all);$('total').textContent=all.length;$('lost').textContent=all.filter(x=>x.type==='LOST').length;$('found').textContent=all.filter(x=>x.type==='FOUND').length;$('returned').textContent=all.filter(x=>x.status==='RETURNED').length;let rows=all.filter(r=>(!chosenType||r.type===chosenType)&&(!statFilter||statFilter==='ALL'||(statFilter==='LOST'&&r.type==='LOST')||(statFilter==='FOUND'&&r.type==='FOUND')||(statFilter==='RETURNED'&&r.status==='RETURNED'))&&passesFilters(r));$('resultCount').textContent=`${rows.length} report${rows.length===1?'':'s'} shown`;if(!rows.length){const hasSearch=($('q')?.value||'').trim()||$('filterCategory')?.value||($('filterLocation')?.value||'').trim()||$('dateFrom')?.value||$('dateTo')?.value||chosenType;const heading=myReportsOnly?'You have not submitted any reports yet':(hasSearch?'No matching reports found':'No lost or found items reported yet');const message=myReportsOnly?'Reports submitted from your account will appear here.':(hasSearch?'Try changing your search or filters, or clear them to see all reports.':'When someone reports a lost or found item, it will appear here. You can post a report anytime using the + button.');$('grid').innerHTML=`<div class="empty"><b>${heading}</b><p>${message}</p>${hasSearch?'<button type="button" class="light" onclick="clearFilters()" style="margin-top:12px;">Clear filters</button>':''}</div>`;return}
 $('grid').innerHTML=rows.map(r=>{
  const m=bestMatch(r,all);
  const authorName=String(r.ownerDisplayName||r.reporterName||'CampUs user').trim()||'CampUs user';
  const ownerUsername=String(r.accountUsername||'');
  const avatarContent=avatarInner(r.ownerAvatarId,authorName,r.ownerProfileImageUrl);
  const roleBadge=roleBadgeMarkup(r.ownerRole);
- const author=ownerUsername
-  ? `<button type="button" class="post-author post-author-link" data-profile-username="${esc(ownerUsername)}" aria-label="View ${esc(authorName)}'s profile"><span class="post-author-avatar">${avatarContent}</span><span class="post-author-name">${esc(authorName)}${roleBadge}</span></button>`
-  : `<div class="post-author"><span class="post-author-avatar">${avatarContent}</span><span class="post-author-name">${esc(authorName)}${roleBadge}</span></div>`;
  const canEdit=!!(currentUser&&ownerUsername&&ownerUsername.toLowerCase()===currentUser.username.toLowerCase());
+ const typeIsFound=String(r.type||'').toUpperCase()==='FOUND';
+ const cleanPhone=String(r.reporterPhone||'').replace(/[^0-9]/g,'');
+ const waPhone=cleanPhone.length===10?'91'+cleanPhone:cleanPhone;
+ const waText=encodeURIComponent(`Hi ${authorName}! I saw your ${r.type} report for "${r.title}" on CampUs.`);
+ const waUrl=cleanPhone?`https://wa.me/${waPhone}?text=${waText}`:'';
+ const postTime=timeAgo(r.createdAt||r.itemDate);
+ const collegeTag=r.college?collegeDisplayName(r.college):(currentUser?currentUser.collegeName:'Campus');
+
  const statusControl=canEdit
-  ? `<select onchange="updateStatus(${r.id},this.value)" aria-label="Update status"><option value="OPEN" ${r.status==='OPEN'?'selected':''}>Open</option><option value="MATCHED" ${r.status==='MATCHED'?'selected':''}>Matched</option><option value="RETURNED" ${r.status==='RETURNED'?'selected':''}>Returned</option></select>`
-  : `<span class="status ${String(r.status||'').toUpperCase()==='RETURNED'?'returned':String(r.status||'').toUpperCase()==='MATCHED'?'matched':'open'}">${esc(r.status)}</span>`;
- return `<article class="card" data-report-id="${r.id}">${author}<div class="cardtop"><span class="pill ${r.type==='FOUND'?'found':''}">${r.type==='LOST'?'● LOST ITEM':'● FOUND ITEM'}</span><span class="status ${String(r.status||'').toUpperCase()==='RETURNED'?'returned':String(r.status||'').toUpperCase()==='MATCHED'?'matched':'open'}">${esc(r.status)}</span></div><small class="eyebrow">${esc(r.category)}</small><h3>${esc(r.title)}</h3><div class="meta">📍 ${esc(r.location)}</div><div class="meta">📅 ${esc(r.itemDate||'Date not specified')}</div>${r.imageData?`<img class="item-photo" src="${esc(r.imageData)}" alt="Photo of ${esc(r.title)}" loading="lazy">`:''}${r.description?`<div class="desc">${esc(r.description)}</div>`:''}<div class="match-note ${m?'has-match':'no-match'}">${m?`<b>Possible match:</b> ${esc(m.title)} <span>(${esc(m.type)} · ${esc(m.location)})</span>`:'No match found'}</div>${r.reporterPhone?`<div class="contact-line">📱 Contact: <a href="tel:${esc(r.reporterPhone.replace(/[^+0-9]/g,''))}">${esc(r.reporterPhone)}</a></div>`:''}<div class="cardbottom">${canEdit?`<span>Update status</span>${statusControl}`:`<span>Reported ${esc(r.itemDate||'date not specified')}</span>`}</div></article>`
+  ? `<select class="action-status-select" onchange="updateStatus(${r.id},this.value)" aria-label="Update status"><option value="OPEN" ${r.status==='OPEN'?'selected':''}>● Open</option><option value="MATCHED" ${r.status==='MATCHED'?'selected':''}>● Matched</option><option value="RETURNED" ${r.status==='RETURNED'?'selected':''}>✓ Returned</option></select>`
+  : `<span class="insta-status-badge ${String(r.status||'').toUpperCase()==='RETURNED'?'returned':''}">${esc(r.status)}</span>`;
+
+ return `<article class="insta-post-card" data-report-id="${r.id}">
+   <div class="insta-post-header">
+     <button type="button" class="insta-post-author" onclick="openChatUserProfile('${esc(authorName)}','${esc(ownerUsername)}')" aria-label="View ${esc(authorName)}'s profile">
+       <div class="insta-post-avatar">${avatarContent}</div>
+       <div class="insta-post-author-text">
+         <span class="insta-post-author-name">${esc(authorName)} ${roleBadge}</span>
+         <span class="insta-post-author-sub">@${esc(ownerUsername||'student')} · ${esc(postTime)} · ${esc(collegeTag)}</span>
+       </div>
+     </button>
+     <div class="insta-post-badges">
+       <span class="insta-type-badge ${typeIsFound?'found':'lost'}">${typeIsFound?'🟢 FOUND':'🔴 LOST'}</span>
+       ${!canEdit?statusControl:''}
+     </div>
+   </div>
+   ${r.imageData?`<div class="insta-post-media" onclick="viewFullImage('${esc(r.imageData)}')" title="Click to view full photo"><img src="${esc(r.imageData)}" alt="Photo of ${esc(r.title)}" loading="lazy"></div>`:`<div class="insta-post-no-media"><div class="insta-no-media-icon">${categoryEmoji(r.category)}</div><div class="insta-no-media-text"><b>${esc(r.category||'Item')}</b><small>No photo attached by reporter</small></div></div>`}
+   <div class="insta-post-body">
+     <div class="insta-post-tags">
+       <span class="insta-meta-tag">${categoryEmoji(r.category)} ${esc(r.category)}</span>
+       <span class="insta-meta-tag">📍 ${esc(r.location)}</span>
+       ${r.itemDate?`<span class="insta-meta-tag">📅 ${esc(r.itemDate)}</span>`:''}
+     </div>
+     <h3 class="insta-post-title">${esc(r.title)}</h3>
+     ${r.description?`<p class="insta-post-desc">${esc(r.description)}</p>`:''}
+     ${m?`<div class="insta-match-banner"><span>✦ Possible Match:</span><b>${esc(m.title)}</b> (${esc(m.type)} at ${esc(m.location)})</div>`:''}
+   </div>
+   <div class="insta-post-actions">
+     ${waUrl?`<a class="action-btn-whatsapp" href="${waUrl}" target="_blank" rel="noopener noreferrer"><span>💬 WhatsApp</span></a>`:''}
+     ${cleanPhone?`<a class="action-btn-call" href="tel:${cleanPhone}"><span>📞 Call</span></a>`:''}
+     <button type="button" class="action-btn-chat" onclick="askAboutItemInChat(${r.id},'${esc(r.title)}')"><span>💬 Ask in Chat</span></button>
+     ${canEdit?statusControl:''}
+   </div>
+ </article>`
 }).join('')}
 catch{$('grid').innerHTML='<div class="empty"><b>Backend not connected</b><p>Start the Java app, then refresh this page.</p></div>'}}
 $('photo').addEventListener('change',()=>{const file=$('photo').files[0];if(!file){$('photoPreview').src='';$('photoPreview').classList.add('hide');return}if(!file.type.startsWith('image/')){toast('Please choose an image file.');$('photo').value='';return}const reader=new FileReader();reader.onload=()=>{$('photoPreview').src=reader.result;$('photoPreview').classList.remove('hide')};reader.onerror=()=>{toast('Could not read the photo. Please try another image.');$('photo').value='';$('photoPreview').src='';$('photoPreview').classList.add('hide')};reader.readAsDataURL(file)});
@@ -265,7 +435,21 @@ function firstNameOfUser(user=currentUser){
 function updateGreeting(){
  const button=$('profileButton');
  if(!button)return;
- button.textContent=`Hi, ${firstNameOfUser()}`;
+ const name = firstNameOfUser();
+ button.textContent = `Hi, ${name}`;
+ const initial = (name.charAt(0) || 'U').toUpperCase();
+ const headerAvatar = $('headerAvatarText');
+ if (headerAvatar) {
+   if (currentUser?.profileImageData) {
+     headerAvatar.innerHTML = `<img src="${currentUser.profileImageData}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+   } else {
+     headerAvatar.textContent = initial;
+   }
+ }
+ const bottomNavAvatar = $('bottomNavAvatar');
+ if (bottomNavAvatar) {
+   bottomNavAvatar.textContent = initial;
+ }
  const mobile=window.innerWidth<=850;
  button.setAttribute('aria-label',mobile?(menuOpen?'Close navigation menu':'Open navigation menu'):(profileMenuOpen?'Close account options':'Open account options'));
  button.setAttribute('aria-expanded',String(mobile?menuOpen:profileMenuOpen));
@@ -398,10 +582,71 @@ function formatUsernameResetDate(value){
  const date=new Date(`${value}T00:00:00+05:30`);
  return Number.isNaN(date.getTime())?value:date.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
 }
+let usernameCheckTimer = null;
+let isUsernameAvailable = true;
+let usernameCheckListenerAttached = false;
+
+function setupUsernameAvailabilityCheck() {
+  const input = $('profileUsername');
+  const hint = $('usernameChangeHint');
+  const saveBtn = $('profileEditorSave');
+  if (!input || !hint || usernameCheckListenerAttached) return;
+  usernameCheckListenerAttached = true;
+
+  input.addEventListener('input', () => {
+    clearTimeout(usernameCheckTimer);
+    const value = input.value.trim().toLowerCase();
+    if (!value) {
+      hint.textContent = 'Please enter a username.';
+      hint.className = 'username-change-hint username-check-result error';
+      if (saveBtn) saveBtn.disabled = true;
+      isUsernameAvailable = false;
+      return;
+    }
+    if (currentUser && value === currentUser.username.toLowerCase()) {
+      hint.textContent = '✓ This is your current username.';
+      hint.className = 'username-change-hint username-check-result success';
+      if (saveBtn) saveBtn.disabled = false;
+      isUsernameAvailable = true;
+      return;
+    }
+    hint.textContent = 'Checking availability…';
+    hint.className = 'username-change-hint username-check-result';
+
+    usernameCheckTimer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/auth/check-username?username=${encodeURIComponent(value)}`);
+        const data = await res.json().catch(() => ({}));
+        if (data.available) {
+          hint.textContent = '✓ Username is available.';
+          hint.className = 'username-change-hint username-check-result success';
+          if (saveBtn) saveBtn.disabled = false;
+          isUsernameAvailable = true;
+        } else {
+          hint.textContent = data.message || 'This username is already taken. Please choose another.';
+          hint.className = 'username-change-hint username-check-result error';
+          if (saveBtn) saveBtn.disabled = true;
+          isUsernameAvailable = false;
+        }
+      } catch {
+        hint.textContent = 'Will verify availability on save.';
+        hint.className = 'username-change-hint username-check-result';
+        if (saveBtn) saveBtn.disabled = false;
+        isUsernameAvailable = true;
+      }
+    }, 240);
+  });
+}
+
 function updateUsernameChangeHint(){
- const hint=$('usernameChangeHint');if(!hint)return;
- hint.textContent='You can change your username at any time. It must be unique across the campus.';
- hint.style.color='#79512E';
+  const hint = $('usernameChangeHint');
+  if (!hint) return;
+  hint.textContent = 'You can change your username at any time. It must be unique across the campus.';
+  hint.className = 'username-change-hint username-check-result';
+  isUsernameAvailable = true;
+  const saveBtn = $('profileEditorSave');
+  if (saveBtn) saveBtn.disabled = false;
+  setupUsernameAvailabilityCheck();
 }
 function updateProfileAvatarPreview(){
  const name=String($('profileDisplayName')?.value||currentUser?.displayName||currentUser?.username||'User').trim()||'User';
@@ -447,6 +692,11 @@ async function saveProfileEditor(event){
  if(!displayName){error.textContent='Please enter your full name.';$('profileDisplayName').focus();return;}
  if(!course){error.textContent='Please enter your course.';$('profileCourse').focus();return;}
  if(!username){error.textContent='Please enter a username.';$('profileUsername').focus();return;}
+ if(!isUsernameAvailable){
+   error.textContent='This username is already taken. Please choose another.';
+   $('profileUsername').focus();
+   return;
+ }
  const button=$('profileEditorSave');button.disabled=true;button.textContent='Saving…';error.textContent='';
  try{
   const response=await fetch('/api/auth/profile',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({displayName,username,phone,course,avatarId:selectedProfileAvatarId,profileImageData:profileImageDataDraft,bannerImageData:bannerImageDataDraft})});
@@ -675,29 +925,32 @@ $('cancelResetPasswordButton')?.addEventListener('click',()=>{
   $('resetPasswordMessage').textContent='';
 });
 $('sendResetOtpButton')?.addEventListener('click',async()=>{
-  const email=$('resetEmail').value.trim();
+  const identifier=$('resetEmail').value.trim();
   const msg=$('resetPasswordMessage'),btn=$('sendResetOtpButton');
   msg.textContent='';
-  if(!email||!$('resetEmail').checkValidity()){msg.textContent='Please enter a valid registered email.';return;}
+  if(!identifier){msg.textContent='Please enter your registered email or username.';return;}
   btn.disabled=true;btn.textContent='Sending…';
   const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-  const timeoutId = controller ? setTimeout(()=>controller.abort(), 8000) : null;
+  const timeoutId = controller ? setTimeout(()=>controller.abort(), 10000) : null;
   try{
     const r=await fetch('/api/auth/forgot-password',{
       method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
-      body:JSON.stringify({email}),
+      body:JSON.stringify({email:identifier}),
       signal: controller ? controller.signal : undefined
     });
     if(timeoutId) clearTimeout(timeoutId);
     const d=await r.json().catch(()=>({}));
-    if(!r.ok){msg.textContent=d.message||'Could not send OTP. Please try again.';return;}
+    if(!r.ok){msg.textContent=d.message||'Could not send OTP. Please check your spelling and try again.';return;}
     resetOtpRequested=true;$('resetOtpFields').hidden=false;
     if($('resetOtp'))$('resetOtp').value='';
-    msg.textContent=d.message||'An OTP has been sent to your email. Please check your inbox and enter it below.';
+    msg.textContent=d.message||'An OTP has been sent. Please check your inbox and enter it below.';
+    if(d.otpCode){
+      msg.innerHTML=`${esc(d.message)}<br><div style="margin-top:8px;padding:6px 14px;background:#FFF0E3;border:1px dashed #E8944B;border-radius:10px;display:inline-block;font-size:17px;font-weight:900;color:#D0813B;letter-spacing:4px;font-family:monospace;">${esc(d.otpCode)}</div>`;
+    }
     $('resetOtp')?.focus();
   }catch(err){
     if(err && err.name === 'AbortError') {
-      msg.textContent='Request timed out. Please try clicking Resend OTP.';
+      msg.textContent='Request timed out. Please click Resend OTP.';
     } else {
       msg.textContent='Could not connect. Please try again.';
     }
@@ -707,18 +960,18 @@ $('sendResetOtpButton')?.addEventListener('click',async()=>{
   }
 });
 $('verifyResetOtpButton')?.addEventListener('click',async()=>{
-  const email=$('resetEmail').value.trim(),otp=$('resetOtp').value.trim(),password=$('resetNewPassword').value;
+  const identifier=$('resetEmail').value.trim(),otp=$('resetOtp').value.trim(),password=$('resetNewPassword').value;
   const msg=$('resetPasswordMessage'),btn=$('verifyResetOtpButton');
   msg.textContent='';
-  if(!/^\d{6}$/.test(otp)){msg.textContent='Enter the 6-digit OTP.';return;}
-  if(password.length<8){msg.textContent='New password must be at least 8 characters.';return;}
+  if(!/^\d{6}$/.test(otp)){msg.textContent='Enter the 6-digit OTP code.';return;}
+  if(password.length<6){msg.textContent='New password must be at least 6 characters.';return;}
   btn.disabled=true;btn.textContent='Resetting…';
   try{
-    const r=await fetch('/api/auth/reset-password',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({email,otp,newPassword:password})});
+    const r=await fetch('/api/auth/reset-password',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({email:identifier,otp,newPassword:password})});
     const d=await r.json().catch(()=>({}));
     if(!r.ok){msg.textContent=d.message||'OTP invalid or expired. Request a new OTP.';return;}
-    msg.textContent='Password reset successfully. You can now log in.';
-    $('authUsername').value=email;$('authPassword').value='';$('resetOtpFields').hidden=true;
+    msg.textContent='Password reset successfully! You can now log in with your new password.';
+    $('authUsername').value=identifier;$('authPassword').value='';$('resetOtpFields').hidden=true;
   }catch{msg.textContent='Could not connect. Please try again.';}
   finally{btn.disabled=false;btn.textContent='Verify OTP & reset password';}
 });
