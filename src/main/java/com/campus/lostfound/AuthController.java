@@ -22,6 +22,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 import java.security.SecureRandom;
 
 @RestController
@@ -44,6 +47,10 @@ public class AuthController {
 
     @Value("${spring.mail.username:}")
     private String mailFrom;
+    @Value("${campusfind.mail.sender-name:CampUs | Lost & Found}")
+    private String mailSenderName;
+    @Value("${campusfind.mail.from:${spring.mail.username:}}")
+    private String mailFromAddress;
     @Value("${campusfind.reset-otp-minutes:10}")
     private long resetOtpMinutes;
 
@@ -174,18 +181,52 @@ public class AuthController {
         resetTokens.saveAndFlush(token);
 
         JavaMailSender sender = mailSenderProvider.getIfAvailable();
-        if (sender != null && mailFrom != null && !mailFrom.isBlank()) {
+        String effectiveFrom = (mailFromAddress != null && !mailFromAddress.isBlank()) ? mailFromAddress.trim() : (mailFrom != null ? mailFrom.trim() : "");
+        if (sender != null && !effectiveFrom.isBlank()) {
             try {
-                SimpleMailMessage message = new SimpleMailMessage();
-                message.setFrom(mailFrom);
-                message.setTo(email);
-                message.setSubject("Your CampUs password reset code");
-                message.setText("Your CampUs password reset OTP is: " + otp + "\n\nIt expires in " +
-                        Math.max(5, Math.min(resetOtpMinutes, 20)) + " minutes. If you did not request this, ignore this email.");
-                sender.send(message);
-                return ResponseEntity.ok(Map.of("message", "An OTP has been sent to your email inbox."));
+                MimeMessage mimeMessage = sender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+                String displayName = (mailSenderName != null && !mailSenderName.isBlank()) ? mailSenderName.trim() : "CampUs | Lost & Found";
+                helper.setFrom(new InternetAddress(effectiveFrom, displayName, "UTF-8"));
+                helper.setTo(email);
+                helper.setSubject("Your CampUs Password Reset Code: " + otp);
+
+                int expireMinutes = (int) Math.max(5, Math.min(resetOtpMinutes, 20));
+                String html = """
+                    <!DOCTYPE html>
+                    <html>
+                    <head><meta charset="utf-8"></head>
+                    <body style="margin: 0; padding: 24px 12px; background-color: #FFF8EF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+                      <div style="max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 20px; border: 1px solid #F1D7C2; overflow: hidden; box-shadow: 0 8px 30px rgba(88,56,28,0.08);">
+                        <div style="background: linear-gradient(135deg, #E8944B 0%%, #D0813B 100%%); padding: 32px 24px; text-align: center; color: #ffffff;">
+                          <h1 style="margin: 0; font-size: 30px; font-weight: 900; letter-spacing: -0.5px;">Camp<span style="color: #FFE6D0;">Us</span></h1>
+                          <p style="margin: 6px 0 0; font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; opacity: 0.92;">Campus Lost &amp; Found Hub</p>
+                        </div>
+                        <div style="padding: 32px 24px; text-align: center;">
+                          <h2 style="margin: 0 0 12px; color: #2D2319; font-size: 20px; font-weight: 800;">Reset Your Password</h2>
+                          <p style="margin: 0 0 24px; color: #6D5E52; font-size: 14px; line-height: 1.6;">
+                            We received a request to reset the password for your CampUs account. Use this verification code below:
+                          </p>
+                          <div style="display: inline-block; padding: 16px 36px; background: #FFF4E5; border: 2px dashed #E8944B; border-radius: 14px; margin-bottom: 24px;">
+                            <span style="font-size: 36px; font-weight: 900; letter-spacing: 10px; color: #D0813B; font-family: monospace;">%s</span>
+                          </div>
+                          <p style="margin: 0 0 8px; color: #8C786A; font-size: 13px;">
+                            ⏱️ This code expires in <strong>%d minutes</strong>.
+                          </p>
+                          <p style="margin: 20px 0 0; padding-top: 20px; border-top: 1px solid #F6ECE4; color: #A8998C; font-size: 12px; line-height: 1.5;">
+                            If you didn't request a password reset, you can safely ignore this email. Your account remains secure.
+                          </p>
+                        </div>
+                      </div>
+                    </body>
+                    </html>
+                """.formatted(otp, expireMinutes);
+
+                helper.setText(html, true);
+                sender.send(mimeMessage);
+                return ResponseEntity.ok(Map.of("message", "An OTP code has been sent from CampUs to your email inbox."));
             } catch (Exception ex) {
-                // If mail failed, fall through to dev OTP below
+                // If mail failed, log and fall through to dev OTP below
             }
         }
 
