@@ -223,6 +223,7 @@ body.auth-locked > main { display:none !important; }
 #authForm input:focus{border-color:var(--p);box-shadow:0 0 0 3px #e8944b1c}
 #authForm .auth-primary{margin-top:6px}
 .auth-error{min-height:0;margin:0;color:#b42318;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+#resetPasswordMessage:not(:empty){min-height:0;margin:12px 0;padding:12px 14px;background:#FFF7ED;border:1.5px solid #EA580C;border-radius:12px;color:#9A3412;font-size:13px;font-weight:600;line-height:1.5;box-shadow:0 4px 12px rgba(234,88,12,0.1);overflow-wrap:anywhere}
 .auth-footnote{margin:22px 0 0;color:#A89B90;font-size:10px;line-height:1.5}
 .logout-nav{color:#b42318!important}
 @media(max-width:520px){.auth-gate{padding:14px}.auth-card{padding:26px 21px;border-radius:22px}.auth-brand{font-size:26px;margin-bottom:23px}.auth-brand-mark{width:52px;height:52px;font-size:38px}.auth-card h1{font-size:25px}}

@@ -449,20 +449,10 @@ public class AuthController {
         String newKey = submittedUsername;
         UserAccount existing = users.findByUsernameKey(newKey).orElse(null);
         if (existing != null && !existing.getId().equals(account.getId())) {
-            return error(HttpStatus.CONFLICT, "The username " + submittedUsername + " is taken. Please try another.");
+            return error(HttpStatus.CONFLICT, "This username is already taken. Please choose another.");
         }
 
         String previousUsername = account.getUsername();
-        boolean usernameChanging = previousUsername == null || !previousUsername.equalsIgnoreCase(submittedUsername);
-        if (usernameChanging && !hasUnlimitedUsernameChanges(account) && account.getUsernameChangesUsed() != null
-                && account.getUsernameChangesUsed() >= USERNAME_USES_PER_YEAR) {
-            LocalDateTime nextWindow = account.getUsernameChangeWindowStart().plusYears(1);
-            return error(HttpStatus.TOO_MANY_REQUESTS, "You have used both username changes for this 12-month period. You can change your username again on "
-                    + POLICY_DATE_FORMAT.format(nextWindow.toLocalDate()) + ". To save other profile details now, keep your current username.");
-        }
-        if (usernameChanging && !hasUnlimitedUsernameChanges(account)) {
-            account.setUsernameChangesUsed((account.getUsernameChangesUsed() == null ? 1 : account.getUsernameChangesUsed()) + 1);
-        }
 
         account.setUsername(submittedUsername);
         account.setUsernameKey(newKey);
@@ -610,15 +600,15 @@ public class AuthController {
     }
 
     static boolean hasUnlimitedUsernameChanges(UserAccount account) {
-        return account != null && ("OWNER".equals(account.getRole()) || "ADMIN".equals(account.getRole()));
+        return true;
     }
 
     static boolean canUseCustomProfilePhoto(UserAccount account) {
-        return account != null && List.of("OWNER", "ADMIN", "LEADER").contains(account.getRole());
+        return account != null;
     }
 
     static boolean canUseProfileBanner(UserAccount account) {
-        return account != null && List.of("OWNER", "ADMIN", "LEADER", "MODERATOR").contains(account.getRole());
+        return account != null;
     }
 
     static boolean canManageMembers(UserAccount account) {

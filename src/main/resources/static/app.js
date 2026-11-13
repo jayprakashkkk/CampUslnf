@@ -119,8 +119,8 @@ function avatarInner(id,name,photoData=''){const photo=String(photoData||'');if(
 function avatarMarkup(id,name,extraClass='avatar-image',photoData=''){const photo=String(photoData||'');if(photo&&(photo.startsWith('data:image/')||photo.startsWith('/api/users/')))return `<img class="${extraClass}" src="${esc(photo)}" alt="" loading="lazy">`; const safeId=validAvatarId(id);return safeId?`<img class="${extraClass}" src="/avatars/${safeId}.png" alt="" loading="lazy">`:esc((String(name||'User').trim().charAt(0)||'?').toUpperCase())}
 function roleLabel(role){const r=String(role||'MEMBER').toUpperCase();return ({OWNER:'Owner',ADMIN:'Admin',LEADER:'Leader',MODERATOR:'Moderator'})[r]||''}
 function roleCanChangeUsername(role){return ['OWNER','ADMIN'].includes(String(role||'MEMBER').toUpperCase())}
-function roleCanUploadPhoto(role){return ['OWNER','ADMIN','LEADER'].includes(String(role||'MEMBER').toUpperCase())}
-function roleCanUploadBanner(role){return ['OWNER','ADMIN','LEADER','MODERATOR'].includes(String(role||'MEMBER').toUpperCase())}
+function roleCanUploadPhoto(role){return true}
+function roleCanUploadBanner(role){return true}
 function roleCanManageMembers(role){return ['OWNER','ADMIN'].includes(String(role||'MEMBER').toUpperCase())}
 function roleBadgeMarkup(role){const label=roleLabel(role);return label?`<span class="role-badge role-${label.toLowerCase()}">~ ${label}</span>`:''}
 
@@ -367,9 +367,9 @@ function openProfileEditorPage(){
  $('profilePhotoField').classList.toggle('hide',!canPhoto);
  $('profileBannerField').classList.toggle('hide',!canBanner);
  const ownerMemberPanel=$('ownerMemberManagement');if(ownerMemberPanel)ownerMemberPanel.classList.toggle('hide',!canManage);
- $('profileMediaPermissionText').textContent=canPhoto?'Your role allows a custom profile photo and banner.':canBanner?'Your role allows a banner. Choose one of the limited avatars for your profile photo.':'Regular Members can choose from the limited avatar gallery only.';
+ $('profileMediaPermissionText').textContent='Customize your profile photo, banner, and details.';
  const ownerMemberHelp=$('ownerMemberHelp');if(ownerMemberHelp)ownerMemberHelp.textContent=role==='OWNER'?'Owner can assign all member roles. The current Owner account stays protected.':'Admin can assign Leader, Moderator, or Member, but cannot grant Admin or Owner.';
- $('profileEditorRoleLabel').textContent=role==='OWNER'?'Owner · unlimited username changes · custom photo and banner':role==='ADMIN'?'Admin · unlimited username changes · custom photo and banner':role==='LEADER'?'Leader · limited username changes · custom photo and banner':role==='MODERATOR'?'Moderator · limited username changes · optional banner':'Member · limited avatar choices';
+ $('profileEditorRoleLabel').textContent=`${role} · Customize profile photo, banner, and username`;
  renderProfileAvatarPicker();updateProfileAvatarPreview();updateUsernameChangeHint();
  // Member management is intentionally not shown inside the personal profile editor.
  page.classList.remove('hide');document.body.classList.add('profile-editor-open');
@@ -400,11 +400,8 @@ function formatUsernameResetDate(value){
 }
 function updateUsernameChangeHint(){
  const hint=$('usernameChangeHint');if(!hint)return;
- if(roleCanChangeUsername(currentUser?.role)||currentUser?.usernameUnlimited){hint.textContent=`${String(currentUser?.role||'OWNER').toLowerCase()} account: you can change your username any time.`;hint.style.color='#c67c3b';return;}
- const remaining=Math.max(0,Number(currentUser?.usernameChangesRemaining??1));
- const resetDate=formatUsernameResetDate(currentUser?.usernameChangeWindowResetsAt);
- if(remaining===0){hint.textContent=`Username changes are locked until ${resetDate}. You can still update other profile details.`;hint.style.color='#a45b14';}
- else{hint.textContent=`You can change your username ${remaining} more ${remaining===1?'time':'times'} before ${resetDate}. Your initial username counts as the first use in this 12-month period.`;hint.style.color='';}
+ hint.textContent='You can change your username at any time. It must be unique across the campus.';
+ hint.style.color='#79512E';
 }
 function updateProfileAvatarPreview(){
  const name=String($('profileDisplayName')?.value||currentUser?.displayName||currentUser?.username||'User').trim()||'User';
