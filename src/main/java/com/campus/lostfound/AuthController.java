@@ -26,10 +26,13 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 import java.security.SecureRandom;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
     private static final ZoneId APP_ZONE = ZoneId.of("Asia/Kolkata");
     private static final int USERNAME_USES_PER_YEAR = 2;
     private static final DateTimeFormatter POLICY_DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
@@ -226,7 +229,11 @@ public class AuthController {
                 sender.send(mimeMessage);
                 return ResponseEntity.ok(Map.of("message", "An OTP code has been sent from CampUs to your email inbox."));
             } catch (Exception ex) {
-                // If mail failed, log and fall through to dev OTP below
+                log.warn("Could not send email via SMTP to {}: {}", email, ex.getMessage());
+                return ResponseEntity.ok(Map.of(
+                        "message", "SMTP delivery issue: " + ex.getMessage() + ". Your OTP code is: " + otp,
+                        "devOtp", otp
+                ));
             }
         }
 

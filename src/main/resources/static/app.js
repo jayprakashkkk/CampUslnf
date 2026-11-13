@@ -683,15 +683,30 @@ $('sendResetOtpButton')?.addEventListener('click',async()=>{
   msg.textContent='';
   if(!email||!$('resetEmail').checkValidity()){msg.textContent='Please enter a valid registered email.';return;}
   btn.disabled=true;btn.textContent='Sending…';
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timeoutId = controller ? setTimeout(()=>controller.abort(), 8000) : null;
   try{
-    const r=await fetch('/api/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({email})});
+    const r=await fetch('/api/auth/forgot-password',{
+      method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({email}),
+      signal: controller ? controller.signal : undefined
+    });
+    if(timeoutId) clearTimeout(timeoutId);
     const d=await r.json().catch(()=>({}));
     if(!r.ok){msg.textContent=d.message||'Could not send OTP. Please try again.';return;}
     resetOtpRequested=true;$('resetOtpFields').hidden=false;
     if(d.devOtp&&$('resetOtp'))$('resetOtp').value=d.devOtp;
     msg.textContent=d.message||'If the email belongs to an account, an OTP has been sent.';
-  }catch{msg.textContent='Could not connect. Please try again.';}
-  finally{btn.disabled=false;btn.textContent='Resend OTP';}
+  }catch(err){
+    if(err && err.name === 'AbortError') {
+      msg.textContent='Request timed out. Please try clicking Resend OTP.';
+    } else {
+      msg.textContent='Could not connect. Please try again.';
+    }
+  }finally{
+    if(timeoutId) clearTimeout(timeoutId);
+    btn.disabled=false;btn.textContent='Resend OTP';
+  }
 });
 $('verifyResetOtpButton')?.addEventListener('click',async()=>{
   const email=$('resetEmail').value.trim(),otp=$('resetOtp').value.trim(),password=$('resetNewPassword').value;
