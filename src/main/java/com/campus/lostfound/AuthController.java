@@ -68,7 +68,7 @@ public class AuthController {
         String email = credentials == null || credentials.email() == null ? "" : credentials.email().trim().toLowerCase(Locale.ROOT);
         String displayName = credentials == null || credentials.displayName() == null ? "" : credentials.displayName().trim();
         String course = credentials == null || credentials.course() == null ? "" : credentials.course().trim();
-        if (email.isEmpty()) return error(HttpStatus.BAD_REQUEST, "Please enter your university email.");
+        if (email.isEmpty()) return error(HttpStatus.BAD_REQUEST, "Please enter your email address.");
         if (email.length() > 254 || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
             return error(HttpStatus.BAD_REQUEST, "Please enter a valid email address.");
         }

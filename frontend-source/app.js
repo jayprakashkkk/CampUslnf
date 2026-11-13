@@ -673,8 +673,8 @@ $('authForm')?.addEventListener('submit',async event=>{
   const isRegister=authMode==='register';
   if(isRegister&&!displayName){$('authError').textContent='Please enter your full name.';$('authFullName').focus();return;}
   if(isRegister&&!course){$('authError').textContent='Please enter your course.';$('authCourse').focus();return;}
-  if(isRegister&&!email){$('authError').textContent='Please enter your university email.';$('authEmail').focus();return;}
-  if(isRegister&&!$('authEmail').checkValidity()){$('authError').textContent='Please enter a valid university email address.';$('authEmail').focus();return;}
+  if(isRegister&&!email){$('authError').textContent='Please enter your email address.';$('authEmail').focus();return;}
+  if(isRegister&&!$('authEmail').checkValidity()){$('authError').textContent='Please enter a valid email address.';$('authEmail').focus();return;}
   if(!username){$('authError').textContent='Please enter a username.';$('authUsername').focus();return;}
   if(password.length===0){$('authError').textContent='Please enter a password.';$('authPassword').focus();return;}
   const button=$('authSubmitButton');
