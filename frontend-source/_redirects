@@ -1,0 +1,4 @@
+# Cloudflare Pages Proxy Rule for Railway Backend
+# All /api/* calls from Cloudflare Pages are proxied to Railway backend
+# Once you have your Railway URL, replace the domain below:
+/api/*  https://campuslnf-production.up.railway.app/api/:splat  200

@@ -1,3 +1,20 @@
+// Universal API Base configuration for Cloudflare Pages + Railway
+const CAMPUS_API_BASE = (typeof window !== 'undefined' && (window.CAMPUS_API_BASE || localStorage.getItem('CAMPUS_API_BASE'))) || '';
+const _origFetch = window.fetch;
+window.fetch = function(input, init) {
+  let url = typeof input === 'string' ? input : (input instanceof Request ? input.url : String(input));
+  init = init || {};
+  if (url.startsWith('/api/')) {
+    if (CAMPUS_API_BASE) {
+      url = CAMPUS_API_BASE.replace(/\/+$/, '') + url;
+    }
+    if (!init.credentials) {
+      init.credentials = 'include';
+    }
+  }
+  return _origFetch.call(this, url, init);
+};
+
 let chosenType='', myReportsOnly=false, statFilter='', currentUser=null, authMode='login';
 let notificationRefreshTimer=null, communityMuted=false, notificationHasInitialLoad=false, latestNotificationId=0;
 let profileImageDataDraft='', bannerImageDataDraft='';
