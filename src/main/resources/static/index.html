@@ -111,8 +111,16 @@
   <div class="header-left">
     <div class="logo">
       <img class="brand-mark" src="/icons/campusfind-mark-cream-orange.svg?v=campus-4" alt="CampUs logo">
-      <div class="logo-text">Camp<span>Us</span><small>LOST &amp; FOUND</small></div>
-      <span id="campusCollegeBadge" class="college-badge" hidden></span>
+      <div class="logo-text">
+        <div class="logo-title-row">
+          <span class="logo-title-brand">Camp<span>Us</span></span>
+          <span id="campusCollegeBadge" class="college-badge" hidden>
+            <span class="college-badge-icon" aria-hidden="true">🏛️</span>
+            <span id="campusCollegeText">Chandigarh University</span>
+          </span>
+        </div>
+        <small class="logo-subtitle">LOST &amp; FOUND</small>
+      </div>
     </div>
   </div>
 
@@ -435,8 +443,11 @@
 
       <!-- Custom Profile Photo Upload -->
       <div id="privilegedProfileMedia" class="privileged-profile-media" style="margin:16px 0;text-align:center;">
-        <input id="profilePhotoFile" type="file" accept="image/*" style="display:none;">
-        <button type="button" onclick="$('profilePhotoFile').click()" class="upload-photo-btn">📷 Upload Profile Photo</button>
+        <div id="profilePhotoField">
+          <input id="profilePhotoFile" type="file" accept="image/*" style="display:none;">
+          <button type="button" onclick="$('profilePhotoFile').click()" class="upload-photo-btn">📷 Upload Profile Photo</button>
+        </div>
+        <p id="profileMediaPermissionText" style="display:none;"></p>
       </div>
 
       <!-- Avatar Picker Gallery -->

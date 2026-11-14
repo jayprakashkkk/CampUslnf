@@ -377,7 +377,7 @@ function normWords(s){return String(s||'').toLowerCase().replace(/[^a-z0-9\s]/g,
 function matchScore(a,b){const aw=new Set(normWords((a.title||'')+' '+(a.description||''))),bw=new Set(normWords((b.title||'')+' '+(b.description||'')));const common=[...aw].filter(w=>bw.has(w)).length;const sameTitle=String(a.title||'').trim().toLowerCase()===String(b.title||'').trim().toLowerCase();const sameCat=String(a.category||'').toLowerCase()===String(b.category||'').toLowerCase();if(sameTitle)return 10+(sameCat?2:0);if(common===0)return 0;return common+(sameCat?1:0)}
 function bestMatch(r,all){return all.filter(x=>x.type!==r.type&&x.status!=='RETURNED').map(x=>({item:x,score:matchScore(r,x)})).filter(x=>x.score>=2).sort((a,b)=>b.score-a.score)[0]?.item||null}
 function updatePoster(all){const returned=all.filter(x=>String(x.status||'').toUpperCase()==='RETURNED').sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));if(!returned.length){if($('matchIcon'))$('matchIcon').textContent='⌕';if($('matchName'))$('matchName').textContent='No items returned yet';if($('matchMeta'))$('matchMeta').textContent='Successfully returned items will appear here';if($('matchBadge')){$('matchBadge').textContent='WAITING FOR RETURN';$('matchBadge').classList.remove('match-yes');}return}const item=returned[0];if($('matchIcon'))$('matchIcon').textContent=String(item.category||'').toLowerCase().includes('id')?'🪪':String(item.category||'').toLowerCase().includes('electronic')?'🎧':'✓';if($('matchName'))$('matchName').textContent=item.title||'Returned item';if($('matchMeta'))$('matchMeta').textContent=`Returned · ${item.location||'Location not specified'}${item.itemDate?' · '+item.itemDate:''}`;if($('matchBadge')){$('matchBadge').textContent='SUCCESSFULLY RETURNED';$('matchBadge').classList.add('match-yes');}}
-function clearFilters(){['q','filterCategory','filterLocation','dateFrom','dateTo'].forEach(id=>{const field=$(id);if(field)field.value=''});if($('boardSearch'))$('boardSearch').value='';chosenType='';statFilter='';myReportsOnly=false;document.querySelectorAll('.status-tab').forEach(x=>x.classList.toggle('active',x.dataset.tabStatus==='ALL'));document.querySelectorAll('.category-chip').forEach(c=>c.classList.toggle('active',c.textContent.includes('All')));if($('myReports'))$('myReports').textContent='My reports';load()}
+function clearFilters(){['q','filterCategory','filterLocation','dateFrom','dateTo'].forEach(id=>{const field=$(id);if(field)field.value=''});if($('boardSearch'))$('boardSearch').value='';if($('mobileBoardSearch'))$('mobileBoardSearch').value='';chosenType='';statFilter='';myReportsOnly=false;document.querySelectorAll('.status-tab').forEach(x=>x.classList.toggle('active',x.dataset.tabStatus==='ALL'));document.querySelectorAll('.category-chip').forEach(c=>c.classList.toggle('active',c.textContent.includes('All')));if($('myReports'))$('myReports').textContent='My reports';load()}
 function filterStats(which){statFilter=which;chosenType='';myReportsOnly=false;document.querySelectorAll('.status-tab').forEach(x=>x.classList.toggle('active',x.dataset.tabStatus===which));load();const board=$('board');if(board)board.scrollIntoView({behavior:'smooth',block:'start'});}
 function toggleMyReports(){statFilter='';myReportsOnly=!myReportsOnly;if($('myReports'))$('myReports').textContent=myReportsOnly?'Show all reports':'My reports';load()}
 function showMyReports(e){if(e)e.preventDefault();showNavPopup('myReports')}
@@ -579,9 +579,42 @@ function firstNameOfUser(user=currentUser){
  return first.charAt(0).toLocaleUpperCase()+first.slice(1);
 }
 
+function formatCollegeFullName(raw) {
+  if (!raw) return 'Chandigarh University';
+  const str = String(raw).trim();
+  const match = str.match(/\(([^)]+)\)/);
+  if (match && match[1]) return match[1].trim();
+  const upper = str.toUpperCase();
+  if (upper === 'CU' || upper.includes('CHANDIGARH')) return 'Chandigarh University';
+  if (upper === 'LPU' || upper.includes('LOVELY')) return 'Lovely Professional University';
+  if (upper === 'CGC_UNIV' || upper.includes('CGC UNIV')) return 'CGC University';
+  if (upper === 'CGC_LANDRAN' || upper.includes('LANDRAN')) return 'CGC Landran';
+  return str;
+}
+
+function collegeDisplayName(code) {
+  return formatCollegeFullName(code);
+}
+
+function renderCollegeBadge() {
+  const badge = $('campusCollegeBadge');
+  const badgeText = $('campusCollegeText');
+  const fullName = formatCollegeFullName(currentUser?.collegeName || currentUser?.college);
+  if (badge) {
+    if (badgeText) {
+      badgeText.textContent = fullName;
+    } else {
+      badge.textContent = fullName;
+    }
+    badge.title = `Verified Campus: ${fullName}`;
+    badge.hidden = false;
+  }
+}
+
 function updateGreeting(){
  const name = firstNameOfUser();
  const initial = (name.charAt(0) || 'U').toUpperCase();
+ renderCollegeBadge();
 
  const deskName = $('deskGreetingName');
  if (deskName) deskName.textContent = `Hi, ${name}`;
@@ -701,11 +734,11 @@ function openProfileEditorPage(){
  $('profileEditorError').textContent='';
  const role=String(currentUser?.role||'MEMBER').toUpperCase();
  const canPhoto=roleCanUploadPhoto(role),canBanner=roleCanUploadBanner(role),canManage=roleCanManageMembers(role);
- $('privilegedProfileMedia').classList.toggle('hide',!(canPhoto||canBanner));
- $('profilePhotoField').classList.toggle('hide',!canPhoto);
- $('profileBannerField').classList.toggle('hide',!canBanner);
+ $('privilegedProfileMedia')?.classList.toggle('hide',!(canPhoto||canBanner));
+ $('profilePhotoField')?.classList.toggle('hide',!canPhoto);
+ $('profileBannerField')?.classList.toggle('hide',!canBanner);
  const ownerMemberPanel=$('ownerMemberManagement');if(ownerMemberPanel)ownerMemberPanel.classList.toggle('hide',!canManage);
- $('profileMediaPermissionText').textContent='Customize your profile photo, banner, and details.';
+ if($('profileMediaPermissionText')) $('profileMediaPermissionText').textContent='Customize your profile photo, banner, and details.';
  const ownerMemberHelp=$('ownerMemberHelp');if(ownerMemberHelp)ownerMemberHelp.textContent=role==='OWNER'?'Owner can assign all member roles. The current Owner account stays protected.':'Admin can assign Leader, Moderator, or Member, but cannot grant Admin or Owner.';
  $('profileEditorRoleLabel').textContent=`${role} · Customize profile photo, banner, and username`;
  renderProfileAvatarPicker();updateProfileAvatarPreview();updateUsernameChangeHint();
@@ -992,14 +1025,10 @@ function enterApp(user) {
       user.usernameChangeWindowResetsAt || ''
   };
 
-  const badge = $('campusCollegeBadge');
-  if (badge) {
-    badge.textContent = currentUser.collegeName;
-    badge.hidden = false;
-  }
+  renderCollegeBadge();
   const chatSubtitle = $('chatCampusSubtitle');
   if (chatSubtitle) {
-    chatSubtitle.textContent = 'CampUs · ' + currentUser.collegeName;
+    chatSubtitle.textContent = 'CampUs · ' + formatCollegeFullName(currentUser.collegeName);
   }
 
   document.body.classList.remove('auth-locked');

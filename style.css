@@ -3179,34 +3179,57 @@ header.app-header {
   align-items: center;
   gap: 10px;
   cursor: pointer;
+  min-width: 0;
 }
 .logo-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+.logo-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.logo-title-brand {
   font-size: 20px;
   font-weight: 850;
-  line-height: 1;
+  line-height: 1.1;
+  color: #3E3023;
+  letter-spacing: -0.02em;
 }
-.logo-text span { color: var(--insta-primary); }
-.logo-text small {
+.logo-title-brand span { color: var(--insta-primary); }
+.logo-subtitle {
   display: block;
   font-size: 8px;
   letter-spacing: 2px;
   color: #B3A293;
-  margin-top: 4px;
+  margin-top: 3px;
+  font-weight: 700;
 }
 
 .college-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: #FFEECA;
-  color: #8C5320;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 3px 10px !important;
+  border-radius: 999px !important;
+  background: #FFF3E6 !important;
+  border: 1px solid #FCD8B8 !important;
+  color: #9C4D15 !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.01em !important;
+  white-space: nowrap !important;
+  max-width: none !important;
+  line-height: 1.2 !important;
+  box-shadow: 0 1px 3px rgba(232, 148, 75, 0.08) !important;
+}
+.college-badge-icon {
   font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  margin-left: 8px;
-  border: 1px solid #FFE0A6;
-  white-space: nowrap;
+  line-height: 1;
 }
 
 .header-search-wrap {
@@ -4296,10 +4319,8 @@ header.app-header {
     display: flex !important;
   }
   .college-badge {
-    max-width: 150px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    max-width: none !important;
+    white-space: nowrap !important;
   }
   .feed-main-container {
     max-width: 1360px !important;
@@ -4417,10 +4438,8 @@ header.app-header {
     padding: 0 20px;
   }
   .college-badge {
-    max-width: 130px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    max-width: none !important;
+    white-space: nowrap !important;
   }
   .standalone-search {
     display: block !important;
@@ -4522,14 +4541,24 @@ header.app-header {
   .hamburger-menu-btn {
     display: flex !important;
   }
+  .logo {
+    gap: 8px;
+  }
+  .logo-title-row {
+    gap: 6px;
+  }
+  .logo-title-brand {
+    font-size: 18px;
+  }
   .college-badge {
-    max-width: 110px;
-    font-size: 9px;
-    padding: 2px 6px;
-    margin-left: 4px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    max-width: none !important;
+    font-size: 10px !important;
+    padding: 2.5px 8px !important;
+    margin-left: 0 !important;
+    white-space: nowrap !important;
+  }
+  .college-badge-icon {
+    font-size: 10px;
   }
   .feed-main-container {
     padding: 0 10px !important;
@@ -4578,6 +4607,10 @@ header.app-header {
   }
   .nav-drawer-overlay.hide .nav-drawer-panel {
     transform: translateY(-100%);
+  }
+  body.chat-fullscreen-open .bottom-app-nav,
+  body.profile-editor-open .bottom-app-nav {
+    display: none !important;
   }
 }
 
