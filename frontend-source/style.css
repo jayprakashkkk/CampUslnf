@@ -3669,6 +3669,575 @@ header.app-header {
   background: #FFFDFB;
 }
 
+/* --------------------------------------------------------------------------
+   INSTAGRAM-STYLE SOCIAL BAR (Like, Comment, Share, Archive)
+   -------------------------------------------------------------------------- */
+.insta-social-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-top: 1px solid #FAF4EE;
+  background: #FFFDFB;
+  gap: 10px;
+}
+.insta-social-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.insta-social-btn {
+  background: transparent;
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--insta-text-main, #3E3023);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.insta-social-btn:hover {
+  background: #FFF5EC;
+  color: var(--insta-primary, #E8944B);
+}
+.insta-social-btn.like-btn.active .social-icon {
+  transform: scale(1.15);
+  animation: heartPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.insta-social-btn.like-btn.active {
+  color: #E53935;
+}
+.social-icon {
+  font-size: 16px;
+  line-height: 1;
+  display: inline-block;
+  transition: transform 0.2s ease;
+}
+.social-count {
+  font-size: 12px;
+  font-weight: 800;
+}
+.social-text {
+  font-size: 12px;
+}
+.insta-social-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.insta-action-pill {
+  background: #FFF5EC;
+  border: 1px solid #FCE4CE;
+  color: #C06A26;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.insta-action-pill:hover {
+  background: #FCE6D2;
+}
+
+@keyframes heartPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.35); }
+  100% { transform: scale(1.15); }
+}
+
+/* Post direct link highlight effect */
+.post-card-highlight {
+  box-shadow: 0 0 0 4px #E8944B, 0 12px 30px rgba(232, 148, 75, 0.3) !important;
+  animation: postGlow 2s ease infinite alternate;
+}
+@keyframes postGlow {
+  from { box-shadow: 0 0 0 3px #E8944B, 0 8px 24px rgba(232, 148, 75, 0.25); }
+  to { box-shadow: 0 0 0 6px rgba(232, 148, 75, 0.5), 0 16px 36px rgba(232, 148, 75, 0.4); }
+}
+
+/* --------------------------------------------------------------------------
+   POST COMMENTS MODAL & THREADED REPLIES
+   -------------------------------------------------------------------------- */
+#commentsModal {
+  z-index: 9992;
+}
+.comments-dialog {
+  width: min(540px, 96vw);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 !important;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #FFFFFF;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+.comments-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #FAF4EE;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FFFDFB;
+  position: relative;
+}
+.comments-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 850;
+  color: var(--insta-text-main, #3E3023);
+}
+.comments-post-subtitle {
+  font-size: 11px;
+  color: var(--insta-text-muted, #8B7F75);
+}
+.comments-post-snippet {
+  padding: 10px 20px;
+  background: #FFF8F1;
+  border-bottom: 1px solid #F5EAE0;
+}
+.snippet-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+.snippet-title {
+  color: #4A3320;
+}
+.snippet-meta {
+  color: #A38C7A;
+  font-size: 11px;
+}
+.comments-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  min-height: 240px;
+  max-height: 52vh;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.comment-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.comment-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #FFF0E2;
+  display: grid;
+  place-items: center;
+  border: 1px solid #F5E1D0;
+}
+.c-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.c-avatar-initial {
+  font-size: 12px;
+  font-weight: 850;
+  color: var(--insta-primary, #E8944B);
+}
+.comment-body {
+  flex: 1;
+  min-width: 0;
+}
+.comment-header-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.comment-author {
+  font-weight: 800;
+  color: var(--insta-text-main, #3E3023);
+  cursor: pointer;
+}
+.comment-author:hover {
+  color: var(--insta-primary, #E8944B);
+}
+.comment-handle {
+  color: #A49385;
+  font-size: 11px;
+}
+.comment-dot {
+  color: #D2C4B7;
+}
+.comment-time {
+  color: #B5A699;
+  font-size: 11px;
+}
+.comment-text {
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: #403225;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
+.reply-mention {
+  color: var(--insta-primary, #E8944B);
+  font-weight: 750;
+}
+.comment-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 4px;
+}
+.c-reply-btn, .c-del-btn {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 750;
+  color: #A49385;
+  cursor: pointer;
+}
+.c-reply-btn:hover {
+  color: var(--insta-primary, #E8944B);
+}
+.c-del-btn:hover {
+  color: #D32F2F;
+}
+.comment-replies-thread {
+  margin-top: 10px;
+  padding-left: 14px;
+  border-left: 2px solid #F5EAE0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.reply-item .comment-avatar {
+  width: 26px;
+  height: 26px;
+}
+.reply-item .c-avatar-initial {
+  font-size: 10px;
+}
+.comment-reply-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 16px;
+  background: #FFF4E8;
+  border-top: 1px solid #F8DFC8;
+  font-size: 12px;
+}
+.reply-banner-text {
+  color: #934C18;
+}
+.reply-banner-cancel {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #A3501A;
+}
+.comment-compose-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-top: 1px solid #FAF4EE;
+  background: #FFFDFB;
+}
+.comment-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #FFF0E2;
+  color: #E8944B;
+  font-size: 12px;
+  font-weight: 850;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border: 1px solid #F5E1D0;
+}
+.comment-compose-bar input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid #EFE4D8;
+  border-radius: 999px;
+  padding: 9px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  background: #FFFFFF;
+  outline: none;
+}
+.comment-compose-bar input:focus {
+  border-color: var(--insta-primary, #E8944B);
+}
+.comment-send-btn {
+  background: var(--insta-primary, #E8944B);
+  color: #FFFFFF;
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.comment-send-btn:hover {
+  opacity: 0.92;
+}
+
+/* --------------------------------------------------------------------------
+   YOUR ACTIVITY CENTER MODAL (Archive, Recently Deleted, Likes)
+   -------------------------------------------------------------------------- */
+#activityCenterModal {
+  z-index: 9993;
+}
+.activity-center-dialog {
+  width: min(640px, 96vw);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 !important;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #FFFFFF;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+.activity-center-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #FAF4EE;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FFFDFB;
+  position: relative;
+}
+.activity-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.activity-center-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 850;
+  color: var(--insta-text-main, #3E3023);
+}
+.activity-subtitle {
+  font-size: 11px;
+  color: var(--insta-text-muted, #8B7F75);
+}
+.activity-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #FFFBF7;
+  border-bottom: 1px solid #FAF0E6;
+  overflow-x: auto;
+}
+.activity-tab {
+  background: #FFFFFF;
+  border: 1px solid #EFE2D4;
+  color: #796657;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.activity-tab:hover {
+  background: #FFF8F0;
+  border-color: #E8944B;
+}
+.activity-tab.active {
+  background: #E8944B;
+  color: #FFFFFF;
+  border-color: #E8944B;
+}
+.activity-pill-badge {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+}
+.activity-tab.active .activity-pill-badge {
+  background: rgba(255, 255, 255, 0.3);
+  color: #FFFFFF;
+}
+.activity-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+  max-height: 60vh;
+}
+.activity-info-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #FFF7EE;
+  border: 1px solid #FCE4CE;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: #7A4E26;
+}
+.activity-info-banner.warning {
+  background: #FFF4F2;
+  border-color: #FED7D2;
+  color: #9C2718;
+}
+.activity-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.activity-post-card {
+  border: 1px solid #EFE4D6;
+  background: #FFFDFB;
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: box-shadow 0.15s ease;
+}
+.activity-post-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+.activity-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.activity-countdown-badge {
+  background: #FFE8E5;
+  color: #C62828;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid #FFCDD2;
+}
+.activity-card-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: #38271E;
+}
+.activity-card-desc {
+  margin: 0;
+  font-size: 12.5px;
+  color: #796657;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.activity-card-tags {
+  display: flex;
+  gap: 8px;
+  font-size: 11.5px;
+  color: #9C897B;
+}
+.activity-card-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #FAF2E8;
+}
+.act-btn-restore {
+  background: #E8F5E9;
+  border: 1px solid #C8E6C9;
+  color: #2E7D32;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.act-btn-delete {
+  background: #FFF5F5;
+  border: 1px solid #FFCDD2;
+  color: #D32F2F;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.act-btn-permanent {
+  background: #D32F2F;
+  border: 0;
+  color: #FFFFFF;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.act-btn-view, .act-btn-share {
+  background: #FFF3E6;
+  border: 1px solid #FBDBC0;
+  color: #9C4D15;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+/* User profile posts owner bar */
+.profile-post-owner-bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #FAF0E4;
+}
+.prof-act-btn {
+  background: #FFF7EE;
+  border: 1px solid #F5E0CD;
+  color: #8C5320;
+  font-size: 11px;
+  font-weight: 750;
+  padding: 4px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.prof-act-btn:hover {
+  background: #FCEBDD;
+}
+.prof-act-btn.del {
+  background: #FFF5F5;
+  border-color: #FFCDD2;
+  color: #D32F2F;
+}
+.prof-act-btn.del:hover {
+  background: #FFEBEE;
+}
+
 .action-btn-whatsapp {
   background: #25D366 !important;
   color: #ffffff !important;

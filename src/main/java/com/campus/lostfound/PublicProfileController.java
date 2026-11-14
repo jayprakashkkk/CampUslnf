@@ -78,9 +78,13 @@ public class PublicProfileController {
             return error(HttpStatus.NOT_FOUND, "This profile could not be found.");
         }
 
+        UserAccount viewer = sessionUser(request);
+        boolean isOwner = viewer != null && viewer.getUsername().equalsIgnoreCase(account.getUsername());
+
         List<Report> owned = reports.findAll().stream()
                 .filter(report -> report.getAccountUsername() != null
                         && report.getAccountUsername().equalsIgnoreCase(account.getUsername()))
+                .filter(report -> isOwner || (!report.isArchived() && !report.isDeleted()))
                 .sorted(Comparator.comparing(Report::getCreatedAt,
                         Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
@@ -98,6 +102,9 @@ public class PublicProfileController {
             post.put("createdAt", report.getCreatedAt());
             post.put("description", report.getDescription() == null ? "" : report.getDescription());
             post.put("imageData", report.getImageData());
+            post.put("archived", report.isArchived());
+            post.put("deleted", report.isDeleted());
+            post.put("isOwner", isOwner);
             posts.add(post);
         }
 
@@ -117,7 +124,7 @@ public class PublicProfileController {
         result.put("profileImageUrl", !AuthController.canUseCustomProfilePhoto(account) || account.getProfileImageData().isBlank() ? "" : imageUrl(account.getUsername(), "photo"));
         result.put("bannerImageUrl", !AuthController.canUseProfileBanner(account) || account.getBannerImageData().isBlank() ? "" : imageUrl(account.getUsername(), "banner"));
         result.put("role", account.getRole());
-        UserAccount viewer = sessionUser(request);
+        result.put("isOwner", isOwner);
         result.put("viewerRole", viewer == null ? "MEMBER" : viewer.getRole());
         result.put("viewerUsername", viewer == null ? "" : viewer.getUsername());
         result.put("bannerAllowed", AuthController.canUseProfileBanner(account));

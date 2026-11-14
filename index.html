@@ -184,6 +184,14 @@
         </div>
       </button>
 
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('activity')">
+        <span class="drawer-item-icon">⏱️</span>
+        <div class="drawer-item-text">
+          <b>Your Activity</b>
+          <small>Archive, recently deleted &amp; likes</small>
+        </div>
+      </button>
+
       <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('campusInfo')">
         <span class="drawer-item-icon">🏛️</span>
         <div class="drawer-item-text">
@@ -489,6 +497,75 @@
     </section>
   </div>
 </section>
+
+<!-- Post Comments & Threaded Replies Modal -->
+<div id="commentsModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="commentsModalTitle">
+  <div class="dialog comments-dialog">
+    <header class="comments-header">
+      <div class="comments-header-info">
+        <h2 id="commentsModalTitle">Comments</h2>
+        <span id="commentsPostSubtitle" class="comments-post-subtitle">On report</span>
+      </div>
+      <button class="modal-close-btn" type="button" onclick="closeCommentsModal()" aria-label="Close comments">✕</button>
+    </header>
+
+    <div id="commentsPostSnippet" class="comments-post-snippet"></div>
+
+    <div id="commentsList" class="comments-list" aria-live="polite">
+      <div class="empty">Loading comments…</div>
+    </div>
+
+    <!-- Active Reply Banner -->
+    <div id="commentReplyBanner" class="comment-reply-banner hide">
+      <span class="reply-banner-text"><b>Replying to</b> <span id="commentReplyTarget">@user</span></span>
+      <button type="button" class="reply-banner-cancel" onclick="cancelCommentReply()" aria-label="Cancel reply">✕</button>
+    </div>
+
+    <!-- Compose Comment Bar -->
+    <form id="commentComposeForm" class="comment-compose-bar" onsubmit="submitPostComment(event)">
+      <div class="comment-user-avatar" id="commentUserAvatar">U</div>
+      <input id="commentInput" type="text" maxlength="1000" placeholder="Add a comment or reply..." autocomplete="off" required>
+      <button type="submit" id="commentSubmitBtn" class="comment-send-btn" aria-label="Send comment">Post</button>
+    </form>
+  </div>
+</div>
+
+<!-- Your Activity Center Modal (Archive, Recently Deleted, Likes) -->
+<div id="activityCenterModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="activityCenterTitle">
+  <div class="dialog activity-center-dialog">
+    <header class="activity-center-header">
+      <div class="activity-header-left">
+        <button class="activity-back universal-back-arrow" type="button" onclick="closeActivityCenter()" aria-label="Back">‹</button>
+        <div>
+          <h2 id="activityCenterTitle">Your Activity</h2>
+          <small class="activity-subtitle">Manage your campus reports &amp; interactions</small>
+        </div>
+      </div>
+      <button class="modal-close-btn" type="button" onclick="closeActivityCenter()" aria-label="Close">✕</button>
+    </header>
+
+    <!-- Activity Sub-Tabs -->
+    <div class="activity-tabs" role="tablist">
+      <button type="button" class="activity-tab active" data-act-tab="archive" onclick="switchActivityTab('archive')">
+        <span>📁 Archive</span>
+        <span id="activityArchiveBadge" class="activity-pill-badge">0</span>
+      </button>
+      <button type="button" class="activity-tab" data-act-tab="deleted" onclick="switchActivityTab('deleted')">
+        <span>🗑️ Recently Deleted</span>
+        <span id="activityDeletedBadge" class="activity-pill-badge">0</span>
+      </button>
+      <button type="button" class="activity-tab" data-act-tab="likes" onclick="switchActivityTab('likes')">
+        <span>❤️ Likes</span>
+        <span id="activityLikesBadge" class="activity-pill-badge">0</span>
+      </button>
+    </div>
+
+    <!-- Dynamic Activity Content View -->
+    <div id="activityContent" class="activity-content" aria-live="polite">
+      <div class="empty">Loading activity…</div>
+    </div>
+  </div>
+</div>
 
 <!-- Image Zoom Lightbox Container -->
 <div id="imageLightbox" class="image-lightbox hide" onclick="closeLightbox()" aria-modal="true" role="dialog">

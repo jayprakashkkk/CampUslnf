@@ -129,6 +129,8 @@ function closeCampusUiLayerFromBack(layer){
 }
 function closeTopUntrackedUiLayer(){
   if(navDrawerOpen){closeNavDrawer(true);return true;}
+  if($('commentsModal')&&!$('commentsModal').classList.contains('hide')){closeCommentsModal();return true;}
+  if($('activityCenterModal')&&!$('activityCenterModal').classList.contains('hide')){closeActivityCenter();return true;}
   if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage(true);return true;}
   if($('communityProfilePage')&&!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile(true);return true;}
   if(communityChatOpen){closeCommunityChat(true);return true;}
@@ -402,49 +404,75 @@ $('grid').innerHTML=rows.map(r=>{
   ? `<select class="action-status-select" onchange="updateStatus(${r.id},this.value)" aria-label="Update status"><option value="OPEN" ${r.status==='OPEN'?'selected':''}>● Open</option><option value="MATCHED" ${r.status==='MATCHED'?'selected':''}>● Matched</option><option value="RETURNED" ${r.status==='RETURNED'?'selected':''}>✓ Returned</option></select>`
   : `<span class="insta-status-badge ${String(r.status||'').toUpperCase()==='RETURNED'?'returned':''}">${esc(r.status)}</span>`;
 
- return `<article class="insta-post-card" data-report-id="${r.id}">
-   <div class="insta-post-header">
-     <button type="button" class="insta-post-author" onclick="openChatUserProfile('${esc(authorName)}','${esc(ownerUsername)}')" aria-label="View ${esc(authorName)}'s profile">
-       <div class="insta-post-avatar">${avatarContent}</div>
-       <div class="insta-post-author-text">
-         <span class="insta-post-author-name">${esc(authorName)} ${roleBadge}</span>
-         <span class="insta-post-author-sub">@${esc(ownerUsername||'student')} · ${esc(postTime)} · ${esc(collegeTag)}</span>
-       </div>
-     </button>
-     <div class="insta-post-badges">
-       <span class="insta-type-badge ${typeIsFound?'found':'lost'}">${typeIsFound?'🟢 FOUND':'🔴 LOST'}</span>
-       ${!canEdit?statusControl:''}
-     </div>
-   </div>
-   ${r.imageData?`<div class="insta-post-media" onclick="viewFullImage('${esc(r.imageData)}')" title="Click to view full photo"><img src="${esc(r.imageData)}" alt="Photo of ${esc(r.title)}" loading="lazy"></div>`:`<div class="insta-post-no-media"><div class="insta-no-media-icon">${categoryEmoji(r.category)}</div><div class="insta-no-media-text"><b>${esc(r.category||'Item')}</b><small>No photo attached by reporter</small></div></div>`}
-   <div class="insta-post-body">
-     <div class="insta-post-tags">
-       <span class="insta-meta-tag">${categoryEmoji(r.category)} ${esc(r.category)}</span>
-       <span class="insta-meta-tag">📍 ${esc(r.location)}</span>
-       ${r.itemDate?`<span class="insta-meta-tag">📅 ${esc(r.itemDate)}</span>`:''}
-     </div>
-     <h3 class="insta-post-title">${esc(r.title)}</h3>
-     ${r.description?`<p class="insta-post-desc">${esc(r.description)}</p>`:''}
-     ${m?`<div class="insta-match-banner"><span>✦ Possible Match:</span><b>${esc(m.title)}</b> (${esc(m.type)} at ${esc(m.location)})</div>`:''}
-   </div>
-   <div class="insta-post-actions">
-     ${canEdit ? `
-       <div class="insta-owner-actions">
-         <label class="owner-status-label">
-           Status: ${statusControl}
-         </label>
-         <button type="button" class="action-btn-del" onclick="deleteReport(${r.id})" title="Delete this report">🗑 Delete</button>
-       </div>
-     ` : `
-       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;">
-         ${waUrl?`<a class="action-btn-whatsapp" href="${waUrl}" target="_blank" rel="noopener noreferrer"><span>💬 WhatsApp</span></a>`:''}
-         ${cleanPhone?`<a class="action-btn-call" href="tel:${cleanPhone}"><span>📞 Call</span></a>`:''}
-         <button type="button" class="action-btn-chat" onclick="askAboutItemInChat(${r.id},'${esc(r.title)}')"><span>💬 Ask in Chat</span></button>
-       </div>
-     `}
-   </div>
- </article>`
-}).join('')}
+ return `<article class="insta-post-card" id="post-card-${r.id}" data-report-id="${r.id}">
+    <div class="insta-post-header">
+      <button type="button" class="insta-post-author" onclick="openChatUserProfile('${esc(authorName)}','${esc(ownerUsername)}')" aria-label="View ${esc(authorName)}'s profile">
+        <div class="insta-post-avatar">${avatarContent}</div>
+        <div class="insta-post-author-text">
+          <span class="insta-post-author-name">${esc(authorName)} ${roleBadge}</span>
+          <span class="insta-post-author-sub">@${esc(ownerUsername||'student')} · ${esc(postTime)} · ${esc(collegeTag)}</span>
+        </div>
+      </button>
+      <div class="insta-post-badges">
+        <span class="insta-type-badge ${typeIsFound?'found':'lost'}">${typeIsFound?'🟢 FOUND':'🔴 LOST'}</span>
+        ${!canEdit?statusControl:''}
+      </div>
+    </div>
+    ${r.imageData?`<div class="insta-post-media" onclick="viewFullImage('${esc(r.imageData)}')" title="Click to view full photo"><img src="${esc(r.imageData)}" alt="Photo of ${esc(r.title)}" loading="lazy"></div>`:`<div class="insta-post-no-media"><div class="insta-no-media-icon">${categoryEmoji(r.category)}</div><div class="insta-no-media-text"><b>${esc(r.category||'Item')}</b><small>No photo attached by reporter</small></div></div>`}
+    <div class="insta-post-body">
+      <div class="insta-post-tags">
+        <span class="insta-meta-tag">${categoryEmoji(r.category)} ${esc(r.category)}</span>
+        <span class="insta-meta-tag">📍 ${esc(r.location)}</span>
+        ${r.itemDate?`<span class="insta-meta-tag">📅 ${esc(r.itemDate)}</span>`:''}
+      </div>
+      <h3 class="insta-post-title">${esc(r.title)}</h3>
+      ${r.description?`<p class="insta-post-desc">${esc(r.description)}</p>`:''}
+      ${m?`<div class="insta-match-banner"><span>✦ Possible Match:</span><b>${esc(m.title)}</b> (${esc(m.type)} at ${esc(m.location)})</div>`:''}
+    </div>
+
+    <!-- Instagram-style Social Bar (Like, Comment, Share, Archive) -->
+    <div class="insta-social-bar">
+      <div class="insta-social-left">
+        <button type="button" class="insta-social-btn like-btn like-btn-${r.id} ${r.likedByMe ? 'active' : ''}" onclick="togglePostLike(${r.id}, this)" aria-label="Like post">
+          <span class="social-icon heart-icon-${r.id}">${r.likedByMe ? '❤️' : '🤍'}</span>
+          <span class="social-count like-count-${r.id}">${r.likeCount || 0}</span>
+        </button>
+        <button type="button" class="insta-social-btn comment-btn" onclick="openPostComments(${r.id})" aria-label="Comments">
+          <span class="social-icon">💬</span>
+          <span class="social-count comment-count-${r.id}">${r.commentCount || 0}</span>
+        </button>
+        <button type="button" class="insta-social-btn share-btn" onclick="sharePost(${r.id}, '${esc(r.title)}')" aria-label="Share post">
+          <span class="social-icon">🔗</span>
+          <span class="social-text">Share</span>
+        </button>
+      </div>
+      ${canEdit ? `
+        <div class="insta-social-right">
+          <button type="button" class="insta-action-pill archive-pill" onclick="archiveReport(${r.id})" title="Archive post (hides from feed)">📁 Archive</button>
+        </div>
+      ` : ''}
+    </div>
+
+    <div class="insta-post-actions">
+      ${canEdit ? `
+        <div class="insta-owner-actions">
+          <label class="owner-status-label">
+            Status: ${statusControl}
+          </label>
+          <button type="button" class="action-btn-del" onclick="deleteReport(${r.id})" title="Move to Recently Deleted (restorable for 30 days)">🗑 Delete</button>
+        </div>
+      ` : `
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;">
+          ${waUrl?`<a class="action-btn-whatsapp" href="${waUrl}" target="_blank" rel="noopener noreferrer"><span>💬 WhatsApp</span></a>`:''}
+          ${cleanPhone?`<a class="action-btn-call" href="tel:${cleanPhone}"><span>📞 Call</span></a>`:''}
+          <button type="button" class="action-btn-chat" onclick="askAboutItemInChat(${r.id},'${esc(r.title)}')"><span>💬 Ask in Chat</span></button>
+        </div>
+      `}
+    </div>
+  </article>`
+}).join('');
+checkDirectPostLink();
+}
 catch{$('grid').innerHTML='<div class="empty"><b>Backend not connected</b><p>Start the Java app, then refresh this page.</p></div>'}}
 $('photo').addEventListener('change',()=>{const file=$('photo').files[0];if(!file){$('photoPreview').src='';$('photoPreview').classList.add('hide');return}if(!file.type.startsWith('image/')){toast('Please choose an image file.');$('photo').value='';return}const reader=new FileReader();reader.onload=()=>{$('photoPreview').src=reader.result;$('photoPreview').classList.remove('hide')};reader.onerror=()=>{toast('Could not read the photo. Please try another image.');$('photo').value='';$('photoPreview').src='';$('photoPreview').classList.add('hide')};reader.readAsDataURL(file)});
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeForm()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeForm()});
@@ -452,7 +480,550 @@ $('form').addEventListener('submit',async e=>{e.preventDefault();const file=$('p
 let payload={imageData,type:$('type').value,title:$('title').value.trim(),category:$('category').value,location:$('location').value.trim(),itemDate:$('itemDate').value||null,reporterName:$('name').value.trim(),reporterPhone:$('phone').value.trim(),description:$('description').value.trim()};
 try{let res=await fetch('/api/reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!res.ok){let d=await res.json().catch(()=>({}));throw Error(d.message||'Please check the form and try again.')}const created=await res.json().catch(()=>null);$('form').reset();$('photoPreview').src='';$('photoPreview').classList.add('hide');closeForm();toast('Report submitted. Thanks for helping your campus! 💜');load()}catch(err){$('error').textContent=err.message||'Could not submit report.'}});
 async function updateStatus(id,status){try{let r=await fetch(`/api/reports/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});if(!r.ok)throw 0;toast('Status updated');load()}catch{toast('Could not update status')}}
-async function deleteReport(id){if(!confirm('Are you sure you want to delete this report? This action cannot be undone.'))return;try{const res=await fetch(`/api/reports/${id}`,{method:'DELETE',headers:{'Accept':'application/json'}});if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err.message||'Could not delete report.');}toast('Report deleted successfully');load();}catch(err){toast(err.message||'Could not delete report');}}
+
+/* --------------------------------------------------------------------------
+   SOCIAL FEATURES: LIKES, SHARE, ARCHIVE, RECYCLE BIN & THREADED COMMENTS
+   -------------------------------------------------------------------------- */
+async function togglePostLike(id, btnEl) {
+  try {
+    const res = await fetch(`/api/reports/${id}/like`, { method: 'POST' });
+    if (!res.ok) throw 0;
+    const data = await res.json();
+    const countEl = document.querySelector(`.like-count-${id}`);
+    const heartIcon = document.querySelector(`.heart-icon-${id}`);
+    const likeBtn = btnEl || document.querySelector(`.like-btn-${id}`);
+    if (countEl) countEl.textContent = data.count || 0;
+    if (heartIcon) heartIcon.textContent = data.liked ? '❤️' : '🤍';
+    if (likeBtn) likeBtn.classList.toggle('active', data.liked);
+  } catch {
+    toast('Could not update like.');
+  }
+}
+
+async function sharePost(id, title) {
+  const postUrl = `${window.location.origin}/?report=${id}`;
+  const shareData = {
+    title: `CampUs: ${title}`,
+    text: `Lost & Found Report on CampUs: "${title}"`,
+    url: postUrl
+  };
+
+  if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+    try {
+      await navigator.share(shareData);
+      return;
+    } catch (err) {
+      if (err.name === 'AbortError') return;
+    }
+  }
+
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(postUrl);
+      toast('Post link copied to clipboard! 📋');
+    } else {
+      const temp = document.createElement('input');
+      temp.value = postUrl;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+      toast('Post link copied to clipboard! 📋');
+    }
+  } catch {
+    prompt('Copy this link to share the post:', postUrl);
+  }
+}
+
+function checkDirectPostLink() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const reportId = params.get('report') || (window.location.hash.startsWith('#report-') ? window.location.hash.replace('#report-', '') : null);
+    if (reportId) {
+      setTimeout(() => {
+        const card = document.querySelector(`[data-report-id="${reportId}"]`);
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          card.classList.add('post-card-highlight');
+          setTimeout(() => card.classList.remove('post-card-highlight'), 3500);
+        }
+      }, 350);
+    }
+  } catch {}
+}
+
+async function archiveReport(id) {
+  if (!confirm('Archive this post? It will be hidden from the campus feed and saved in Your Activity > Archive.')) return;
+  try {
+    const res = await fetch(`/api/reports/${id}/archive`, { method: 'POST' });
+    if (!res.ok) throw 0;
+    toast('Post moved to Archive 📁');
+    load();
+    if ($('communityProfilePage') && !$('communityProfilePage').classList.contains('hide')) {
+      openOwnPublicProfile();
+    }
+  } catch {
+    toast('Could not archive post.');
+  }
+}
+
+async function unarchiveReport(id) {
+  try {
+    const res = await fetch(`/api/reports/${id}/unarchive`, { method: 'POST' });
+    if (!res.ok) throw 0;
+    toast('Post restored to the campus feed! 🏠');
+    switchActivityTab('archive');
+    load();
+  } catch {
+    toast('Could not unarchive post.');
+  }
+}
+
+async function deleteReport(id, fromActivity = false) {
+  if (!confirm('Move this post to Recently Deleted? You can restore it anytime within 30 days.')) return;
+  try {
+    const res = await fetch(`/api/reports/${id}`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
+    if (!res.ok) throw 0;
+    toast('Post moved to Recently Deleted (Restorable for 30 days) 🗑️');
+    load();
+    if (fromActivity) {
+      switchActivityTab('archive');
+    }
+    if ($('communityProfilePage') && !$('communityProfilePage').classList.contains('hide')) {
+      openOwnPublicProfile();
+    }
+  } catch {
+    toast('Could not delete post.');
+  }
+}
+
+async function restoreReport(id) {
+  try {
+    const res = await fetch(`/api/reports/${id}/restore`, { method: 'POST' });
+    if (!res.ok) throw 0;
+    toast('Post restored to the campus feed! 🎉');
+    switchActivityTab('deleted');
+    load();
+  } catch {
+    toast('Could not restore post.');
+  }
+}
+
+async function permanentlyDeleteReport(id) {
+  if (!confirm('Permanently delete this report? This cannot be undone.')) return;
+  try {
+    const res = await fetch(`/api/reports/${id}/permanent`, { method: 'DELETE' });
+    if (!res.ok) throw 0;
+    toast('Post permanently deleted.');
+    switchActivityTab('deleted');
+  } catch {
+    toast('Could not permanently delete post.');
+  }
+}
+
+/* --------------------------------------------------------------------------
+   YOUR ACTIVITY CENTER (Archive, Recently Deleted, Likes)
+   -------------------------------------------------------------------------- */
+let currentActivityTab = 'archive';
+
+function openActivityCenter(defaultTab = 'archive') {
+  closeNavDrawer();
+  const modal = $('activityCenterModal');
+  if (!modal) return;
+  modal.classList.remove('hide');
+  document.body.classList.add('activity-modal-open');
+  switchActivityTab(defaultTab);
+}
+
+function closeActivityCenter() {
+  const modal = $('activityCenterModal');
+  if (modal) modal.classList.add('hide');
+  document.body.classList.remove('activity-modal-open');
+}
+
+async function switchActivityTab(tab) {
+  currentActivityTab = tab;
+  document.querySelectorAll('.activity-tab').forEach(b => {
+    b.classList.toggle('active', b.dataset.actTab === tab);
+  });
+  const container = $('activityContent');
+  if (!container) return;
+  container.innerHTML = '<div class="empty">Loading…</div>';
+
+  try {
+    if (tab === 'archive') {
+      const res = await fetch('/api/reports/archived');
+      const list = await res.json().catch(() => []);
+      const badge = $('activityArchiveBadge');
+      if (badge) badge.textContent = list.length;
+      if (!list.length) {
+        container.innerHTML = `
+          <div class="empty">
+            <span class="activity-empty-icon" style="font-size:32px;display:block;margin-bottom:8px;">📁</span>
+            <b>No Archived Posts</b>
+            <p>Posts you archive will appear here. Only you can see them.</p>
+          </div>`;
+        return;
+      }
+      container.innerHTML = `
+        <div class="activity-info-banner">
+          <span>📁</span>
+          <p><b>Archive:</b> These reports are hidden from the public feed. You can unarchive them anytime to show them back on the feed.</p>
+        </div>
+        <div class="activity-cards-list">
+          ${list.map(r => `
+            <article class="activity-post-card" id="act-post-${r.id}">
+              <div class="activity-card-meta">
+                <span class="pill ${r.type === 'FOUND' ? 'found' : ''}">● ${r.type}</span>
+                <span class="activity-date" style="font-size:11px;color:#A49385;">Archived ${timeAgo(r.archivedAt || r.createdAt)}</span>
+              </div>
+              <h3 class="activity-card-title">${esc(r.title)}</h3>
+              <p class="activity-card-desc">${esc(r.description || 'No description provided')}</p>
+              <div class="activity-card-tags">
+                <span>${categoryEmoji(r.category)} ${esc(r.category)}</span>
+                <span>📍 ${esc(r.location)}</span>
+              </div>
+              <div class="activity-card-actions">
+                <button type="button" class="act-btn-restore" onclick="unarchiveReport(${r.id})">↺ Unarchive (Show on Feed)</button>
+                <button type="button" class="act-btn-delete" onclick="deleteReport(${r.id}, true)">🗑 Move to Trash</button>
+              </div>
+            </article>
+          `).join('')}
+        </div>`;
+    } else if (tab === 'deleted') {
+      const res = await fetch('/api/reports/deleted');
+      const list = await res.json().catch(() => []);
+      const badge = $('activityDeletedBadge');
+      if (badge) badge.textContent = list.length;
+      if (!list.length) {
+        container.innerHTML = `
+          <div class="empty">
+            <span class="activity-empty-icon" style="font-size:32px;display:block;margin-bottom:8px;">🗑️</span>
+            <b>Recently Deleted is Empty</b>
+            <p>Deleted posts stay here for 30 days before permanent removal.</p>
+          </div>`;
+        return;
+      }
+      container.innerHTML = `
+        <div class="activity-info-banner warning">
+          <span>⏳</span>
+          <p><b>Recently Deleted:</b> Items remain here for 30 days. You can restore them to the feed anytime. After 30 days, they are permanently deleted.</p>
+        </div>
+        <div class="activity-cards-list">
+          ${list.map(r => `
+            <article class="activity-post-card deleted" id="act-post-${r.id}">
+              <div class="activity-card-meta">
+                <span class="pill ${r.type === 'FOUND' ? 'found' : ''}">● ${r.type}</span>
+                <span class="activity-countdown-badge">⏳ ${r.daysRemaining != null ? r.daysRemaining : 30} days left</span>
+              </div>
+              <h3 class="activity-card-title">${esc(r.title)}</h3>
+              <p class="activity-card-desc">${esc(r.description || 'No description provided')}</p>
+              <div class="activity-card-tags">
+                <span>${categoryEmoji(r.category)} ${esc(r.category)}</span>
+                <span>📍 ${esc(r.location)}</span>
+              </div>
+              <div class="activity-card-actions">
+                <button type="button" class="act-btn-restore" onclick="restoreReport(${r.id})">↺ Restore to Feed</button>
+                <button type="button" class="act-btn-permanent" onclick="permanentlyDeleteReport(${r.id})">✕ Delete Forever</button>
+              </div>
+            </article>
+          `).join('')}
+        </div>`;
+    } else if (tab === 'likes') {
+      const res = await fetch('/api/reports/liked');
+      const list = await res.json().catch(() => []);
+      const badge = $('activityLikesBadge');
+      if (badge) badge.textContent = list.length;
+      if (!list.length) {
+        container.innerHTML = `
+          <div class="empty">
+            <span class="activity-empty-icon" style="font-size:32px;display:block;margin-bottom:8px;">❤️</span>
+            <b>No Liked Posts Yet</b>
+            <p>Tap the heart icon on any post in the feed to save it to your likes.</p>
+          </div>`;
+        return;
+      }
+      container.innerHTML = `
+        <div class="activity-info-banner">
+          <span>❤️</span>
+          <p><b>Posts You Liked:</b> A collection of campus reports you showed support for.</p>
+        </div>
+        <div class="activity-cards-list">
+          ${list.map(r => `
+            <article class="activity-post-card" id="act-post-${r.id}">
+              <div class="activity-card-meta">
+                <span class="pill ${r.type === 'FOUND' ? 'found' : ''}">● ${r.type}</span>
+                <span class="activity-date" style="font-size:11px;color:#A49385;">${timeAgo(r.createdAt)}</span>
+              </div>
+              <h3 class="activity-card-title">${esc(r.title)}</h3>
+              <p class="activity-card-desc">${esc(r.description || 'No description provided')}</p>
+              <div class="activity-card-tags">
+                <span>${categoryEmoji(r.category)} ${esc(r.category)}</span>
+                <span>📍 ${esc(r.location)}</span>
+              </div>
+              <div class="activity-card-actions">
+                <button type="button" class="act-btn-view" onclick="viewPostFromActivity(${r.id})">👀 View Post</button>
+                <button type="button" class="act-btn-share" onclick="sharePost(${r.id}, '${esc(r.title)}')">🔗 Share</button>
+              </div>
+            </article>
+          `).join('')}
+        </div>`;
+    }
+  } catch (err) {
+    container.innerHTML = `<div class="empty"><b>Could not load activity</b><p>${esc(err.message || 'Please try again.')}</p></div>`;
+  }
+}
+
+function viewPostFromActivity(reportId) {
+  closeActivityCenter();
+  myReportsOnly = false;
+  chosenType = '';
+  statFilter = '';
+  load();
+  setTimeout(() => {
+    const card = document.querySelector(`[data-report-id="${reportId}"]`);
+    if (card) {
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.classList.add('post-card-highlight');
+      setTimeout(() => card.classList.remove('post-card-highlight'), 3500);
+    }
+  }, 400);
+}
+
+/* --------------------------------------------------------------------------
+   THREADED COMMENTS SYSTEM
+   -------------------------------------------------------------------------- */
+let currentCommentsReportId = null;
+let activeReplyCommentId = null;
+let activeReplyUsername = null;
+
+async function openPostComments(reportId) {
+  currentCommentsReportId = reportId;
+  activeReplyCommentId = null;
+  activeReplyUsername = null;
+  cancelCommentReply();
+
+  const modal = $('commentsModal');
+  if (!modal) return;
+  modal.classList.remove('hide');
+  document.body.classList.add('comments-modal-open');
+
+  const avatar = $('commentUserAvatar');
+  if (avatar) {
+    const initial = firstNameOfUser().charAt(0).toUpperCase();
+    if (currentUser?.profileImageData) {
+      avatar.innerHTML = `<img src="${currentUser.profileImageData}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+    } else {
+      avatar.textContent = initial;
+    }
+  }
+
+  const listEl = $('commentsList');
+  const snippetEl = $('commentsPostSnippet');
+  if (listEl) listEl.innerHTML = '<div class="empty">Loading comments…</div>';
+
+  try {
+    const [reportRes, commentsRes] = await Promise.all([
+      fetch(`/api/reports/${reportId}`),
+      fetch(`/api/reports/${reportId}/comments`)
+    ]);
+
+    if (reportRes.ok) {
+      const rep = await reportRes.json();
+      if (snippetEl) {
+        snippetEl.innerHTML = `
+          <div class="snippet-content">
+            <span class="pill ${rep.type === 'FOUND' ? 'found' : ''}">● ${rep.type}</span>
+            <b class="snippet-title">${esc(rep.title)}</b>
+            <span class="snippet-meta">by @${esc(rep.accountUsername || 'student')} · 📍 ${esc(rep.location)}</span>
+          </div>`;
+      }
+    }
+
+    const comments = commentsRes.ok ? await commentsRes.json() : [];
+    renderCommentsList(comments);
+  } catch (err) {
+    if (listEl) listEl.innerHTML = '<div class="empty">Could not load comments.</div>';
+  }
+}
+
+function closeCommentsModal() {
+  const modal = $('commentsModal');
+  if (modal) modal.classList.add('hide');
+  document.body.classList.remove('comments-modal-open');
+  currentCommentsReportId = null;
+  cancelCommentReply();
+}
+
+function cancelCommentReply() {
+  activeReplyCommentId = null;
+  activeReplyUsername = null;
+  const banner = $('commentReplyBanner');
+  if (banner) banner.classList.add('hide');
+  const input = $('commentInput');
+  if (input) input.placeholder = 'Add a comment or reply...';
+}
+
+function setCommentReply(commentId, authorUsername) {
+  activeReplyCommentId = commentId;
+  activeReplyUsername = authorUsername;
+  const banner = $('commentReplyBanner');
+  const target = $('commentReplyTarget');
+  if (banner && target) {
+    target.textContent = `@${authorUsername}`;
+    banner.classList.remove('hide');
+  }
+  const input = $('commentInput');
+  if (input) {
+    input.placeholder = `Reply to @${authorUsername}…`;
+    input.focus();
+  }
+}
+
+function renderCommentsList(comments) {
+  const listEl = $('commentsList');
+  if (!listEl) return;
+  if (!comments || !comments.length) {
+    listEl.innerHTML = `
+      <div class="empty">
+        <span class="comments-empty-icon" style="font-size:32px;display:block;margin-bottom:8px;">💬</span>
+        <b>No comments yet</b>
+        <p>Be the first to share clues, contact details, or congratulations!</p>
+      </div>`;
+    return;
+  }
+
+  listEl.innerHTML = comments.map(c => renderSingleCommentTree(c)).join('');
+}
+
+function renderSingleCommentTree(c) {
+  const isMine = currentUser && c.username && c.username.toLowerCase() === currentUser.username.toLowerCase();
+  const authorName = c.userDisplayName || c.username;
+  const initial = (authorName.charAt(0) || 'U').toUpperCase();
+  const avatarHtml = c.userProfileImageUrl 
+    ? `<img src="${esc(c.userProfileImageUrl)}" alt="" class="c-avatar-img">`
+    : `<div class="c-avatar-initial">${esc(initial)}</div>`;
+
+  const repliesHtml = (c.replies && c.replies.length) ? `
+    <div class="comment-replies-thread">
+      ${c.replies.map(r => {
+        const rIsMine = currentUser && r.username && r.username.toLowerCase() === currentUser.username.toLowerCase();
+        const rName = r.userDisplayName || r.username;
+        const rInitial = (rName.charAt(0) || 'U').toUpperCase();
+        const rAvatar = r.userProfileImageUrl 
+          ? `<img src="${esc(r.userProfileImageUrl)}" alt="" class="c-avatar-img">`
+          : `<div class="c-avatar-initial">${esc(rInitial)}</div>`;
+        return `
+          <div class="comment-item reply-item" id="comment-${r.id}">
+            <div class="comment-avatar">${rAvatar}</div>
+            <div class="comment-body">
+              <div class="comment-header-row">
+                <span class="comment-author" onclick="openChatUserProfile('${esc(rName)}','${esc(r.username)}')">${esc(rName)}</span>
+                <span class="comment-handle">@${esc(r.username)}</span>
+                <span class="comment-dot">·</span>
+                <span class="comment-time">${timeAgo(r.createdAt)}</span>
+              </div>
+              <div class="comment-text">
+                ${r.replyToUsername ? `<span class="reply-mention">@${esc(r.replyToUsername)}</span> ` : ''}
+                ${esc(r.content)}
+              </div>
+              <div class="comment-actions">
+                <button type="button" class="c-reply-btn" onclick="setCommentReply(${c.id}, '${esc(r.username)}')">Reply</button>
+                ${rIsMine ? `<button type="button" class="c-del-btn" onclick="deletePostComment(${r.id})">Delete</button>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  ` : '';
+
+  return `
+    <div class="comment-item" id="comment-${c.id}">
+      <div class="comment-avatar">${avatarHtml}</div>
+      <div class="comment-body">
+        <div class="comment-header-row">
+          <span class="comment-author" onclick="openChatUserProfile('${esc(authorName)}','${esc(c.username)}')">${esc(authorName)}</span>
+          <span class="comment-handle">@${esc(c.username)}</span>
+          <span class="comment-dot">·</span>
+          <span class="comment-time">${timeAgo(c.createdAt)}</span>
+        </div>
+        <div class="comment-text">${esc(c.content)}</div>
+        <div class="comment-actions">
+          <button type="button" class="c-reply-btn" onclick="setCommentReply(${c.id}, '${esc(c.username)}')">Reply</button>
+          ${isMine ? `<button type="button" class="c-del-btn" onclick="deletePostComment(${c.id})">Delete</button>` : ''}
+        </div>
+        ${repliesHtml}
+      </div>
+    </div>
+  `;
+}
+
+async function submitPostComment(event) {
+  if (event) event.preventDefault();
+  if (!currentCommentsReportId) return;
+  const input = $('commentInput');
+  const content = (input ? input.value : '').trim();
+  if (!content) return;
+
+  const submitBtn = $('commentSubmitBtn');
+  if (submitBtn) submitBtn.disabled = true;
+
+  try {
+    const payload = {
+      content,
+      parentCommentId: activeReplyCommentId,
+      replyToUsername: activeReplyUsername
+    };
+    const res = await fetch(`/api/reports/${currentCommentsReportId}/comments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw 0;
+
+    if (input) input.value = '';
+    cancelCommentReply();
+
+    const commentsRes = await fetch(`/api/reports/${currentCommentsReportId}/comments`);
+    if (commentsRes.ok) {
+      const comments = await commentsRes.json();
+      renderCommentsList(comments);
+      const listEl = $('commentsList');
+      if (listEl) listEl.scrollTop = listEl.scrollHeight;
+
+      const countEl = document.querySelector(`.comment-count-${currentCommentsReportId}`);
+      if (countEl) {
+        let totalCount = 0;
+        comments.forEach(c => {
+          totalCount += 1 + (c.replies ? c.replies.length : 0);
+        });
+        countEl.textContent = totalCount;
+      }
+    }
+  } catch {
+    toast('Could not post comment. Please try again.');
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
+  }
+}
+
+async function deletePostComment(commentId) {
+  if (!currentCommentsReportId) return;
+  if (!confirm('Delete this comment?')) return;
+  try {
+    const res = await fetch(`/api/reports/${currentCommentsReportId}/comments/${commentId}`, { method: 'DELETE' });
+    if (!res.ok) throw 0;
+    toast('Comment deleted');
+    const commentsRes = await fetch(`/api/reports/${currentCommentsReportId}/comments`);
+    if (commentsRes.ok) {
+      const comments = await commentsRes.json();
+      renderCommentsList(comments);
+    }
+  } catch {
+    toast('Could not delete comment.');
+  }
+}
 const boardSearch=$('boardSearch');
 let memberSearchTimer=null, memberSearchSequence=0;
 if(boardSearch){
@@ -545,6 +1116,8 @@ function handleDrawerNav(action) {
   closeNavDrawer();
   if (action === 'myReports') {
     openMyReportsView();
+  } else if (action === 'activity') {
+    openActivityCenter('archive');
   } else if (action === 'campusInfo') {
     const college = currentUser ? currentUser.collegeName : 'University Network';
     toast(`Verified Campus: ${college} 🏛️`);
@@ -912,7 +1485,7 @@ function confirmNavPopup(){
 }
 
 $('navPopup').addEventListener('click',e=>{if(e.target===$('navPopup'))closeNavPopup()});
-document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(navDrawerOpen){closeNavDrawer();return;}if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage();return;}if(!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile();return;}if(communityChatOpen){closeCommunityChat();return;}if(!$('navPopup').classList.contains('hide')){closeNavPopup();return;}if(!$('modal').classList.contains('hide')){closeForm();return;}closeMenu();closeProfileDropdown();});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(navDrawerOpen){closeNavDrawer();return;}if($('commentsModal')&&!$('commentsModal').classList.contains('hide')){closeCommentsModal();return;}if($('activityCenterModal')&&!$('activityCenterModal').classList.contains('hide')){closeActivityCenter();return;}if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage();return;}if(!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile();return;}if(communityChatOpen){closeCommunityChat();return;}if(!$('navPopup').classList.contains('hide')){closeNavPopup();return;}if(!$('modal').classList.contains('hide')){closeForm();return;}closeMenu();closeProfileDropdown();});
 window.addEventListener('click',e=>{if(profileMenuOpen&&!e.target.closest('#profileDropdown')&&!e.target.closest('#profileButton'))closeProfileDropdown()});
 window.addEventListener('resize',()=>{if(window.innerWidth>850)closeMenu();else closeProfileDropdown()});
 
@@ -1386,17 +1959,35 @@ function renderPublicProfile(data){
  // Public appearance belongs to the profile being viewed, not the viewer.
  // The API only returns bannerImageUrl when the target account is entitled to a banner.
  const hasBanner=!!data.bannerImageUrl;
+ const viewerUsername=String(data.viewerUsername||currentUser?.username||'').toLowerCase();
+ const targetUsername=String(data.username||'').toLowerCase();
+ const isOwnProfile=!!targetUsername&&targetUsername===viewerUsername;
  const posts=Array.isArray(data.posts)?data.posts:[];
  const postCards=posts.length?posts.map(post=>{
   const type=String(post.type||'').toUpperCase();
   const status=String(post.status||'OPEN').toUpperCase();
-  return `<article class="public-profile-post"><div class="public-profile-post-top"><span class="pill ${type==='FOUND'?'found':''}">${type==='FOUND'?'● FOUND ITEM':'● LOST ITEM'}</span><span class="status ${status==='RETURNED'?'returned':status==='MATCHED'?'matched':'open'}">${esc(status)}</span></div><h3>${esc(post.title||'Untitled item')}</h3><div class="meta">${esc(post.category||'Other')} · 📍 ${esc(post.location||'Location not specified')}</div>${post.imageData?`<img class="public-profile-post-image" src="${esc(post.imageData)}" alt="${esc(post.title||'Reported item')}" loading="lazy">`:''}${post.description?`<p>${esc(post.description)}</p>`:''}<small class="public-profile-post-date">${esc(post.itemDate||'Date not specified')}</small></article>`;
+  return `<article class="public-profile-post" id="profile-post-${post.id}">
+    <div class="public-profile-post-top">
+      <span class="pill ${type==='FOUND'?'found':''}">${type==='FOUND'?'● FOUND ITEM':'● LOST ITEM'}</span>
+      <span class="status ${status==='RETURNED'?'returned':status==='MATCHED'?'matched':'open'}">${esc(status)}</span>
+    </div>
+    <h3>${esc(post.title||'Untitled item')}</h3>
+    <div class="meta">${esc(post.category||'Other')} · 📍 ${esc(post.location||'Location not specified')}</div>
+    ${post.imageData?`<img class="public-profile-post-image" src="${esc(post.imageData)}" alt="${esc(post.title||'Reported item')}" loading="lazy">`:''}
+    ${post.description?`<p>${esc(post.description)}</p>`:''}
+    <small class="public-profile-post-date">${esc(post.itemDate||'Date not specified')}</small>
+    <div class="profile-post-owner-bar">
+      <button type="button" class="prof-act-btn" onclick="openPostComments(${post.id})">💬 Comments</button>
+      <button type="button" class="prof-act-btn" onclick="sharePost(${post.id}, '${esc(post.title)}')">🔗 Share</button>
+      ${isOwnProfile ? `
+        <button type="button" class="prof-act-btn" onclick="archiveReport(${post.id})" title="Archive post (hides from feed)">📁 Archive</button>
+        <button type="button" class="prof-act-btn del" onclick="deleteReport(${post.id})" title="Move to Recently Deleted (restorable for 30 days)">🗑 Delete</button>
+      ` : ''}
+    </div>
+  </article>`;
  }).join(''):'<div class="empty public-profile-empty"><b>No posts yet</b><p>This member has not posted any lost or found items.</p></div>';
  const viewerRole=String(data.viewerRole||currentUser?.role||'MEMBER').toUpperCase();
  const targetRole=String(data.role||'MEMBER').toUpperCase();
- const viewerUsername=String(data.viewerUsername||currentUser?.username||'').toLowerCase();
- const targetUsername=String(data.username||'').toLowerCase();
- const isOwnProfile=!!targetUsername&&targetUsername===viewerUsername;
  const bannerMarkup=hasBanner?`<div class="public-profile-banner"><img src="${esc(data.bannerImageUrl)}" alt="${esc(name)} profile banner" loading="lazy"></div>`:'';
  const editButton=isOwnProfile?'<div class="public-profile-own-actions"><button type="button" class="public-profile-edit-button" onclick="openProfileEditorPage()">Edit profile</button></div>':'';
  content.innerHTML=`<section class="public-profile-hero${hasBanner?' has-profile-banner':' no-profile-banner'}">${bannerMarkup}<div class="public-profile-avatar" aria-label="${esc(name)} avatar">${avatarInner(data.avatarId,name,data.profileImageUrl)}</div><h2>${esc(name)} ${roleBadgeMarkup(data.role)}</h2><p class="public-profile-handle">@${esc(data.username||'')}</p><div class="public-profile-course">${esc(data.course||'Course not provided')}</div><div class="public-profile-stats"><div><b>${Number(data.totalPosts)||0}</b><span>Posts</span></div><div><b>${Number(data.itemsReceivedBack)||0}</b><span>Received back</span></div><div><b>${Number(data.itemsReturnedToOthers)||0}</b><span>Returned to others</span></div></div>${editButton}</section><section class="public-profile-posts"><div class="public-profile-posts-heading"><h2>Posts</h2><span>${posts.length}</span></div><div class="public-profile-post-grid">${postCards}</div></section>`;
