@@ -5,6 +5,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -99,6 +101,21 @@ public class ReportController {
         }
         r.setStatus(status);
         return repo.save(r);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id, HttpServletRequest request) {
+        requireLogin(request);
+        Report r = repo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        String username = AuthController.currentUsername(request);
+        UserAccount user = currentUser(request);
+        boolean isOwner = username != null && r.getAccountUsername() != null && username.equalsIgnoreCase(r.getAccountUsername());
+        boolean isPrivileged = user != null && List.of("OWNER", "ADMIN").contains(user.getRole());
+        if (!isOwner && !isPrivileged) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot delete this report.");
+        }
+        repo.delete(r);
+        return ResponseEntity.noContent().build();
     }
 
     private void requireLogin(HttpServletRequest request) {

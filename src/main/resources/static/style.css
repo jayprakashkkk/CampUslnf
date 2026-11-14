@@ -2929,11 +2929,12 @@ body.back-controls-arrow #navPopup .nav-dialog > .nav-popup-back:focus-visible{o
 .college-badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;background:#ffeee0;color:#c67c3b;font-size:11px;font-weight:800;letter-spacing:0.02em;margin-left:8px;border:1px solid #ffd8b8;white-space:nowrap}
 @media(max-width:600px){.college-badge{font-size:9.5px;padding:2px 6px;margin-left:4px}}
 
+
 /* ==========================================================================
-   INSTAGRAM-STYLE APP REDESIGN — CampUs Modern Campus Social & Lost/Found
+   CAMPUS MODERN RESPONSIVE & DECLUTTERED APP SYSTEM
+   Optimized for Phone (<640px), Tablet (641px-899px), and Laptop/Desktop (>=900px)
    ========================================================================== */
 
-/* App Shell & Global Tweaks */
 :root {
   --insta-bg: #FAF7F2;
   --insta-card-bg: #FFFFFF;
@@ -2949,68 +2950,319 @@ body.back-controls-arrow #navPopup .nav-dialog > .nav-popup-back:focus-visible{o
   --insta-text-main: #2D2319;
   --insta-text-muted: #8B7F75;
   --insta-radius: 18px;
-  --insta-shadow: 0 4px 18px rgba(62, 48, 35, 0.06);
+  --insta-shadow: 0 4px 18px rgba(62, 48, 35, 0.05);
 }
 
 body {
   background: var(--insta-bg);
-  padding-bottom: 74px; /* Space for bottom nav */
+  color: var(--insta-text-main);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
 }
 
-/* Modern App Header */
+/* --------------------------------------------------------------------------
+   AUTH GATE SCREEN & DIRECT TABS
+   -------------------------------------------------------------------------- */
+#authGate.auth-gate {
+  position: fixed;
+  inset: 0;
+  background: rgba(45, 35, 25, 0.75);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.auth-card {
+  width: min(440px, 100%);
+  background: #ffffff;
+  border: 1px solid var(--insta-border);
+  border-radius: 22px;
+  box-shadow: 0 16px 40px rgba(45, 35, 25, 0.18);
+  padding: 28px 24px;
+  position: relative;
+  margin: auto;
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.auth-brand-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+.auth-brand-name {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--insta-text-main);
+  line-height: 1;
+}
+.auth-brand-name span { color: var(--insta-primary); }
+.auth-brand-name small {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--insta-text-muted);
+  margin-top: 4px;
+}
+
+.auth-kicker {
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  font-weight: 850;
+  color: var(--insta-primary);
+  margin: 0 0 16px;
+}
+
+#authWelcomeTitle {
+  display: none; /* Removed redundant title to save vertical space */
+}
+
+/* Direct Segmented Switch Tabs (Log In vs Create Account) */
+.auth-mode-tabs {
+  display: flex;
+  background: #F5EEE6;
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 18px;
+  gap: 4px;
+}
+
+.auth-tab {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  padding: 10px 12px;
+  border-radius: 9px;
+  font-size: 13.5px;
+  font-weight: 750;
+  color: var(--insta-text-muted);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  text-align: center;
+}
+
+.auth-tab.active {
+  background: #ffffff;
+  color: var(--insta-primary);
+  box-shadow: 0 2px 8px rgba(62, 48, 35, 0.08);
+}
+
+.auth-register-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.auth-register-fields[hidden] {
+  display: none !important;
+}
+
+.auth-card label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 750;
+  color: var(--insta-text-muted);
+  margin: 8px 0 4px;
+}
+
+.auth-card input,
+.auth-card select {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid #EFE6DC;
+  border-radius: 11px;
+  font-family: inherit;
+  font-size: 14px;
+  background: #FFFDFB;
+  color: var(--insta-text-main);
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  box-sizing: border-box;
+}
+
+.auth-card input:focus,
+.auth-card select:focus {
+  border-color: var(--insta-primary);
+  box-shadow: 0 0 0 3px rgba(232, 148, 75, 0.16);
+}
+
+.password-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.password-input-wrap input {
+  padding-right: 44px;
+}
+.password-toggle-btn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: 0;
+  color: var(--insta-text-muted);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-primary {
+  width: 100%;
+  padding: 13px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--insta-primary), #D78135);
+  color: #ffffff;
+  font-size: 14.5px;
+  font-weight: 800;
+  cursor: pointer;
+  margin-top: 14px;
+  box-shadow: 0 4px 14px rgba(232, 148, 75, 0.32);
+  transition: all 0.18s ease;
+}
+.auth-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(232, 148, 75, 0.42);
+}
+
+.auth-error {
+  font-size: 12px;
+  color: #D32F2F;
+  font-weight: 700;
+  margin: 8px 0 0;
+  min-height: 16px;
+}
+
+.panel-subtitle {
+  font-size: 12px;
+  color: var(--insta-text-muted);
+  margin: 0 0 10px;
+}
+
+/* --------------------------------------------------------------------------
+   ADAPTIVE APP HEADER (Phone, Tablet, Laptop)
+   -------------------------------------------------------------------------- */
 header.app-header {
   position: sticky;
   top: 0;
   z-index: 90;
-  height: 64px;
-  background: rgba(255, 252, 250, 0.94);
+  background: rgba(255, 252, 250, 0.95);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border-bottom: 1px solid var(--insta-border);
-  padding: 0 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 1px 6px rgba(45, 35, 25, 0.04);
+  box-shadow: 0 1px 6px rgba(45, 35, 25, 0.03);
 }
 
-.header-brand-wrap {
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
   display: flex;
   align-items: center;
   gap: 10px;
+  cursor: pointer;
+}
+.logo-text {
+  font-size: 20px;
+  font-weight: 850;
+  line-height: 1;
+}
+.logo-text span { color: var(--insta-primary); }
+.logo-text small {
+  display: block;
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: #B3A293;
+  margin-top: 4px;
 }
 
-.header-right-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.header-btn {
+.college-badge {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  height: 38px;
+  padding: 3px 9px;
   border-radius: 999px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
+  background: #FFEECA;
+  color: #8C5320;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  margin-left: 8px;
+  border: 1px solid #FFE0A6;
+  white-space: nowrap;
 }
 
-.header-chat-btn {
-  background: var(--insta-primary-light);
-  color: var(--insta-primary);
-  border-color: #F8D9C0;
-  padding: 0 14px;
+.header-search-wrap {
   position: relative;
 }
-.header-chat-btn:hover {
-  background: #FFE8D2;
+.header-search-wrap input {
+  width: 100%;
+  padding: 9px 14px;
+  border: 1px solid #EFE6DC;
+  border-radius: 20px;
+  font-family: inherit;
+  font-size: 13px;
+  background: #FFFDFB;
+  outline: none;
+  transition: all 0.18s ease;
+}
+.header-search-wrap input:focus {
+  border-color: var(--insta-primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(232, 148, 75, 0.14);
 }
 
+/* Desktop Header Navigation */
+.desktop-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.desk-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 750;
+  color: var(--insta-text-main);
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+.desk-nav-btn:hover {
+  background: #FFF4E8;
+  color: var(--insta-primary);
+}
+.desk-nav-btn.active {
+  background: #FFF4E8;
+  color: var(--insta-primary);
+  border-color: #F8D9C0;
+}
+
+.desk-chat-btn {
+  position: relative;
+}
 .header-chat-dot {
   width: 7px;
   height: 7px;
@@ -3019,21 +3271,20 @@ header.app-header {
   animation: pulse-dot 1.8s infinite;
 }
 
-@keyframes pulse-dot {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.6); }
-  70% { transform: scale(1.15); box-shadow: 0 0 0 5px rgba(37, 211, 102, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
-}
-
-.header-post-cta {
-  background: linear-gradient(135deg, var(--insta-primary), #D78135);
-  color: #fff;
-  padding: 0 16px;
+.desk-post-btn {
+  background: linear-gradient(135deg, var(--insta-primary), #D78135) !important;
+  color: #ffffff !important;
   box-shadow: 0 3px 10px rgba(232, 148, 75, 0.28);
 }
-.header-post-cta:hover {
+.desk-post-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 5px 14px rgba(232, 148, 75, 0.38);
+}
+
+.header-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .header-user-avatar {
@@ -3047,6 +3298,10 @@ header.app-header {
   font-weight: 800;
   overflow: hidden;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 .header-user-avatar img {
   width: 100%;
@@ -3054,69 +3309,75 @@ header.app-header {
   object-fit: cover;
 }
 
-/* Stories / Quick Categories Row */
-.insta-stories-container {
-  padding: 14px 0 6px;
-  margin-bottom: 12px;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-.insta-stories-container::-webkit-scrollbar {
-  display: none;
-}
-
-.insta-stories-list {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.category-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border-radius: 999px;
+.header-logout-btn {
+  border: 1px solid #EFE6DC;
   background: #ffffff;
-  border: 1px solid var(--insta-border);
-  font-size: 13px;
-  font-weight: 650;
-  color: var(--insta-text-main);
-  white-space: nowrap;
+  color: #79512E;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 750;
   cursor: pointer;
-  transition: all 0.18s ease;
-  flex-shrink: 0;
+  transition: all 0.15s ease;
 }
-.category-chip:hover {
-  border-color: var(--insta-primary);
-  color: var(--insta-primary);
-}
-.category-chip.active {
-  background: var(--insta-primary);
-  color: #ffffff;
-  border-color: var(--insta-primary);
-  box-shadow: 0 3px 10px rgba(232, 148, 75, 0.25);
+.header-logout-btn:hover {
+  border-color: #D32F2F;
+  color: #D32F2F;
 }
 
-/* Status Filter Switcher */
+/* --------------------------------------------------------------------------
+   MAIN FEED CONTAINER & STORIES / STATUS PILLS
+   -------------------------------------------------------------------------- */
+.feed-main-container {
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* Mobile Standalone Search Bar */
+.standalone-search {
+  max-width: 680px;
+  margin: 12px auto 6px;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+.standalone-search input {
+  width: 100%;
+  padding: 11px 16px;
+  border: 1px solid #EFE6DC;
+  border-radius: 14px;
+  font-family: inherit;
+  font-size: 13.5px;
+  background: #ffffff;
+  outline: none;
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+.standalone-search input:focus {
+  border-color: var(--insta-primary);
+  box-shadow: 0 0 0 3px rgba(232, 148, 75, 0.14);
+}
+
+/* Status Filter Switcher Tabs */
 .insta-status-tabs {
   display: flex;
   background: #ffffff;
   border: 1px solid var(--insta-border);
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 4px;
-  margin-bottom: 20px;
+  margin: 14px 0 12px;
   gap: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.02);
 }
+
 .status-tab {
   flex: 1;
   border: 0;
   background: transparent;
-  padding: 9px 8px;
-  border-radius: 9px;
-  font-size: 13px;
-  font-weight: 700;
+  padding: 9px 6px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 750;
   color: var(--insta-text-muted);
   cursor: pointer;
   transition: all 0.16s ease;
@@ -3129,18 +3390,78 @@ header.app-header {
   box-shadow: 0 2px 6px rgba(0,0,0,0.03);
 }
 
-/* Instagram Post Card */
+/* Category Stories Chips */
+.insta-stories-container {
+  padding: 4px 0 12px;
+  margin-bottom: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.insta-stories-container::-webkit-scrollbar { display: none; }
+
+.insta-stories-list {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid var(--insta-border);
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--insta-text-main);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  flex-shrink: 0;
+}
+.category-chip:hover {
+  border-color: var(--insta-primary);
+  color: var(--insta-primary);
+}
+.category-chip.active {
+  background: var(--insta-primary);
+  color: #ffffff;
+  border-color: var(--insta-primary);
+  box-shadow: 0 3px 10px rgba(232, 148, 75, 0.22);
+}
+
+.board-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--insta-text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   DECLUTTERED INSTAGRAM POST CARDS
+   -------------------------------------------------------------------------- */
+.grid-feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .insta-post-card {
   background: var(--insta-card-bg);
   border: 1px solid var(--insta-border);
   border-radius: var(--insta-radius);
   box-shadow: var(--insta-shadow);
-  margin-bottom: 22px;
   overflow: hidden;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
 }
 .insta-post-card:hover {
-  box-shadow: 0 8px 26px rgba(62, 48, 35, 0.09);
+  box-shadow: 0 6px 24px rgba(62, 48, 35, 0.08);
 }
 
 .insta-post-header {
@@ -3163,15 +3484,15 @@ header.app-header {
 }
 
 .insta-post-avatar {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: #FFF1E2;
   border: 2px solid #F5DECB;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 850;
   color: var(--insta-primary);
   overflow: hidden;
@@ -3188,7 +3509,7 @@ header.app-header {
   flex-direction: column;
 }
 .insta-post-author-name {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 800;
   color: var(--insta-text-main);
   display: flex;
@@ -3200,14 +3521,8 @@ header.app-header {
   color: var(--insta-text-muted);
 }
 
-.insta-post-badges {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
 .insta-type-badge {
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 850;
   padding: 4px 10px;
   border-radius: 999px;
@@ -3224,23 +3539,10 @@ header.app-header {
   border: 1px solid #C4ECD7;
 }
 
-.insta-status-badge {
-  font-size: 10px;
-  font-weight: 750;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: #F4EFEB;
-  color: #79512E;
-}
-.insta-status-badge.returned {
-  background: #E8F8F0;
-  color: #1F824E;
-}
-
 /* Post Media */
 .insta-post-media {
   width: 100%;
-  max-height: 400px;
+  max-height: 440px;
   background: #FDFBFA;
   display: flex;
   align-items: center;
@@ -3252,17 +3554,13 @@ header.app-header {
 .insta-post-media img {
   width: 100%;
   height: auto;
-  max-height: 400px;
+  max-height: 440px;
   object-fit: contain;
   display: block;
-  transition: transform 0.25s ease;
-}
-.insta-post-media:hover img {
-  transform: scale(1.02);
 }
 
 .insta-post-no-media {
-  padding: 24px 16px;
+  padding: 22px 16px;
   background: linear-gradient(135deg, #FFF9F3 0%, #FFF2E6 100%);
   display: flex;
   align-items: center;
@@ -3270,19 +3568,19 @@ header.app-header {
   border-bottom: 1px solid #FAF4EE;
 }
 .insta-no-media-icon {
-  font-size: 34px;
-  width: 54px;
-  height: 54px;
+  font-size: 32px;
+  width: 50px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #ffffff;
   border-radius: 14px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.04);
 }
 .insta-no-media-text b {
   display: block;
-  font-size: 14px;
+  font-size: 13.5px;
   color: var(--insta-text-main);
 }
 .insta-no-media-text small {
@@ -3292,9 +3590,8 @@ header.app-header {
 
 /* Post Body */
 .insta-post-body {
-  padding: 14px 16px 12px;
+  padding: 14px 16px 10px;
 }
-
 .insta-post-tags {
   display: flex;
   flex-wrap: wrap;
@@ -3307,25 +3604,24 @@ header.app-header {
   gap: 4px;
   background: #F7F1EB;
   color: #5D4D40;
-  padding: 4px 9px;
-  border-radius: 7px;
-  font-size: 11.5px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
   font-weight: 650;
 }
 
 .insta-post-title {
-  margin: 6px 0 8px;
-  font-size: 17px;
+  margin: 6px 0 6px;
+  font-size: 16.5px;
   font-weight: 850;
   color: var(--insta-text-main);
   line-height: 1.3;
 }
-
 .insta-post-desc {
-  font-size: 13.5px;
+  font-size: 13px;
   color: #5B4E44;
   line-height: 1.55;
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   white-space: pre-line;
 }
 
@@ -3333,22 +3629,19 @@ header.app-header {
   background: #FFF6EC;
   border: 1px dashed var(--insta-primary);
   border-radius: 10px;
-  padding: 8px 12px;
-  font-size: 12px;
+  padding: 7px 12px;
+  font-size: 11.5px;
   color: #8C5320;
-  margin: 10px 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  margin: 8px 0;
 }
 
-/* Post Actions Bar */
+/* Decluttered Actions Bar */
 .insta-post-actions {
-  padding: 10px 16px 14px;
+  padding: 10px 16px 12px;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 10px;
   border-top: 1px solid #FAF4EE;
   background: #FFFDFB;
 }
@@ -3357,10 +3650,10 @@ header.app-header {
   background: #25D366 !important;
   color: #ffffff !important;
   border: 0 !important;
-  padding: 8px 14px !important;
+  padding: 9px 18px !important;
   border-radius: 999px !important;
-  font-size: 12.5px !important;
-  font-weight: 750 !important;
+  font-size: 13px !important;
+  font-weight: 800 !important;
   display: inline-flex !important;
   align-items: center !important;
   gap: 6px !important;
@@ -3369,15 +3662,13 @@ header.app-header {
   cursor: pointer !important;
   transition: transform 0.15s ease !important;
 }
-.action-btn-whatsapp:hover {
-  transform: scale(1.03) !important;
-}
+.action-btn-whatsapp:hover { transform: scale(1.02) !important; }
 
 .action-btn-call {
   background: #ffffff !important;
   color: var(--insta-text-main) !important;
   border: 1px solid var(--insta-border) !important;
-  padding: 8px 12px !important;
+  padding: 8px 14px !important;
   border-radius: 999px !important;
   font-size: 12px !important;
   font-weight: 700 !important;
@@ -3391,35 +3682,62 @@ header.app-header {
   background: var(--insta-primary-light) !important;
   color: var(--insta-primary) !important;
   border: 1px solid #FADDC4 !important;
-  padding: 8px 12px !important;
+  padding: 9px 16px !important;
   border-radius: 999px !important;
-  font-size: 12px !important;
+  font-size: 12.5px !important;
   font-weight: 750 !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 5px !important;
+  gap: 6px !important;
   cursor: pointer !important;
 }
 
+.insta-owner-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  justify-content: space-between;
+}
+.owner-status-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--insta-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 .action-status-select {
-  margin-left: auto;
   border: 1px solid var(--insta-border);
   background: #ffffff;
   padding: 6px 10px;
   border-radius: 8px;
-  font-size: 11.5px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 750;
   color: var(--insta-text-main);
   cursor: pointer;
 }
+.action-btn-del {
+  border: 1px solid #FFCDD2;
+  background: #FFF5F5;
+  color: #D32F2F;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.action-btn-del:hover { background: #FFEBEE; }
 
-/* Instagram Bottom Navigation Bar */
+/* --------------------------------------------------------------------------
+   BOTTOM NAVIGATION BAR (Phone & Tablet)
+   -------------------------------------------------------------------------- */
 .bottom-app-nav {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 62px;
+  height: 58px;
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
@@ -3438,12 +3756,12 @@ header.app-header {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
   background: transparent;
   border: 0;
   padding: 6px 0;
   color: #8C7F74;
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 700;
   cursor: pointer;
   position: relative;
@@ -3462,15 +3780,14 @@ header.app-header {
 .bottom-nav-dot {
   position: absolute;
   top: 6px;
-  right: calc(50% - 14px);
-  width: 7px;
-  height: 7px;
+  right: calc(50% - 13px);
+  width: 6.5px;
+  height: 6.5px;
   border-radius: 50%;
   background: #25D366;
   border: 1.5px solid #ffffff;
 }
 
-/* Big elevated center "+" button */
 .bottom-nav-item.nav-post-cta {
   flex: 0 0 54px;
 }
@@ -3487,134 +3804,138 @@ header.app-header {
   font-weight: 400;
   box-shadow: 0 4px 14px rgba(232, 148, 75, 0.42);
   transform: translateY(-8px);
-  transition: transform 0.18s ease;
+  transition: transform 0.16s ease;
 }
 .bottom-nav-item.nav-post-cta:active .nav-post-circle {
   transform: translateY(-5px) scale(0.96);
 }
 
-/* Instagram-style Profile View Header */
-.insta-profile-card {
-  background: #ffffff;
-  border: 1px solid var(--insta-border);
-  border-radius: var(--insta-radius);
-  overflow: hidden;
-  margin-bottom: 24px;
-  box-shadow: var(--insta-shadow);
+/* --------------------------------------------------------------------------
+   MODAL DIALOGS (Clean & Decluttered)
+   -------------------------------------------------------------------------- */
+.modern-modal-card {
+  width: min(560px, 100%) !important;
+  border-radius: 20px !important;
+  padding: 24px !important;
+  box-sizing: border-box;
 }
 
-.insta-profile-cover {
-  height: 130px;
-  background: linear-gradient(135deg, #E8944B 0%, #FFE0C2 100%);
-  background-size: cover;
-  background-position: center;
-  position: relative;
-}
-
-.insta-profile-main {
-  padding: 0 16px 16px;
-  position: relative;
-}
-
-.insta-profile-avatar-row {
+.modal-type-switcher {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-top: -46px;
-  margin-bottom: 10px;
+  gap: 10px;
+  margin: 12px 0 16px;
+}
+.modal-type-btn {
+  flex: 1;
+  padding: 11px;
+  border-radius: 12px;
+  border: 1px solid #EFE6DC;
+  background: #ffffff;
+  color: var(--insta-text-main);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+.modal-type-btn.active-lost {
+  background: #FEECE9;
+  color: #E05A47;
+  border-color: #E05A47;
+}
+.modal-type-btn.active-found {
+  background: #E8F8F0;
+  color: #2E9D64;
+  border-color: #2E9D64;
 }
 
-.insta-profile-avatar-big {
-  width: 86px;
-  height: 86px;
-  border-radius: 50%;
-  border: 4px solid #ffffff;
-  background: #FFF2E4;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+.modal-single-action {
+  margin-top: 14px;
+}
+
+/* Chat Modern Card */
+.modern-chat-card {
+  max-width: 680px;
+  height: 88vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
   overflow: hidden;
+  border-radius: 22px;
+  box-sizing: border-box;
+}
+.chat-topbar {
+  padding: 12px 16px;
+  border-bottom: 1px solid #F0E6DC;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 32px;
+  justify-content: space-between;
+  background: rgba(255,255,255,0.98);
+}
+.chat-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.chat-page-heading h2 {
+  margin: 0;
+  font-size: 16px;
   font-weight: 850;
-  color: var(--insta-primary);
-}
-.insta-profile-avatar-big img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.insta-profile-edit-btn {
-  border: 1px solid var(--insta-border);
-  background: #ffffff;
   color: var(--insta-text-main);
-  padding: 8px 16px;
-  border-radius: 999px;
-  font-size: 13px;
+}
+.chat-page-heading small {
+  font-size: 11px;
+  color: #2E9D64;
+  font-weight: 700;
+}
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  background: #FAF7F2;
+}
+.chat-compose {
+  padding: 10px 14px;
+  background: #ffffff;
+  border-top: 1px solid #F0E6DC;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.chat-compose textarea {
+  flex: 1;
+  padding: 9px 14px;
+  border: 1px solid #EFE6DC;
+  border-radius: 20px;
+  font-family: inherit;
+  font-size: 13.5px;
+  resize: none;
+  outline: none;
+  box-sizing: border-box;
+}
+.chat-send-btn {
+  border: 0;
+  background: var(--insta-primary);
+  color: #fff;
+  border-radius: 20px;
+  padding: 9px 16px;
   font-weight: 750;
   cursor: pointer;
-  transition: all 0.15s ease;
-}
-.insta-profile-edit-btn:hover {
-  border-color: var(--insta-primary);
-  color: var(--insta-primary);
+  white-space: nowrap;
 }
 
-.insta-profile-name {
-  margin: 0 0 2px;
-  font-size: 20px;
-  font-weight: 850;
-  color: var(--insta-text-main);
-}
-.insta-profile-handle {
-  font-size: 13px;
-  color: var(--insta-text-muted);
-  margin-bottom: 8px;
-}
-.insta-profile-bio {
-  font-size: 13px;
-  color: #5A4E44;
-  line-height: 1.5;
-  margin-bottom: 14px;
+/* Profile Photo Upload Button */
+.upload-photo-btn {
+  border: 1px solid #E8944B;
+  background: #FFF4E5;
+  color: #E8944B;
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 12.5px;
+  font-weight: 750;
+  cursor: pointer;
 }
 
-.insta-profile-stats-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  background: #FFFBF7;
-  border: 1px solid #F5EAE0;
-  border-radius: 12px;
-  padding: 10px 4px;
-  text-align: center;
-}
-.insta-stat-box b {
-  display: block;
-  font-size: 18px;
-  color: var(--insta-primary);
-  font-weight: 850;
-}
-.insta-stat-box small {
-  font-size: 11px;
-  color: var(--insta-text-muted);
-}
-
-/* Live Username Check Message */
-.username-check-result {
-  font-size: 12px;
-  font-weight: 700;
-  margin-top: 4px;
-  display: block;
-  transition: color 0.15s ease;
-}
-.username-check-result.error {
-  color: #D32F2F !important;
-}
-.username-check-result.success {
-  color: #2E7D32 !important;
-}
-
-/* Lightbox Modal for Image Zoom */
+/* Lightbox Modal */
 .image-lightbox {
   position: fixed;
   inset: 0;
@@ -3633,5 +3954,125 @@ header.app-header {
   object-fit: contain;
   border-radius: 14px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.app-footer {
+  margin-top: 32px;
+  padding: 20px 0 40px;
+  text-align: center;
+  color: var(--insta-text-muted);
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   VIEWPORT BREAKPOINTS: LAPTOP, TABLET & PHONE
+   -------------------------------------------------------------------------- */
+
+/* 1. Laptop & Desktop (>= 860px) */
+@media (min-width: 860px) {
+  body {
+    padding-bottom: 24px !important; /* No bottom nav on desktop */
+  }
+  .bottom-app-nav {
+    display: none !important; /* Completely hide bottom nav on desktop */
+  }
+  header.app-header {
+    height: 66px;
+    padding: 0 28px;
+  }
+  .desktop-nav {
+    display: flex !important;
+  }
+  .header-search-wrap {
+    display: flex !important;
+    align-items: center;
+    flex: 0 1 360px;
+    margin: 0 20px;
+  }
+  .standalone-search {
+    display: none !important; /* Integrated search in header is used */
+  }
+  .feed-main-container {
+    max-width: 680px !important;
+    padding: 0 16px !important;
+  }
+}
+
+/* 2. Tablet (641px - 859px) */
+@media (min-width: 641px) and (max-width: 859px) {
+  body {
+    padding-bottom: 74px !important;
+  }
+  .bottom-app-nav {
+    display: flex !important;
+  }
+  .desktop-nav {
+    display: none !important;
+  }
+  .header-search-wrap {
+    display: none !important;
+  }
+  .standalone-search {
+    display: block !important;
+    max-width: 640px !important;
+  }
+  .feed-main-container {
+    max-width: 640px !important;
+    padding: 0 16px !important;
+  }
+}
+
+/* 3. Mobile Phone (< 640px) */
+@media (max-width: 640px) {
+  body {
+    padding-bottom: 74px !important;
+  }
+  .bottom-app-nav {
+    display: flex !important;
+  }
+  .desktop-nav {
+    display: none !important;
+  }
+  .header-search-wrap {
+    display: none !important;
+  }
+  .standalone-search {
+    display: block !important;
+    padding: 0 12px !important;
+    margin: 8px auto 4px !important;
+  }
+  header.app-header {
+    height: 56px;
+    padding: 0 12px;
+  }
+  .feed-main-container {
+    padding: 0 10px !important;
+    max-width: 100% !important;
+  }
+  .insta-post-card {
+    border-radius: 16px;
+    margin-bottom: 16px;
+  }
+  .insta-post-header {
+    padding: 10px 12px;
+  }
+  .insta-post-body {
+    padding: 10px 12px;
+  }
+  .insta-post-actions {
+    padding: 8px 12px 10px;
+  }
+  .modern-chat-card {
+    height: 96vh;
+    border-radius: 16px;
+  }
+  .college-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    margin-left: 4px;
+  }
 }
 

@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="CampUs">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="stylesheet" href="/style.css?v=campus-insta-20261114">
+  <link rel="stylesheet" href="/style.css?v=campus-clean-20261114">
 </head>
 <body class="auth-locked">
 
@@ -26,27 +26,33 @@
     </div>
     <p class="auth-kicker">ONE CAMPUS. ONE COMMUNITY.</p>
     <h1 id="authWelcomeTitle">Welcome to CampUs</h1>
-    <div id="authChoices" class="auth-choices">
-      <button type="button" id="showLoginButton">Login</button>
-      <button type="button" id="showRegisterButton" class="auth-secondary">Create new account</button>
+
+    <!-- Direct Segmented Tabs: Instant Switch between Login & Register -->
+    <div id="authChoices" class="auth-mode-tabs">
+      <button type="button" id="showLoginButton" class="auth-tab active" onclick="chooseAuthMode('login')">Log In</button>
+      <button type="button" id="showRegisterButton" class="auth-tab" onclick="chooseAuthMode('register')">Create Account</button>
     </div>
-    <section id="authFormPanel" class="hide" aria-labelledby="authFormTitle">
-      <h2 id="authFormTitle">Login</h2>
+
+    <!-- Direct Form Panel: No Double-Click Needed -->
+    <section id="authFormPanel" aria-labelledby="authFormTitle">
+      <h2 id="authFormTitle" class="visually-hidden">Log In</h2>
       <form id="authForm" novalidate>
+        
+        <!-- Registration Fields (Revealed when Create Account is tapped) -->
         <div id="authRegisterFields" class="auth-register-fields" hidden>
           <label for="authFullName">Full name *</label>
           <input id="authFullName" name="displayName" type="text" autocomplete="name" maxlength="100" disabled placeholder="Enter your full name">
           
           <label for="authCollege">Select your College / University *</label>
           <select id="authCollege" name="college" disabled required>
-            <option value="">Choose college...</option>
+            <option value="">Choose your campus...</option>
             <option value="CGC_UNIV">CGC University</option>
             <option value="CU">CU (Chandigarh University)</option>
             <option value="CGC_LANDRAN">CGC Landran</option>
             <option value="LPU">LPU (Lovely Professional University)</option>
           </select>
           
-          <label for="authCourse">Course / Field *</label>
+          <label for="authCourse">Course / Branch *</label>
           <input id="authCourse" name="course" type="text" autocomplete="organization-title" maxlength="100" disabled placeholder="e.g. BCA, B.Tech, or MBA">
           
           <label for="authEmail">Email address *</label>
@@ -66,13 +72,13 @@
         </div>
 
         <p id="authError" class="auth-error" role="alert" aria-live="polite"></p>
-        <button type="submit" id="authSubmitButton" class="auth-primary">Login</button>
+        <button type="submit" id="authSubmitButton" class="auth-primary">Log In</button>
         <button type="button" id="forgotPasswordButton" class="auth-forgot-link">Forgot password?</button>
 
         <!-- Forgot Password Panel -->
         <section id="forgotPasswordPanel" class="forgot-password-panel" hidden aria-label="Reset password">
           <h3 id="forgotPasswordTitle">Reset your password</h3>
-          <p style="font-size:12px;color:var(--insta-text-muted);margin:0 0 8px;">Enter your registered email or username to receive a 6-digit OTP code.</p>
+          <p class="panel-subtitle">Enter your registered email or username to receive a 6-digit OTP code.</p>
           <label for="resetEmail">Email or Username</label>
           <input id="resetEmail" type="text" autocomplete="username" placeholder="e.g. jay or name@gmail.com">
           <button type="button" id="sendResetOtpButton" class="auth-secondary">Send OTP</button>
@@ -100,31 +106,47 @@
   </section>
 </div>
 
-<!-- Modern Instagram-Style App Header -->
+<!-- Modern Adaptive App Header (Phone, Tablet, Laptop) -->
 <header class="app-header">
-  <div class="header-brand-wrap">
+  <div class="header-left">
     <div class="logo">
       <img class="brand-mark" src="/icons/campusfind-mark-cream-orange.svg?v=campus-4" alt="CampUs logo">
-      <div>Camp<span>Us</span><small>LOST &amp; FOUND</small></div>
+      <div class="logo-text">Camp<span>Us</span><small>LOST &amp; FOUND</small></div>
       <span id="campusCollegeBadge" class="college-badge" hidden></span>
     </div>
   </div>
-  
-  <div class="header-right-actions">
-    <button type="button" class="header-btn header-chat-btn" onclick="openCommunityChat()" aria-label="Open Community Chat">
-      <span>💬</span>
+
+  <!-- Integrated Desktop Search Input (Visible on Laptop & Tablet >= 860px) -->
+  <div class="header-search-wrap">
+    <input id="boardSearch" type="search" placeholder="🔍 Search item, category, location or @username..." aria-label="Search reports and members" autocomplete="off">
+    <div id="userSearchResults" class="user-search-results" role="listbox" aria-label="Matching CampUs members" hidden></div>
+  </div>
+
+  <!-- Desktop Navigation Bar (Visible on Laptop & Tablet >= 860px) -->
+  <nav class="desktop-nav" aria-label="Desktop Navigation">
+    <button type="button" class="desk-nav-btn active" data-desk-nav="feed" onclick="switchNavTab('feed')">
+      <span>🏠 Feed</span>
+    </button>
+    <button type="button" class="desk-nav-btn desk-chat-btn" data-desk-nav="chat" onclick="openCommunityChat()">
+      <span>💬 Chat</span>
       <span class="header-chat-dot"></span>
-      <span>Chat</span>
     </button>
-    <button type="button" class="header-btn header-post-cta" onclick="openForm('LOST')" aria-label="Post lost or found item">
-      <span>＋</span> Post
+    <button type="button" class="desk-nav-btn desk-post-btn" onclick="openForm('LOST')">
+      <span>＋ Report Item</span>
     </button>
-    <button type="button" class="header-user-avatar" id="profileButton" onclick="openDesktopProfile()" aria-label="Open Profile">
+  </nav>
+
+  <!-- Right Actions: Avatar & Logout -->
+  <div class="header-right-actions">
+    <button type="button" class="header-user-avatar" id="profileButton" onclick="openDesktopProfile()" aria-label="Open Profile" title="My Profile">
       <span id="headerAvatarText">U</span>
+    </button>
+    <button type="button" class="header-logout-btn" onclick="logout()" aria-label="Log out" title="Log out">
+      <span>Log out</span>
     </button>
   </div>
 
-  <!-- Legacy navlinks kept hidden for complete backwards compatibility -->
+  <!-- Legacy mainNav kept hidden for backwards compatibility -->
   <nav class="navlinks hide" id="mainNav" aria-hidden="true">
     <a href="#home" data-page="home">Home</a>
     <a href="#board" data-page="board">Browse items</a>
@@ -139,15 +161,22 @@
   </div>
 </header>
 
-<!-- Search Bar -->
-<div class="board-search" style="max-width:1080px;margin:12px auto 0;padding:0 16px;">
-  <input id="boardSearch" type="search" placeholder="🔍 Search item, category, location or @username..." aria-label="Search reports and members" autocomplete="off">
-  <div id="userSearchResults" class="user-search-results" role="listbox" aria-label="Matching CampUs members" hidden></div>
+<!-- Mobile Standalone Search Bar (Visible on Phone < 860px) -->
+<div class="board-search standalone-search" id="mobileSearchWrap">
+  <input id="mobileBoardSearch" type="search" placeholder="🔍 Search items, categories, or members..." aria-label="Search reports" autocomplete="off" oninput="syncMobileSearch(this.value)">
 </div>
 
-<!-- Main App Content -->
-<main style="max-width:1080px;margin:auto;padding:0 16px;">
+<!-- Main Feed Container (Optimized max-width: 680px for Phone, Tablet, Laptop) -->
+<main class="feed-main-container">
   
+  <!-- Status Filter Switcher Tabs -->
+  <div class="insta-status-tabs" aria-label="Filter reports by status">
+    <button type="button" class="status-tab active" data-tab-status="ALL" onclick="filterStats('ALL')">All (<span id="total">0</span>)</button>
+    <button type="button" class="status-tab" data-tab-status="LOST" onclick="filterStats('LOST')">🔴 Lost (<span id="lost">0</span>)</button>
+    <button type="button" class="status-tab" data-tab-status="FOUND" onclick="filterStats('FOUND')">🟢 Found (<span id="found">0</span>)</button>
+    <button type="button" class="status-tab" data-tab-status="RETURNED" onclick="filterStats('RETURNED')">✨ Returned (<span id="returned">0</span>)</button>
+  </div>
+
   <!-- Instagram Category Stories / Chips Bar -->
   <div class="insta-stories-container">
     <div class="insta-stories-list">
@@ -163,39 +192,30 @@
     </div>
   </div>
 
-  <!-- Status Switcher Tabs -->
-  <div class="insta-status-tabs">
-    <button type="button" class="status-tab active" data-tab-status="ALL" onclick="filterStats('ALL')">All Reports (<span id="total">0</span>)</button>
-    <button type="button" class="status-tab" data-tab-status="LOST" onclick="filterStats('LOST')">🔴 Lost (<span id="lost">0</span>)</button>
-    <button type="button" class="status-tab" data-tab-status="FOUND" onclick="filterStats('FOUND')">🟢 Found (<span id="found">0</span>)</button>
-    <button type="button" class="status-tab" data-tab-status="RETURNED" onclick="filterStats('RETURNED')">✨ Returned (<span id="returned">0</span>)</button>
-  </div>
-
   <!-- Board Feed Section -->
   <section id="board" class="default-list-mode">
-    <div class="board-meta" style="margin-bottom:14px;">
-      <span id="resultCount" style="font-weight:700;color:var(--insta-text-muted);">Loading campus reports…</span>
-      <button class="text" onclick="load()" style="font-size:13px;font-weight:750;color:var(--insta-primary);border:0;background:none;cursor:pointer;">↻ Refresh</button>
+    <div class="board-meta">
+      <span id="resultCount">Loading campus reports…</span>
     </div>
 
     <!-- Live Post Grid / Instagram Feed Cards -->
-    <div id="grid" class="grid" style="display:flex;flex-direction:column;gap:18px;">
+    <div id="grid" class="grid-feed-list">
       <div class="empty">Loading campus feed…</div>
     </div>
   </section>
 
-  <!-- Hidden Match Poster & Legacy Hero Elements (preserved for JS state without visual clutter) -->
+  <!-- Hidden Match Poster & Legacy Elements (preserved for JS state without clutter) -->
   <section class="hero hide" id="home" hidden aria-hidden="true">
     <div class="art"><div class="orb"></div><div class="fakecard" id="matchPoster"><big id="matchIcon">⌕</big><b id="matchName">No match found</b><small id="matchMeta"></small><label id="matchBadge"></label></div></div>
   </section>
 
-  <footer style="margin-top:30px;padding:20px 0 40px;text-align:center;color:var(--insta-text-muted);font-size:12px;">
-    <span>CampUs · Lost &amp; Found University Hub</span><br>
+  <footer class="app-footer">
+    <span>CampUs · University Lost &amp; Found Hub</span>
     <span id="copyrightNotice">Copyright © 2026 CampUs. Built for students, powered by kindness.</span>
   </footer>
 </main>
 
-<!-- Fixed Instagram Bottom Navigation Bar -->
+<!-- Fixed Mobile Bottom Navigation Bar (Hidden on Desktop >= 860px) -->
 <nav class="bottom-app-nav" aria-label="Bottom Navigation">
   <button type="button" class="bottom-nav-item active" data-nav="feed" onclick="switchNavTab('feed')">
     <span class="bottom-nav-icon">🏠</span>
@@ -221,21 +241,22 @@
 
 <!-- Create Post Modal Dialog -->
 <div id="modal" class="overlay hide">
-  <div class="dialog">
-    <button class="x universal-back-arrow" type="button" onclick="closeForm()" aria-label="Back to CampUs">‹</button>
+  <div class="dialog modern-modal-card">
+    <button class="x universal-back-arrow" type="button" onclick="closeForm()" aria-label="Close modal">✕</button>
     <small class="eyebrow">HELP AN ITEM FIND ITS WAY</small>
-    <h2 id="formTitle">Report an item</h2>
+    <h2 id="formTitle">Report an Item</h2>
+    
     <form id="form">
       <input id="type" type="hidden">
       
-      <!-- Type Toggle in Modal -->
-      <div style="display:flex;gap:10px;margin:12px 0 16px;">
-        <button type="button" id="modalTypeLost" onclick="setFormType('LOST')" style="flex:1;padding:10px;border-radius:10px;border:1px solid #E05A47;background:#FEECE9;color:#E05A47;font-weight:800;cursor:pointer;">🔴 I Lost an Item</button>
-        <button type="button" id="modalTypeFound" onclick="setFormType('FOUND')" style="flex:1;padding:10px;border-radius:10px;border:1px solid #EFE6DC;background:#fff;color:#79512E;font-weight:800;cursor:pointer;">🟢 I Found an Item</button>
+      <!-- Type Switcher Tabs in Modal -->
+      <div class="modal-type-switcher">
+        <button type="button" id="modalTypeLost" class="modal-type-btn active-lost" onclick="setFormType('LOST')">🔴 I Lost an Item</button>
+        <button type="button" id="modalTypeFound" class="modal-type-btn" onclick="setFormType('FOUND')">🟢 I Found an Item</button>
       </div>
 
       <div class="fields">
-        <label>Item name *<input id="title" required placeholder="e.g. Blue Boat Earbuds or Student ID"></label>
+        <label>Item name *<input id="title" required placeholder="e.g. Boat Airdopes or Student ID Card"></label>
         
         <label>Category *
           <select id="category" required>
@@ -266,10 +287,12 @@
           <img id="photoPreview" class="photo-preview hide" alt="Selected item photo preview">
         </label>
       </div>
+      
       <p id="error" class="auth-error"></p>
-      <div class="actions">
-        <button type="button" class="light" onclick="closeForm()">Cancel</button>
-        <button type="submit" id="submitReportButton">Post to Campus Feed →</button>
+      
+      <!-- Single Clean Action Button (Removed Redundant Cancel Button) -->
+      <div class="modal-single-action">
+        <button type="submit" id="submitReportButton" class="auth-primary">Post to Campus Feed →</button>
       </div>
     </form>
   </div>
@@ -277,13 +300,13 @@
 
 <!-- Community Chat Overlay / View -->
 <div id="communityChatOverlay" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="communityChatTitle">
-  <section class="dialog community-chat-dialog" style="max-width:720px;height:90vh;display:flex;flex-direction:column;padding:0;overflow:hidden;border-radius:22px;">
-    <div class="chat-topbar" style="padding:14px 18px;border-bottom:1px solid #F0E6DC;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.98);">
-      <div style="display:flex;align-items:center;gap:12px;">
+  <section class="dialog community-chat-dialog modern-chat-card">
+    <div class="chat-topbar">
+      <div class="chat-topbar-left">
         <button class="chat-back universal-back-arrow" type="button" onclick="closeCommunityChat()" aria-label="Back">‹</button>
         <div class="chat-page-heading">
-          <h2 id="communityChatTitle" style="margin:0;font-size:17px;font-weight:850;color:var(--insta-text-main);">Community Chat</h2>
-          <small id="chatCampusSubtitle" style="font-size:11.5px;color:#2E9D64;font-weight:700;">🟢 Live Campus Hub</small>
+          <h2 id="communityChatTitle">Community Chat</h2>
+          <small id="chatCampusSubtitle">🟢 Live Campus Hub</small>
         </div>
       </div>
       <button class="chat-mute-toggle" id="chatMuteButton" type="button" onclick="toggleCommunityMute()" aria-pressed="false" aria-label="Mute notifications">
@@ -292,20 +315,20 @@
     </div>
 
     <!-- Chat Messages Scroll Container -->
-    <div id="chatMessages" class="chat-messages" aria-live="polite" style="flex:1;overflow-y:auto;padding:16px;background:#FAF7F2;">
+    <div id="chatMessages" class="chat-messages" aria-live="polite">
       <div class="empty">Loading campus messages…</div>
     </div>
 
     <!-- Reply Preview -->
-    <div id="chatReplyPreview" class="chat-reply-preview hide" style="padding:8px 16px;background:#FFF3E6;border-top:1px solid #F5DECB;display:flex;justify-content:space-between;align-items:center;">
-      <span style="font-size:12px;color:var(--insta-primary);"><b>Replying to:</b> <span id="chatReplyText"></span></span>
-      <button type="button" onclick="clearChatReply()" aria-label="Cancel reply" style="border:0;background:none;font-size:16px;cursor:pointer;">✕</button>
+    <div id="chatReplyPreview" class="chat-reply-preview hide">
+      <span class="chat-reply-label"><b>Replying to:</b> <span id="chatReplyText"></span></span>
+      <button type="button" onclick="clearChatReply()" aria-label="Cancel reply" class="chat-reply-cancel">✕</button>
     </div>
 
     <!-- Chat Input Form -->
-    <form id="communityChatForm" class="chat-compose" style="padding:12px 16px;background:#ffffff;border-top:1px solid #F0E6DC;display:flex;gap:10px;">
-      <textarea id="communityChatInput" rows="1" maxlength="2000" placeholder="Message your campus community… (Enter to send)" required style="flex:1;padding:10px 14px;border:1px solid #EFE6DC;border-radius:20px;font-family:inherit;font-size:14px;resize:none;outline:none;"></textarea>
-      <button type="submit" aria-label="Send message" style="border:0;background:var(--insta-primary);color:#fff;border-radius:20px;padding:0 18px;font-weight:750;cursor:pointer;transition:transform 0.15s ease;">Send ➤</button>
+    <form id="communityChatForm" class="chat-compose">
+      <textarea id="communityChatInput" rows="1" maxlength="2000" placeholder="Message your campus community… (Enter to send)" required></textarea>
+      <button type="submit" aria-label="Send message" class="chat-send-btn">Send ➤</button>
     </form>
   </section>
 </div>
@@ -361,7 +384,7 @@
       <!-- Custom Profile Photo Upload -->
       <div id="privilegedProfileMedia" class="privileged-profile-media" style="margin:16px 0;text-align:center;">
         <input id="profilePhotoFile" type="file" accept="image/*" style="display:none;">
-        <button type="button" onclick="$('profilePhotoFile').click()" style="border:1px solid #E8944B;background:#FFF4E5;color:#E8944B;border-radius:999px;padding:8px 16px;font-weight:750;cursor:pointer;">📷 Upload Custom Profile Photo</button>
+        <button type="button" onclick="$('profilePhotoFile').click()" class="upload-photo-btn">📷 Upload Profile Photo</button>
       </div>
 
       <!-- Avatar Picker Gallery -->
@@ -445,6 +468,6 @@
   <input id="dateTo" type="date">
 </div>
 
-<script src="/app.js?v=campus-insta-20261114"></script>
+<script src="/app.js?v=campus-clean-20261114"></script>
 </body>
 </html>

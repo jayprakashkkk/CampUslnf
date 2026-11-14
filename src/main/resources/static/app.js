@@ -122,7 +122,7 @@ window.addEventListener('popstate',()=>{
  pushCampusBackGuard();
 });
 installCampusBackGuard();
-function openForm(type){$('form').reset();$('name').value=currentUser?.displayName||currentUser?.username||'';$('phone').value=currentUser?.phone||'';$('photoPreview').src='';$('photoPreview').classList.add('hide');$('type').value=type;$('formTitle').textContent=type==='LOST'?'Report a lost item':'Report a found item';pushCampusUiLayer('reportForm');$('modal').classList.remove('hide');$('error').textContent=''}
+function openForm(type){$('form').reset();$('name').value=currentUser?.displayName||currentUser?.username||'';$('phone').value=currentUser?.phone||'';$('photoPreview').src='';$('photoPreview').classList.add('hide');setFormType(type||'LOST');pushCampusUiLayer('reportForm');$('modal').classList.remove('hide');$('error').textContent=''}
 function closeForm(fromPopstate=false){const wasOpen=!$('modal').classList.contains('hide');$('modal').classList.add('hide');if(wasOpen)finishCampusUiLayer('reportForm',fromPopstate)}
 function filterType(type,btn){chosenType=type;document.querySelectorAll('.type-tabs .tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');load()}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -291,14 +291,21 @@ function switchNavTab(tab) {
   document.querySelectorAll('.bottom-nav-item').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.nav === tab);
   });
+  document.querySelectorAll('.desk-nav-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.deskNav === tab);
+  });
   if (tab === 'feed') {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     myReportsOnly = false;
     statFilter = '';
     load();
   } else if (tab === 'explore') {
+    const mobSearch = $('mobileBoardSearch');
     const search = $('boardSearch');
-    if (search) {
+    if (mobSearch && window.innerWidth < 860) {
+      mobSearch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      mobSearch.focus();
+    } else if (search) {
       search.scrollIntoView({ behavior: 'smooth', block: 'center' });
       search.focus();
     }
@@ -307,6 +314,18 @@ function switchNavTab(tab) {
   } else if (tab === 'profile') {
     openDesktopProfile();
   }
+}
+
+let mobileSearchTimer = null;
+function syncMobileSearch(val) {
+  const qEl = $('q');
+  if (qEl) qEl.value = val;
+  const deskSearch = $('boardSearch');
+  if (deskSearch && deskSearch.value !== val) {
+    deskSearch.value = val;
+  }
+  clearTimeout(mobileSearchTimer);
+  mobileSearchTimer = setTimeout(load, 180);
 }
 
 function openOwnProfileTab() {
@@ -368,10 +387,20 @@ $('grid').innerHTML=rows.map(r=>{
      ${m?`<div class="insta-match-banner"><span>✦ Possible Match:</span><b>${esc(m.title)}</b> (${esc(m.type)} at ${esc(m.location)})</div>`:''}
    </div>
    <div class="insta-post-actions">
-     ${waUrl?`<a class="action-btn-whatsapp" href="${waUrl}" target="_blank" rel="noopener noreferrer"><span>💬 WhatsApp</span></a>`:''}
-     ${cleanPhone?`<a class="action-btn-call" href="tel:${cleanPhone}"><span>📞 Call</span></a>`:''}
-     <button type="button" class="action-btn-chat" onclick="askAboutItemInChat(${r.id},'${esc(r.title)}')"><span>💬 Ask in Chat</span></button>
-     ${canEdit?statusControl:''}
+     ${canEdit ? `
+       <div class="insta-owner-actions">
+         <label class="owner-status-label">
+           Status: ${statusControl}
+         </label>
+         <button type="button" class="action-btn-del" onclick="deleteReport(${r.id})" title="Delete this report">🗑 Delete</button>
+       </div>
+     ` : `
+       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;">
+         ${waUrl?`<a class="action-btn-whatsapp" href="${waUrl}" target="_blank" rel="noopener noreferrer"><span>💬 WhatsApp</span></a>`:''}
+         ${cleanPhone?`<a class="action-btn-call" href="tel:${cleanPhone}"><span>📞 Call</span></a>`:''}
+         <button type="button" class="action-btn-chat" onclick="askAboutItemInChat(${r.id},'${esc(r.title)}')"><span>💬 Ask in Chat</span></button>
+       </div>
+     `}
    </div>
  </article>`
 }).join('')}
@@ -382,6 +411,7 @@ $('form').addEventListener('submit',async e=>{e.preventDefault();const file=$('p
 let payload={imageData,type:$('type').value,title:$('title').value.trim(),category:$('category').value,location:$('location').value.trim(),itemDate:$('itemDate').value||null,reporterName:$('name').value.trim(),reporterPhone:$('phone').value.trim(),description:$('description').value.trim()};
 try{let res=await fetch('/api/reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!res.ok){let d=await res.json().catch(()=>({}));throw Error(d.message||'Please check the form and try again.')}const created=await res.json().catch(()=>null);$('form').reset();$('photoPreview').src='';$('photoPreview').classList.add('hide');closeForm();toast('Report submitted. Thanks for helping your campus! 💜');load()}catch(err){$('error').textContent=err.message||'Could not submit report.'}});
 async function updateStatus(id,status){try{let r=await fetch(`/api/reports/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});if(!r.ok)throw 0;toast('Status updated');load()}catch{toast('Could not update status')}}
+async function deleteReport(id){if(!confirm('Are you sure you want to delete this report? This action cannot be undone.'))return;try{const res=await fetch(`/api/reports/${id}`,{method:'DELETE',headers:{'Accept':'application/json'}});if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err.message||'Could not delete report.');}toast('Report deleted successfully');load();}catch(err){toast(err.message||'Could not delete report');}}
 const boardSearch=$('boardSearch');
 let memberSearchTimer=null, memberSearchSequence=0;
 if(boardSearch){
@@ -389,6 +419,8 @@ if(boardSearch){
  let searchTimer;
  boardSearch.addEventListener('input',()=>{
   $('q').value=boardSearch.value;
+  const mobSearch=$('mobileBoardSearch');
+  if(mobSearch&&mobSearch.value!==boardSearch.value)mobSearch.value=boardSearch.value;
   clearTimeout(searchTimer); searchTimer=setTimeout(load,180);
   clearTimeout(memberSearchTimer);
   const query=boardSearch.value.trim();
@@ -752,43 +784,32 @@ function showAuthGate() {
   const badge = $('campusCollegeBadge');
   if (badge) badge.hidden = true;
 
-  const fields = $('authRegisterFields');
-  if (fields) {
-    fields.hidden = true;
-    ['authFullName', 'authCollege', 'authCourse', 'authEmail'].forEach(id => {
-      const field = $(id);
-      if (field) {
-        field.disabled = true;
-        field.required = false;
-      }
-    });
-  }
-
-  $('authChoices').classList.remove('hide');
-  $('authFormPanel').classList.add('hide');
-  $('authError').textContent = '';
-  $('authPassword').value = '';
-  authMode = 'login';
+  chooseAuthMode('login');
 }
 
 function chooseAuthMode(mode) {
-  if ($('authFormPanel').classList.contains('hide')) {
-    pushCampusUiLayer('authForm');
-  }
-
   authMode = mode;
-  $('authChoices').classList.add('hide');
-  $('authFormPanel').classList.remove('hide');
-  $('authError').textContent = '';
-  $('authForm').reset();
+  const creating = mode === 'register';
+
+  const loginTab = $('showLoginButton');
+  const regTab = $('showRegisterButton');
+  if (loginTab) loginTab.classList.toggle('active', !creating);
+  if (regTab) regTab.classList.toggle('active', creating);
+
+  const choices = $('authChoices');
+  if (choices) choices.classList.remove('hide');
+  const panel = $('authFormPanel');
+  if (panel) panel.classList.remove('hide');
+
+  const errorEl = $('authError');
+  if (errorEl) errorEl.textContent = '';
+  const formEl = $('authForm');
+  if (formEl) formEl.reset();
   resetPasswordVisibility('toggleAuthPassword', 'authPassword');
 
-  const creating = mode === 'register';
   const fields = $('authRegisterFields');
-
   if (fields) {
     fields.hidden = !creating;
-
     ['authFullName', 'authCollege', 'authCourse', 'authEmail'].forEach(id => {
       const field = $(id);
       if (field) {
@@ -799,52 +820,30 @@ function chooseAuthMode(mode) {
     });
   }
 
-  $('authFormTitle').textContent =
-    creating ? 'Create new account' : 'Login';
+  const titleEl = $('authFormTitle');
+  if (titleEl) titleEl.textContent = creating ? 'Create new account' : 'Log In';
 
-  $('authSubmitButton').textContent =
-    creating ? 'Create account' : 'Login';
+  const submitBtn = $('authSubmitButton');
+  if (submitBtn) submitBtn.textContent = creating ? 'Create Account' : 'Log In';
 
-  $('authWelcomeTitle').textContent =
-    creating ? 'Join CampUs' : 'Welcome back';
+  const welcomeTitle = $('authWelcomeTitle');
+  if (welcomeTitle) welcomeTitle.textContent = creating ? 'Join CampUs' : 'Welcome to CampUs';
 
-  $('authPassword').autocomplete =
-    creating ? 'new-password' : 'current-password';
+  const pwdInput = $('authPassword');
+  if (pwdInput) {
+    pwdInput.autocomplete = creating ? 'new-password' : 'current-password';
+    pwdInput.placeholder = creating ? 'Create a password' : 'Enter password';
+  }
 
-  $('authPassword').placeholder =
-    creating ? 'Create a password' : 'Enter password';
-
-  $(creating ? 'authFullName' : 'authUsername').focus();
+  const focusTarget = $(creating ? 'authFullName' : 'authUsername');
+  if (focusTarget) focusTarget.focus();
 }
 
 function backToAuthChoices(fromPopstate = false) {
-  const wasOpen = !$('authFormPanel').classList.contains('hide');
-
-  $('authFormPanel').classList.add('hide');
-
-  if (wasOpen) {
-    finishCampusUiLayer('authForm', fromPopstate);
+  chooseAuthMode('login');
+  if (fromPopstate) {
+    finishCampusUiLayer('authForm', true);
   }
-
-  $('authChoices').classList.remove('hide');
-  $('authError').textContent = '';
-  $('authPassword').value = '';
-  $('authForm').reset();
-
-  const fields = $('authRegisterFields');
-  if (fields) {
-    fields.hidden = true;
-
-    ['authFullName', 'authCollege', 'authCourse', 'authEmail'].forEach(id => {
-      const field = $(id);
-      if (field) {
-        field.disabled = true;
-        field.required = false;
-      }
-    });
-  }
-
-  $('authWelcomeTitle').textContent = 'Welcome to CampUs';
 }
 
 function enterApp(user) {
@@ -1045,7 +1044,7 @@ $('authForm')?.addEventListener('submit',async event=>{
   }catch{
     $('authError').textContent='Could not connect to CampUs. Make sure the Java server is running, then try again.';
   }finally{
-    button.disabled=false;button.textContent=isRegister?'Create account':'Login';
+    button.disabled=false;button.textContent=isRegister?'Create Account':'Log In';
   }
 });
 async function logout(){
