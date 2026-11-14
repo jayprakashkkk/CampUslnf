@@ -136,30 +136,110 @@
     </button>
   </nav>
 
-  <!-- Right Actions: Avatar & Logout -->
+  <!-- Right Actions: Desktop "Hi, User" Greeting Menu & 3-Line Animated Hamburger Menu -->
   <div class="header-right-actions">
-    <button type="button" class="header-user-avatar" id="profileButton" onclick="openDesktopProfile()" aria-label="Open Profile" title="My Profile">
-      <span id="headerAvatarText">U</span>
-    </button>
-    <button type="button" class="header-logout-btn" onclick="logout()" aria-label="Log out" title="Log out">
-      <span>Log out</span>
-    </button>
-  </div>
+    
+    <!-- Desktop/Tablet User Greeting Menu (Hidden on Phone < 640px) -->
+    <div class="desk-user-menu-wrap" id="deskUserMenuWrap">
+      <button type="button" class="desk-greeting-btn" id="deskUserGreetingBtn" onclick="toggleDeskUserDropdown()" aria-expanded="false" aria-haspopup="true" aria-label="Open account menu">
+        <div class="desk-greeting-avatar" id="deskGreetingAvatar">
+          <span id="headerAvatarText">U</span>
+        </div>
+        <span class="desk-greeting-text" id="deskGreetingName">Hi, Student</span>
+        <span class="desk-greeting-arrow" aria-hidden="true">▾</span>
+      </button>
+      <div class="desk-user-dropdown hide" id="deskUserDropdown" role="menu" aria-label="User account menu">
+        <button type="button" role="menuitem" onclick="openDesktopProfile()">
+          <span>👤 My Profile</span>
+        </button>
+        <button type="button" role="menuitem" onclick="openMyReportsView()">
+          <span>📋 My Reports</span>
+        </button>
+        <button type="button" role="menuitem" onclick="openCommunityChat()">
+          <span>💬 Community Chat</span>
+        </button>
+        <div class="dropdown-divider"></div>
+        <button type="button" role="menuitem" class="dropdown-logout" onclick="logout()">
+          <span>🚪 Log out</span>
+        </button>
+      </div>
+    </div>
 
-  <!-- Legacy mainNav kept hidden for backwards compatibility -->
-  <nav class="navlinks hide" id="mainNav" aria-hidden="true">
-    <a href="#home" data-page="home">Home</a>
-    <a href="#board" data-page="board">Browse items</a>
-    <a href="#myReports" data-page="myReports">My reports</a>
-    <a href="#profile" data-page="profile">Profile</a>
-    <a href="#logout" class="logout-nav" onclick="logout();return false;">Log out</a>
-    <button type="button" class="mobile-nav-close" onclick="closeMenu()"><span>Close</span></button>
-  </nav>
-  <div id="profileDropdown" class="profile-dropdown" role="menu" aria-label="Account options" hidden>
-    <button type="button" role="menuitem" onclick="openDesktopProfile()">My Profile</button>
-    <button type="button" role="menuitem" class="dropdown-logout" onclick="logout()">Log out</button>
+    <!-- 3-Line Animated Hamburger Menu Button (Phone, Tablet, Laptop) -->
+    <button type="button" class="hamburger-menu-btn" id="menuToggleBtn" onclick="toggleNavDrawer()" aria-label="Open navigation menu" aria-expanded="false">
+      <span class="hamburger-bar"></span>
+      <span class="hamburger-bar"></span>
+      <span class="hamburger-bar"></span>
+    </button>
   </div>
 </header>
+
+<!-- Full Animated Slide-Down Menu Drawer (Phone, Tablet, Laptop) -->
+<div id="navDrawerOverlay" class="nav-drawer-overlay hide" onclick="handleDrawerBackdropClick(event)">
+  <nav class="nav-drawer-panel" id="navDrawerPanel" aria-label="Main Navigation Drawer">
+    <div class="drawer-header">
+      <span class="drawer-title">CampUs Menu</span>
+      <button type="button" class="drawer-close-btn" onclick="closeNavDrawer()" aria-label="Close menu">✕</button>
+    </div>
+
+    <!-- User Info Card in Drawer -->
+    <div class="drawer-user-card" onclick="openDrawerProfile()">
+      <div class="drawer-user-avatar" id="drawerUserAvatar">U</div>
+      <div class="drawer-user-meta">
+        <span class="drawer-user-name" id="drawerUserName">CampUs Student</span>
+        <span class="drawer-user-handle" id="drawerUserHandle">@student</span>
+        <span class="drawer-campus-tag" id="drawerCampusTag">CU</span>
+      </div>
+      <span class="drawer-arrow">›</span>
+    </div>
+
+    <div class="drawer-divider"></div>
+
+    <!-- Menu Items List -->
+    <div class="drawer-menu-list">
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('feed')">
+        <span class="drawer-item-icon">🏠</span>
+        <span class="drawer-item-text">Home Feed</span>
+      </button>
+
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('myReports')">
+        <span class="drawer-item-icon">📋</span>
+        <span class="drawer-item-text">My Reports</span>
+      </button>
+
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('chat')">
+        <span class="drawer-item-icon">💬</span>
+        <span class="drawer-item-text">Community Chat</span>
+        <span class="drawer-badge" id="drawerChatBadge">Live</span>
+      </button>
+
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('reportLost')">
+        <span class="drawer-item-icon">🔴</span>
+        <span class="drawer-item-text">Report Lost Item</span>
+      </button>
+
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('reportFound')">
+        <span class="drawer-item-icon">🟢</span>
+        <span class="drawer-item-text">Report Found Item</span>
+      </button>
+
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('profile')">
+        <span class="drawer-item-icon">👤</span>
+        <span class="drawer-item-text">My Profile &amp; Settings</span>
+      </button>
+    </div>
+
+    <div class="drawer-divider"></div>
+
+    <!-- Sabse Niche Logout Button as requested! -->
+    <div class="drawer-footer">
+      <button type="button" class="drawer-logout-btn" onclick="logoutFromDrawer()">
+        <span class="drawer-item-icon">🚪</span>
+        <span>Log out of CampUs</span>
+      </button>
+    </div>
+  </nav>
+</div>
 
 <!-- Mobile Standalone Search Bar (Visible on Phone < 860px) -->
 <div class="board-search standalone-search" id="mobileSearchWrap">
@@ -466,6 +546,26 @@
   <input id="filterLocation">
   <input id="dateFrom" type="date">
   <input id="dateTo" type="date">
+</div>
+
+<!-- Apple iOS 12-Blade Activity Loading Indicator (Network-Driven) -->
+<div id="appleLoadingOverlay" class="apple-loading-overlay hide" aria-hidden="true" role="status">
+  <div class="apple-spinner-card">
+    <div class="apple-spinner" aria-label="Loading...">
+      <div class="apple-spinner-blade"></div>
+      <div class="apple-spinner-blade"></div>
+      <div class="apple-spinner-blade"></div>
+      <div class="apple-spinner-blade"></div>
+      <div class="apple-spinner-blade"></div>
+      <div class="apple-spinner-blade"></div>
+      <div class="apple-spinner-blade"></div>
+      <div class="apple-spinner-blade"></div>
+      <div class="apple-spinner-blade"></div>
+      <div class="apple-spinner-blade"></div>
+      <div class="apple-spinner-blade"></div>
+      <div class="apple-spinner-blade"></div>
+    </div>
+  </div>
 </div>
 
 <script src="/app.js?v=campus-clean-20261114"></script>

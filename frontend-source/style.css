@@ -3968,20 +3968,424 @@ header.app-header {
 }
 
 /* --------------------------------------------------------------------------
+   APPLE iOS 12-BLADE ACTIVITY LOADING SPINNER
+   -------------------------------------------------------------------------- */
+.apple-loading-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  z-index: 10001;
+  opacity: 1;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  pointer-events: auto;
+}
+.apple-loading-overlay.hide {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.apple-spinner-card {
+  width: 78px;
+  height: 78px;
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 20px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+.apple-spinner {
+  position: relative;
+  width: 38px;
+  height: 38px;
+}
+.apple-spinner .apple-spinner-blade {
+  position: absolute;
+  left: 44.5%;
+  top: 37%;
+  width: 10%;
+  height: 26%;
+  border-radius: 999px;
+  background-color: #3C3C43;
+  transform-origin: center -50%;
+  animation: apple-spinner-fade 1s linear infinite;
+}
+.apple-spinner .apple-spinner-blade:nth-child(1)  { transform: rotate(0deg) translate(0, -140%); animation-delay: 0s; }
+.apple-spinner .apple-spinner-blade:nth-child(2)  { transform: rotate(30deg) translate(0, -140%); animation-delay: -0.9167s; }
+.apple-spinner .apple-spinner-blade:nth-child(3)  { transform: rotate(60deg) translate(0, -140%); animation-delay: -0.8333s; }
+.apple-spinner .apple-spinner-blade:nth-child(4)  { transform: rotate(90deg) translate(0, -140%); animation-delay: -0.75s; }
+.apple-spinner .apple-spinner-blade:nth-child(5)  { transform: rotate(120deg) translate(0, -140%); animation-delay: -0.6667s; }
+.apple-spinner .apple-spinner-blade:nth-child(6)  { transform: rotate(150deg) translate(0, -140%); animation-delay: -0.5833s; }
+.apple-spinner .apple-spinner-blade:nth-child(7)  { transform: rotate(180deg) translate(0, -140%); animation-delay: -0.5s; }
+.apple-spinner .apple-spinner-blade:nth-child(8)  { transform: rotate(210deg) translate(0, -140%); animation-delay: -0.4167s; }
+.apple-spinner .apple-spinner-blade:nth-child(9)  { transform: rotate(240deg) translate(0, -140%); animation-delay: -0.3333s; }
+.apple-spinner .apple-spinner-blade:nth-child(10) { transform: rotate(270deg) translate(0, -140%); animation-delay: -0.25s; }
+.apple-spinner .apple-spinner-blade:nth-child(11) { transform: rotate(300deg) translate(0, -140%); animation-delay: -0.1667s; }
+.apple-spinner .apple-spinner-blade:nth-child(12) { transform: rotate(330deg) translate(0, -140%); animation-delay: -0.0833s; }
+
+@keyframes apple-spinner-fade {
+  0% { opacity: 1; }
+  100% { opacity: 0.15; }
+}
+
+/* --------------------------------------------------------------------------
+   3-LINE HAMBURGER MENU BUTTON
+   -------------------------------------------------------------------------- */
+.hamburger-menu-btn {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  background: #FFFFFF;
+  border: 1px solid var(--insta-border);
+  border-radius: 12px;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+.hamburger-menu-btn:hover {
+  background: #FFF7EE;
+  border-color: #F7C69D;
+  transform: scale(1.03);
+}
+.hamburger-bar {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--insta-text-main);
+  border-radius: 2px;
+  transition: transform 0.25s ease, opacity 0.2s ease;
+}
+.hamburger-menu-btn.active .hamburger-bar:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.hamburger-menu-btn.active .hamburger-bar:nth-child(2) {
+  opacity: 0;
+}
+.hamburger-menu-btn.active .hamburger-bar:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* --------------------------------------------------------------------------
+   DESKTOP USER GREETING BUTTON & DROPDOWN
+   -------------------------------------------------------------------------- */
+.desk-user-menu-wrap {
+  position: relative;
+}
+.desk-greeting-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #FFFFFF;
+  border: 1px solid var(--insta-border);
+  padding: 5px 12px 5px 6px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+.desk-greeting-btn:hover {
+  border-color: #E8944B;
+  background: #FFF8F0;
+}
+.desk-greeting-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #FFF0E2;
+  color: var(--insta-primary);
+  font-weight: 800;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1.5px solid #FADDC4;
+}
+.desk-greeting-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.desk-greeting-text {
+  font-size: 13.5px;
+  font-weight: 750;
+  color: var(--insta-text-main);
+}
+.desk-greeting-arrow {
+  font-size: 10px;
+  color: var(--insta-text-muted);
+  transition: transform 0.2s ease;
+}
+.desk-greeting-btn[aria-expanded="true"] .desk-greeting-arrow {
+  transform: rotate(180deg);
+}
+.desk-user-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 200px;
+  background: #FFFFFF;
+  border: 1px solid var(--insta-border);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 1000;
+  animation: dropdown-pop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.desk-user-dropdown.hide {
+  display: none !important;
+}
+.desk-user-dropdown button {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--insta-text-main);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.15s ease;
+}
+.desk-user-dropdown button:hover {
+  background: #FFF5EC;
+  color: var(--insta-primary);
+}
+.desk-user-dropdown button.dropdown-logout {
+  color: #D32F2F;
+}
+.desk-user-dropdown button.dropdown-logout:hover {
+  background: #FFF0F0;
+  color: #C62828;
+}
+.dropdown-divider {
+  height: 1px;
+  background: var(--insta-border);
+  margin: 4px 6px;
+}
+
+/* --------------------------------------------------------------------------
+   FULL ANIMATED SLIDE-DOWN MENU DRAWER
+   -------------------------------------------------------------------------- */
+.nav-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 9998;
+  opacity: 1;
+  transition: opacity 0.24s ease, visibility 0.24s ease;
+}
+.nav-drawer-overlay.hide {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.nav-drawer-panel {
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+}
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--insta-border);
+}
+.drawer-title {
+  font-size: 15px;
+  font-weight: 850;
+  color: var(--insta-text-main);
+  letter-spacing: -0.2px;
+}
+.drawer-close-btn {
+  background: #F5EFE8;
+  border: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--insta-text-muted);
+  transition: background 0.15s ease;
+}
+.drawer-close-btn:hover {
+  background: #EFE4D6;
+  color: var(--insta-text-main);
+}
+.drawer-user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: #FFFDF9;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.drawer-user-card:hover {
+  background: #FFF7EE;
+}
+.drawer-user-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #FFF0E2;
+  border: 2px solid #FADDC4;
+  color: var(--insta-primary);
+  font-weight: 850;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.drawer-user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.drawer-user-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.drawer-user-name {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--insta-text-main);
+}
+.drawer-user-handle {
+  font-size: 12px;
+  color: var(--insta-text-muted);
+}
+.drawer-campus-tag {
+  font-size: 10px;
+  font-weight: 800;
+  background: #E8F5E9;
+  color: #2E7D32;
+  padding: 2px 8px;
+  border-radius: 999px;
+  align-self: flex-start;
+  margin-top: 3px;
+}
+.drawer-arrow {
+  font-size: 18px;
+  color: var(--insta-text-muted);
+}
+.drawer-divider {
+  height: 1px;
+  background: var(--insta-border);
+  margin: 6px 0;
+}
+.drawer-menu-list {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px;
+  gap: 4px;
+}
+.drawer-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  background: none;
+  border: 0;
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 750;
+  color: var(--insta-text-main);
+  text-align: left;
+  transition: all 0.15s ease;
+}
+.drawer-menu-item:hover {
+  background: #FFF5EB;
+  color: var(--insta-primary);
+  transform: translateX(3px);
+}
+.drawer-item-icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+.drawer-item-text {
+  flex: 1;
+}
+.drawer-badge {
+  font-size: 10px;
+  font-weight: 800;
+  background: #E8F5E9;
+  color: #2E7D32;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.drawer-footer {
+  padding: 10px 14px 18px;
+}
+.drawer-logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #FFF5F5;
+  border: 1px solid #FFCDD2;
+  border-radius: 14px;
+  color: #D32F2F;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.drawer-logout-btn:hover {
+  background: #FFEBEE;
+  color: #C62828;
+}
+
+/* --------------------------------------------------------------------------
    VIEWPORT BREAKPOINTS: LAPTOP, TABLET & PHONE
    -------------------------------------------------------------------------- */
 
-/* 1. Laptop & Desktop (>= 860px) */
-@media (min-width: 860px) {
+/* 1. Laptop & Desktop (>= 1024px) - FULL SCREEN DASHBOARD LAYOUT */
+@media (min-width: 1024px) {
   body {
-    padding-bottom: 24px !important; /* No bottom nav on desktop */
+    padding-bottom: 30px !important;
   }
   .bottom-app-nav {
-    display: none !important; /* Completely hide bottom nav on desktop */
+    display: none !important;
   }
   header.app-header {
-    height: 66px;
-    padding: 0 28px;
+    height: 68px;
+    padding: 0 32px;
   }
   .desktop-nav {
     display: flex !important;
@@ -3989,20 +4393,61 @@ header.app-header {
   .header-search-wrap {
     display: flex !important;
     align-items: center;
-    flex: 0 1 360px;
-    margin: 0 20px;
+    flex: 0 1 400px;
+    margin: 0 24px;
   }
   .standalone-search {
-    display: none !important; /* Integrated search in header is used */
+    display: none !important;
+  }
+  .header-logout-btn, #profileButton {
+    display: none !important;
+  }
+  .desk-user-menu-wrap {
+    display: flex !important;
+  }
+  .hamburger-menu-btn {
+    display: flex !important;
   }
   .feed-main-container {
-    max-width: 680px !important;
-    padding: 0 16px !important;
+    max-width: 1360px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 28px !important;
+  }
+  .grid-feed-list {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)) !important;
+    gap: 24px !important;
+  }
+  .insta-post-card {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .insta-post-card .insta-post-body {
+    flex: 1 !important;
+  }
+  .nav-drawer-overlay {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding-top: 72px;
+    padding-right: 28px;
+  }
+  .nav-drawer-panel {
+    width: 360px;
+    border-radius: 20px;
+    transform: translateY(0) scale(1);
+    transform-origin: top right;
+    transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  }
+  .nav-drawer-overlay.hide .nav-drawer-panel {
+    transform: translateY(-14px) scale(0.96);
+    opacity: 0;
   }
 }
 
-/* 2. Tablet (641px - 859px) */
-@media (min-width: 641px) and (max-width: 859px) {
+/* 2. Tablet (641px - 1023px) - 2-COLUMN BALANCED GRID */
+@media (min-width: 641px) and (max-width: 1023px) {
   body {
     padding-bottom: 74px !important;
   }
@@ -4015,17 +4460,59 @@ header.app-header {
   .header-search-wrap {
     display: none !important;
   }
+  .header-logout-btn, #profileButton {
+    display: none !important;
+  }
+  .desk-user-menu-wrap {
+    display: flex !important;
+  }
+  .hamburger-menu-btn {
+    display: flex !important;
+  }
   .standalone-search {
     display: block !important;
-    max-width: 640px !important;
+    max-width: 800px !important;
+    margin: 12px auto 6px !important;
   }
   .feed-main-container {
-    max-width: 640px !important;
-    padding: 0 16px !important;
+    max-width: 960px !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 20px !important;
+  }
+  .grid-feed-list {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 18px !important;
+  }
+  .insta-post-card {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .insta-post-card .insta-post-body {
+    flex: 1 !important;
+  }
+  .nav-drawer-overlay {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding-top: 66px;
+    padding-right: 20px;
+  }
+  .nav-drawer-panel {
+    width: 340px;
+    border-radius: 20px;
+    transform: translateY(0) scale(1);
+    transform-origin: top right;
+    transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  }
+  .nav-drawer-overlay.hide .nav-drawer-panel {
+    transform: translateY(-14px) scale(0.96);
+    opacity: 0;
   }
 }
 
-/* 3. Mobile Phone (< 640px) */
+/* 3. Mobile Phone (< 640px) - CLEAN MINIMAL HEADER & SLIDE-DOWN DRAWER */
 @media (max-width: 640px) {
   body {
     padding-bottom: 74px !important;
@@ -4046,15 +4533,27 @@ header.app-header {
   }
   header.app-header {
     height: 56px;
-    padding: 0 12px;
+    padding: 0 14px;
+  }
+  /* Remove Logout button and "Hi, User" from top header on phone as requested! */
+  .header-logout-btn, #profileButton, .desk-user-menu-wrap {
+    display: none !important;
+  }
+  /* Show only 3-line hamburger menu button on top right of phone! */
+  .hamburger-menu-btn {
+    display: flex !important;
   }
   .feed-main-container {
     padding: 0 10px !important;
     max-width: 100% !important;
   }
+  .grid-feed-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+  }
   .insta-post-card {
     border-radius: 16px;
-    margin-bottom: 16px;
   }
   .insta-post-header {
     padding: 10px 12px;
@@ -4073,6 +4572,21 @@ header.app-header {
     font-size: 9px;
     padding: 2px 6px;
     margin-left: 4px;
+  }
+  /* Full animated slide-down from the top header on mobile! */
+  .nav-drawer-overlay {
+    display: flex;
+    align-items: flex-start;
+  }
+  .nav-drawer-panel {
+    width: 100%;
+    max-height: 88vh;
+    border-radius: 0 0 24px 24px;
+    transform: translateY(0);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .nav-drawer-overlay.hide .nav-drawer-panel {
+    transform: translateY(-100%);
   }
 }
 

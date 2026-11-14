@@ -8,33 +8,72 @@ const CAMPUS_API_BASE = (function() {
   return '';
 })();
 
+let activeNetworkRequests = 0;
+let globalSpinnerTimer = null;
+
+function showGlobalSpinner() {
+  activeNetworkRequests++;
+  clearTimeout(globalSpinnerTimer);
+  const overlay = document.getElementById('appleLoadingOverlay');
+  if (overlay) {
+    overlay.classList.remove('hide');
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+}
+
+function hideGlobalSpinner() {
+  activeNetworkRequests = Math.max(0, activeNetworkRequests - 1);
+  if (activeNetworkRequests === 0) {
+    clearTimeout(globalSpinnerTimer);
+    globalSpinnerTimer = setTimeout(() => {
+      if (activeNetworkRequests === 0) {
+        const overlay = document.getElementById('appleLoadingOverlay');
+        if (overlay) {
+          overlay.classList.add('hide');
+          overlay.setAttribute('aria-hidden', 'true');
+        }
+      }
+    }, 120);
+  }
+}
+
 const _origFetch = window.fetch;
 window.fetch = async function(input, init) {
   let url = typeof input === 'string' ? input : (input instanceof Request ? input.url : String(input));
   init = init || {};
-  if (url.startsWith('/api/')) {
-    if (CAMPUS_API_BASE) {
-      url = CAMPUS_API_BASE.replace(/\/+$/, '') + url;
-    }
-    if (!init.credentials) {
-      init.credentials = 'include';
-    }
-    try {
-      const response = await _origFetch.call(this, url, init);
-      if (response.status === 404 && !url.includes('railway.app') && window.location.hostname.includes('pages.dev')) {
-        const fallbackUrl = RAILWAY_BACKEND + (url.startsWith('/') ? url : '/' + url);
-        return await _origFetch.call(this, fallbackUrl, init);
+  const isBackgroundPoll = url.includes('/api/notifications/unread-count') || url.includes('/api/auth/check-username');
+  if (!isBackgroundPoll) {
+    showGlobalSpinner();
+  }
+  try {
+    if (url.startsWith('/api/')) {
+      if (CAMPUS_API_BASE) {
+        url = CAMPUS_API_BASE.replace(/\/+$/, '') + url;
       }
-      return response;
-    } catch (err) {
-      if (!url.includes('railway.app') && window.location.hostname.includes('pages.dev')) {
-        const fallbackUrl = RAILWAY_BACKEND + (url.startsWith('/') ? url : '/' + url);
-        return await _origFetch.call(this, fallbackUrl, init);
+      if (!init.credentials) {
+        init.credentials = 'include';
       }
-      throw err;
+      try {
+        const response = await _origFetch.call(this, url, init);
+        if (response.status === 404 && !url.includes('railway.app') && window.location.hostname.includes('pages.dev')) {
+          const fallbackUrl = RAILWAY_BACKEND + (url.startsWith('/') ? url : '/' + url);
+          return await _origFetch.call(this, fallbackUrl, init);
+        }
+        return response;
+      } catch (err) {
+        if (!url.includes('railway.app') && window.location.hostname.includes('pages.dev')) {
+          const fallbackUrl = RAILWAY_BACKEND + (url.startsWith('/') ? url : '/' + url);
+          return await _origFetch.call(this, fallbackUrl, init);
+        }
+        throw err;
+      }
+    }
+    return await _origFetch.call(this, url, init);
+  } finally {
+    if (!isBackgroundPoll) {
+      hideGlobalSpinner();
     }
   }
-  return _origFetch.call(this, url, init);
 };
 
 let chosenType='', myReportsOnly=false, statFilter='', currentUser=null, authMode='login';
@@ -78,25 +117,28 @@ function finishCampusUiLayer(layer,fromPopstate=false){
  const index=campusUiHistoryStack.lastIndexOf(layer);if(index>=0)campusUiHistoryStack.splice(index,1);
 }
 function closeCampusUiLayerFromBack(layer){
- if(layer==='profileEditor')closeProfileEditorPage(true);
- else if(layer==='publicProfile')closeChatUserProfile(true);
- else if(layer==='communityChat')closeCommunityChat(true);
- else if(layer==='reportForm')closeForm(true);
- else if(layer==='navPopup')closeNavPopup(true);
- else if(layer==='authForm')backToAuthChoices(true);
- else if(layer==='phoneMenu')closeMenu(true);
- else if(layer==='profileDropdown')closeProfileDropdown(true);
+  if(layer==='navDrawer')closeNavDrawer(true);
+  else if(layer==='profileEditor')closeProfileEditorPage(true);
+  else if(layer==='publicProfile')closeChatUserProfile(true);
+  else if(layer==='communityChat')closeCommunityChat(true);
+  else if(layer==='reportForm')closeForm(true);
+  else if(layer==='navPopup')closeNavPopup(true);
+  else if(layer==='authForm')backToAuthChoices(true);
+  else if(layer==='phoneMenu')closeMenu(true);
+  else if(layer==='profileDropdown')closeProfileDropdown(true);
 }
 function closeTopUntrackedUiLayer(){
- if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage(true);return true;}
- if($('communityProfilePage')&&!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile(true);return true;}
- if(communityChatOpen){closeCommunityChat(true);return true;}
- if($('modal')&&!$('modal').classList.contains('hide')){closeForm(true);return true;}
- if($('navPopup')&&!$('navPopup').classList.contains('hide')){closeNavPopup(true);return true;}
- if($('authFormPanel')&&!$('authFormPanel').classList.contains('hide')){backToAuthChoices(true);return true;}
- if(menuOpen){closeMenu(true);return true;}
- if(profileMenuOpen){closeProfileDropdown(true);return true;}
- return false;
+  if(navDrawerOpen){closeNavDrawer(true);return true;}
+  if(deskUserDropdownOpen){closeDeskUserDropdown();return true;}
+  if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage(true);return true;}
+  if($('communityProfilePage')&&!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile(true);return true;}
+  if(communityChatOpen){closeCommunityChat(true);return true;}
+  if($('modal')&&!$('modal').classList.contains('hide')){closeForm(true);return true;}
+  if($('navPopup')&&!$('navPopup').classList.contains('hide')){closeNavPopup(true);return true;}
+  if($('authFormPanel')&&!$('authFormPanel').classList.contains('hide')){backToAuthChoices(true);return true;}
+  if(menuOpen){closeMenu(true);return true;}
+  if(profileMenuOpen){closeProfileDropdown(true);return true;}
+  return false;
 }
 window.addEventListener('popstate',()=>{
  if(ignoreCampusUiPopstate){ignoreCampusUiPopstate=false;return;}
@@ -454,22 +496,130 @@ document.addEventListener('click',event=>{
  const results=$('userSearchResults');
  if(results&&!results.hidden&&!event.target.closest('.board-search'))hideUserSearchResults();
  if(!event.target.closest('#publicProfileOwnerActions'))closePublicProfileRoleMenu();
+ if(deskUserDropdownOpen&&!event.target.closest('#deskUserMenuWrap'))closeDeskUserDropdown();
 });
 let timer;['q','filterCategory','filterLocation','dateFrom','dateTo'].forEach(id=>{const el=$(id);if(el)el.addEventListener(id==='q'||id==='filterLocation'?'input':'change',()=>{clearTimeout(timer);timer=setTimeout(load,220)})});initAuth();
 /* Profile button opens the phone navigation or the profile editor on desktop. */
 let menuOpen=false, profileMenuOpen=false, activeNavPopup='', selectedProfileAvatarId='';
 let mobileNavHomeParent=null, mobileNavHomeNextSibling=null;
+let navDrawerOpen = false;
+let deskUserDropdownOpen = false;
+
+function toggleNavDrawer() {
+  if (navDrawerOpen) closeNavDrawer();
+  else openNavDrawer();
+}
+
+function openNavDrawer() {
+  navDrawerOpen = true;
+  pushCampusUiLayer('navDrawer');
+  const overlay = $('navDrawerOverlay');
+  const btn = $('menuToggleBtn');
+  if (overlay) overlay.classList.remove('hide');
+  if (btn) {
+    btn.classList.add('active');
+    btn.setAttribute('aria-expanded', 'true');
+  }
+  updateGreeting();
+}
+
+function closeNavDrawer(fromPopstate = false) {
+  if (!navDrawerOpen) return;
+  navDrawerOpen = false;
+  const overlay = $('navDrawerOverlay');
+  const btn = $('menuToggleBtn');
+  if (overlay) overlay.classList.add('hide');
+  if (btn) {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+  if (!fromPopstate) {
+    finishCampusUiLayer('navDrawer');
+  }
+}
+
+function handleDrawerBackdropClick(event) {
+  if (event.target === $('navDrawerOverlay')) {
+    closeNavDrawer();
+  }
+}
+
+function handleDrawerNav(action) {
+  closeNavDrawer();
+  if (action === 'feed') {
+    myReportsOnly = false;
+    chosenType = '';
+    statFilter = '';
+    load();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else if (action === 'myReports') {
+    openMyReportsView();
+  } else if (action === 'chat') {
+    openCommunityChat();
+  } else if (action === 'reportLost') {
+    openForm('LOST');
+  } else if (action === 'reportFound') {
+    openForm('FOUND');
+  } else if (action === 'profile') {
+    openDesktopProfile();
+  }
+}
+
+function openDrawerProfile() {
+  closeNavDrawer();
+  openDesktopProfile();
+}
+
+function logoutFromDrawer() {
+  closeNavDrawer();
+  logout();
+}
+
+function openMyReportsView() {
+  closeNavDrawer();
+  closeDeskUserDropdown();
+  myReportsOnly = true;
+  chosenType = '';
+  statFilter = '';
+  load();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  toast('Showing reports submitted by you 📋');
+}
+
+function toggleDeskUserDropdown() {
+  if (deskUserDropdownOpen) closeDeskUserDropdown();
+  else openDeskUserDropdown();
+}
+
+function openDeskUserDropdown() {
+  deskUserDropdownOpen = true;
+  const dropdown = $('deskUserDropdown');
+  const btn = $('deskUserGreetingBtn');
+  if (dropdown) dropdown.classList.remove('hide');
+  if (btn) btn.setAttribute('aria-expanded', 'true');
+}
+
+function closeDeskUserDropdown() {
+  deskUserDropdownOpen = false;
+  const dropdown = $('deskUserDropdown');
+  const btn = $('deskUserGreetingBtn');
+  if (dropdown) dropdown.classList.add('hide');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
 function firstNameOfUser(user=currentUser){
  const full=String(user?.displayName||user?.username||'User').trim();
  const first=(full.split(/\s+/)[0]||'User');
  return first.charAt(0).toLocaleUpperCase()+first.slice(1);
 }
+
 function updateGreeting(){
- const button=$('profileButton');
- if(!button)return;
  const name = firstNameOfUser();
- button.textContent = `Hi, ${name}`;
  const initial = (name.charAt(0) || 'U').toUpperCase();
+
+ const deskName = $('deskGreetingName');
+ if (deskName) deskName.textContent = `Hi, ${name}`;
+
  const headerAvatar = $('headerAvatarText');
  if (headerAvatar) {
    if (currentUser?.profileImageData) {
@@ -478,27 +628,47 @@ function updateGreeting(){
      headerAvatar.textContent = initial;
    }
  }
+
  const bottomNavAvatar = $('bottomNavAvatar');
  if (bottomNavAvatar) {
    bottomNavAvatar.textContent = initial;
  }
- const mobile=window.innerWidth<=850;
- button.setAttribute('aria-label',mobile?(menuOpen?'Close navigation menu':'Open navigation menu'):(profileMenuOpen?'Close account options':'Open account options'));
- button.setAttribute('aria-expanded',String(mobile?menuOpen:profileMenuOpen));
+
+ const drawerName = $('drawerUserName');
+ if (drawerName) drawerName.textContent = currentUser?.displayName || currentUser?.username || 'Student';
+
+ const drawerHandle = $('drawerUserHandle');
+ if (drawerHandle) drawerHandle.textContent = `@${currentUser?.username || 'student'}`;
+
+ const drawerCampus = $('drawerCampusTag');
+ if (drawerCampus) drawerCampus.textContent = currentUser?.collegeName || 'Campus';
+
+ const drawerAvatar = $('drawerUserAvatar');
+ if (drawerAvatar) {
+   if (currentUser?.profileImageData) {
+     drawerAvatar.innerHTML = `<img src="${currentUser.profileImageData}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+   } else {
+     drawerAvatar.textContent = initial;
+   }
+ }
+
+ const legacyProfileBtn = $('profileButton');
+ if (legacyProfileBtn) {
+   legacyProfileBtn.setAttribute('title', `Logged in as ${currentUser?.displayName || currentUser?.username || 'User'}`);
+ }
 }
-function handleProfileButtonClick(){
- if(window.innerWidth<=850){closeProfileDropdown();toggleMenu();return;}
- closeMenu();
- if(profileMenuOpen){closeProfileDropdown();return;}
- profileMenuOpen=true;
- const dropdown=$('profileDropdown');
- if(dropdown)dropdown.hidden=false;
- updateGreeting();
+
+function openDesktopProfile(){
+  closeDeskUserDropdown();
+  closeNavDrawer();
+  openOwnPublicProfile();
 }
-function openDesktopProfile(){closeProfileDropdown();openOwnPublicProfile();}
+
 function openOwnPublicProfile(){
  if(!currentUser||!currentUser.username){toast('Please log in to view your profile.');return;}
- closeMenu();closeProfileDropdown();
+ closeNavDrawer();
+ closeDeskUserDropdown();
+ closeMenu();
  openChatUserProfile(currentUser.displayName||currentUser.username,currentUser.username);
 }
 function closeProfileDropdown(){
@@ -757,7 +927,7 @@ function confirmNavPopup(){
 }
 
 $('navPopup').addEventListener('click',e=>{if(e.target===$('navPopup'))closeNavPopup()});
-document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage();return;}if(!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile();return;}if(communityChatOpen){closeCommunityChat();return;}if(!$('navPopup').classList.contains('hide')){closeNavPopup();return;}if(!$('modal').classList.contains('hide')){closeForm();return;}closeMenu();closeProfileDropdown();});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(navDrawerOpen){closeNavDrawer();return;}if(deskUserDropdownOpen){closeDeskUserDropdown();return;}if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage();return;}if(!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile();return;}if(communityChatOpen){closeCommunityChat();return;}if(!$('navPopup').classList.contains('hide')){closeNavPopup();return;}if(!$('modal').classList.contains('hide')){closeForm();return;}closeMenu();closeProfileDropdown();});
 window.addEventListener('click',e=>{if(profileMenuOpen&&!e.target.closest('#profileDropdown')&&!e.target.closest('#profileButton'))closeProfileDropdown()});
 window.addEventListener('resize',()=>{if(window.innerWidth>850)closeMenu();else closeProfileDropdown()});
 
@@ -776,6 +946,8 @@ function showAuthGate() {
   document.body.classList.add('auth-locked');
   setAuthGateVisibility(true);
 
+  closeNavDrawer();
+  closeDeskUserDropdown();
   closeMenu();
   closeProfileDropdown();
   closeNavPopup();
@@ -1049,6 +1221,8 @@ $('authForm')?.addEventListener('submit',async event=>{
 });
 async function logout(){
   stopNotificationPolling();
+  closeNavDrawer();
+  closeDeskUserDropdown();
   closeMenu();closeProfileDropdown();closeNavPopup();closeProfileEditorPage();closeForm();
   const badge=$('campusCollegeBadge');if(badge)badge.hidden=true;
   try{await fetch('/api/auth/logout',{method:'POST'});}catch{/* The local gate still closes access if the server is unavailable. */}
