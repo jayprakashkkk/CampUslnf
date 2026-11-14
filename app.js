@@ -129,7 +129,6 @@ function closeCampusUiLayerFromBack(layer){
 }
 function closeTopUntrackedUiLayer(){
   if(navDrawerOpen){closeNavDrawer(true);return true;}
-  if(deskUserDropdownOpen){closeDeskUserDropdown();return true;}
   if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage(true);return true;}
   if($('communityProfilePage')&&!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile(true);return true;}
   if(communityChatOpen){closeCommunityChat(true);return true;}
@@ -496,14 +495,12 @@ document.addEventListener('click',event=>{
  const results=$('userSearchResults');
  if(results&&!results.hidden&&!event.target.closest('.board-search'))hideUserSearchResults();
  if(!event.target.closest('#publicProfileOwnerActions'))closePublicProfileRoleMenu();
- if(deskUserDropdownOpen&&!event.target.closest('#deskUserMenuWrap'))closeDeskUserDropdown();
 });
 let timer;['q','filterCategory','filterLocation','dateFrom','dateTo'].forEach(id=>{const el=$(id);if(el)el.addEventListener(id==='q'||id==='filterLocation'?'input':'change',()=>{clearTimeout(timer);timer=setTimeout(load,220)})});initAuth();
 /* Profile button opens the phone navigation or the profile editor on desktop. */
 let menuOpen=false, profileMenuOpen=false, activeNavPopup='', selectedProfileAvatarId='';
 let mobileNavHomeParent=null, mobileNavHomeNextSibling=null;
 let navDrawerOpen = false;
-let deskUserDropdownOpen = false;
 
 function toggleNavDrawer() {
   if (navDrawerOpen) closeNavDrawer();
@@ -546,28 +543,19 @@ function handleDrawerBackdropClick(event) {
 
 function handleDrawerNav(action) {
   closeNavDrawer();
-  if (action === 'feed') {
-    myReportsOnly = false;
-    chosenType = '';
-    statFilter = '';
-    load();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  } else if (action === 'myReports') {
+  if (action === 'myReports') {
     openMyReportsView();
-  } else if (action === 'chat') {
-    openCommunityChat();
-  } else if (action === 'reportLost') {
-    openForm('LOST');
-  } else if (action === 'reportFound') {
-    openForm('FOUND');
-  } else if (action === 'profile') {
-    openDesktopProfile();
+  } else if (action === 'campusInfo') {
+    const college = currentUser ? currentUser.collegeName : 'University Network';
+    toast(`Verified Campus: ${college} 🏛️`);
+  } else if (action === 'soundToggle') {
+    toggleCommunityMute();
+    const isMuted = $('chatMuteButton')?.getAttribute('aria-pressed') === 'true';
+    const statusEl = $('drawerSoundStatus');
+    if (statusEl) statusEl.textContent = isMuted ? 'Notifications muted' : 'Chat sounds enabled';
+  } else if (action === 'guidelines') {
+    toast('CampUs Community: Always verify item ownership before returning items. 🤝');
   }
-}
-
-function openDrawerProfile() {
-  closeNavDrawer();
-  openDesktopProfile();
 }
 
 function logoutFromDrawer() {
@@ -577,34 +565,12 @@ function logoutFromDrawer() {
 
 function openMyReportsView() {
   closeNavDrawer();
-  closeDeskUserDropdown();
   myReportsOnly = true;
   chosenType = '';
   statFilter = '';
   load();
   window.scrollTo({ top: 0, behavior: 'smooth' });
   toast('Showing reports submitted by you 📋');
-}
-
-function toggleDeskUserDropdown() {
-  if (deskUserDropdownOpen) closeDeskUserDropdown();
-  else openDeskUserDropdown();
-}
-
-function openDeskUserDropdown() {
-  deskUserDropdownOpen = true;
-  const dropdown = $('deskUserDropdown');
-  const btn = $('deskUserGreetingBtn');
-  if (dropdown) dropdown.classList.remove('hide');
-  if (btn) btn.setAttribute('aria-expanded', 'true');
-}
-
-function closeDeskUserDropdown() {
-  deskUserDropdownOpen = false;
-  const dropdown = $('deskUserDropdown');
-  const btn = $('deskUserGreetingBtn');
-  if (dropdown) dropdown.classList.add('hide');
-  if (btn) btn.setAttribute('aria-expanded', 'false');
 }
 
 function firstNameOfUser(user=currentUser){
@@ -634,32 +600,19 @@ function updateGreeting(){
    bottomNavAvatar.textContent = initial;
  }
 
- const drawerName = $('drawerUserName');
- if (drawerName) drawerName.textContent = currentUser?.displayName || currentUser?.username || 'Student';
-
- const drawerHandle = $('drawerUserHandle');
- if (drawerHandle) drawerHandle.textContent = `@${currentUser?.username || 'student'}`;
-
- const drawerCampus = $('drawerCampusTag');
- if (drawerCampus) drawerCampus.textContent = currentUser?.collegeName || 'Campus';
-
- const drawerAvatar = $('drawerUserAvatar');
- if (drawerAvatar) {
-   if (currentUser?.profileImageData) {
-     drawerAvatar.innerHTML = `<img src="${currentUser.profileImageData}" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
-   } else {
-     drawerAvatar.textContent = initial;
-   }
+ const campusDesc = $('drawerCampusDesc');
+ if (campusDesc) {
+   campusDesc.textContent = currentUser?.collegeName || 'Verified University Network';
  }
 
- const legacyProfileBtn = $('profileButton');
- if (legacyProfileBtn) {
-   legacyProfileBtn.setAttribute('title', `Logged in as ${currentUser?.displayName || currentUser?.username || 'User'}`);
+ const isMuted = $('chatMuteButton')?.getAttribute('aria-pressed') === 'true';
+ const soundStatus = $('drawerSoundStatus');
+ if (soundStatus) {
+   soundStatus.textContent = isMuted ? 'Notifications muted' : 'Chat sounds enabled';
  }
 }
 
 function openDesktopProfile(){
-  closeDeskUserDropdown();
   closeNavDrawer();
   openOwnPublicProfile();
 }
@@ -667,7 +620,6 @@ function openDesktopProfile(){
 function openOwnPublicProfile(){
  if(!currentUser||!currentUser.username){toast('Please log in to view your profile.');return;}
  closeNavDrawer();
- closeDeskUserDropdown();
  closeMenu();
  openChatUserProfile(currentUser.displayName||currentUser.username,currentUser.username);
 }
@@ -927,7 +879,7 @@ function confirmNavPopup(){
 }
 
 $('navPopup').addEventListener('click',e=>{if(e.target===$('navPopup'))closeNavPopup()});
-document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(navDrawerOpen){closeNavDrawer();return;}if(deskUserDropdownOpen){closeDeskUserDropdown();return;}if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage();return;}if(!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile();return;}if(communityChatOpen){closeCommunityChat();return;}if(!$('navPopup').classList.contains('hide')){closeNavPopup();return;}if(!$('modal').classList.contains('hide')){closeForm();return;}closeMenu();closeProfileDropdown();});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(navDrawerOpen){closeNavDrawer();return;}if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage();return;}if(!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile();return;}if(communityChatOpen){closeCommunityChat();return;}if(!$('navPopup').classList.contains('hide')){closeNavPopup();return;}if(!$('modal').classList.contains('hide')){closeForm();return;}closeMenu();closeProfileDropdown();});
 window.addEventListener('click',e=>{if(profileMenuOpen&&!e.target.closest('#profileDropdown')&&!e.target.closest('#profileButton'))closeProfileDropdown()});
 window.addEventListener('resize',()=>{if(window.innerWidth>850)closeMenu();else closeProfileDropdown()});
 
@@ -947,7 +899,6 @@ function showAuthGate() {
   setAuthGateVisibility(true);
 
   closeNavDrawer();
-  closeDeskUserDropdown();
   closeMenu();
   closeProfileDropdown();
   closeNavPopup();
@@ -1222,7 +1173,6 @@ $('authForm')?.addEventListener('submit',async event=>{
 async function logout(){
   stopNotificationPolling();
   closeNavDrawer();
-  closeDeskUserDropdown();
   closeMenu();closeProfileDropdown();closeNavPopup();closeProfileEditorPage();closeForm();
   const badge=$('campusCollegeBadge');if(badge)badge.hidden=true;
   try{await fetch('/api/auth/logout',{method:'POST'});}catch{/* The local gate still closes access if the server is unavailable. */}

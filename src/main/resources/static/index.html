@@ -136,33 +136,17 @@
     </button>
   </nav>
 
-  <!-- Right Actions: Desktop "Hi, User" Greeting Menu & 3-Line Animated Hamburger Menu -->
+  <!-- Right Actions: Desktop "Hi, User" Greeting & 3-Line Animated Hamburger Menu -->
   <div class="header-right-actions">
     
-    <!-- Desktop/Tablet User Greeting Menu (Hidden on Phone < 640px) -->
+    <!-- Desktop/Tablet User Greeting (Direct click opens Profile!) -->
     <div class="desk-user-menu-wrap" id="deskUserMenuWrap">
-      <button type="button" class="desk-greeting-btn" id="deskUserGreetingBtn" onclick="toggleDeskUserDropdown()" aria-expanded="false" aria-haspopup="true" aria-label="Open account menu">
+      <button type="button" class="desk-greeting-btn" id="deskUserGreetingBtn" onclick="openDesktopProfile()" aria-label="View My Profile" title="Click to view My Profile">
         <div class="desk-greeting-avatar" id="deskGreetingAvatar">
           <span id="headerAvatarText">U</span>
         </div>
         <span class="desk-greeting-text" id="deskGreetingName">Hi, Student</span>
-        <span class="desk-greeting-arrow" aria-hidden="true">▾</span>
       </button>
-      <div class="desk-user-dropdown hide" id="deskUserDropdown" role="menu" aria-label="User account menu">
-        <button type="button" role="menuitem" onclick="openDesktopProfile()">
-          <span>👤 My Profile</span>
-        </button>
-        <button type="button" role="menuitem" onclick="openMyReportsView()">
-          <span>📋 My Reports</span>
-        </button>
-        <button type="button" role="menuitem" onclick="openCommunityChat()">
-          <span>💬 Community Chat</span>
-        </button>
-        <div class="dropdown-divider"></div>
-        <button type="button" role="menuitem" class="dropdown-logout" onclick="logout()">
-          <span>🚪 Log out</span>
-        </button>
-      </div>
     </div>
 
     <!-- 3-Line Animated Hamburger Menu Button (Phone, Tablet, Laptop) -->
@@ -174,58 +158,46 @@
   </div>
 </header>
 
-<!-- Full Animated Slide-Down Menu Drawer (Phone, Tablet, Laptop) -->
+<!-- Full Animated Slide-Down Menu Drawer (Unique Features Only) -->
 <div id="navDrawerOverlay" class="nav-drawer-overlay hide" onclick="handleDrawerBackdropClick(event)">
   <nav class="nav-drawer-panel" id="navDrawerPanel" aria-label="Main Navigation Drawer">
     <div class="drawer-header">
-      <span class="drawer-title">CampUs Menu</span>
+      <span class="drawer-title">CampUs Options</span>
       <button type="button" class="drawer-close-btn" onclick="closeNavDrawer()" aria-label="Close menu">✕</button>
     </div>
 
-    <!-- User Info Card in Drawer -->
-    <div class="drawer-user-card" onclick="openDrawerProfile()">
-      <div class="drawer-user-avatar" id="drawerUserAvatar">U</div>
-      <div class="drawer-user-meta">
-        <span class="drawer-user-name" id="drawerUserName">CampUs Student</span>
-        <span class="drawer-user-handle" id="drawerUserHandle">@student</span>
-        <span class="drawer-campus-tag" id="drawerCampusTag">CU</span>
-      </div>
-      <span class="drawer-arrow">›</span>
-    </div>
-
-    <div class="drawer-divider"></div>
-
-    <!-- Menu Items List -->
+    <!-- Unique Options (Zero Duplication with Home Screen / Bottom Bar) -->
     <div class="drawer-menu-list">
-      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('feed')">
-        <span class="drawer-item-icon">🏠</span>
-        <span class="drawer-item-text">Home Feed</span>
-      </button>
-
       <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('myReports')">
         <span class="drawer-item-icon">📋</span>
-        <span class="drawer-item-text">My Reports</span>
+        <div class="drawer-item-text">
+          <b>My Reports</b>
+          <small>View and manage items you reported</small>
+        </div>
       </button>
 
-      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('chat')">
-        <span class="drawer-item-icon">💬</span>
-        <span class="drawer-item-text">Community Chat</span>
-        <span class="drawer-badge" id="drawerChatBadge">Live</span>
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('campusInfo')">
+        <span class="drawer-item-icon">🏛️</span>
+        <div class="drawer-item-text">
+          <b>Campus Community</b>
+          <small id="drawerCampusDesc">Verified University Network</small>
+        </div>
       </button>
 
-      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('reportLost')">
-        <span class="drawer-item-icon">🔴</span>
-        <span class="drawer-item-text">Report Lost Item</span>
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('soundToggle')">
+        <span class="drawer-item-icon">🔔</span>
+        <div class="drawer-item-text">
+          <b>Notifications &amp; Alerts</b>
+          <small id="drawerSoundStatus">Chat sounds enabled</small>
+        </div>
       </button>
 
-      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('reportFound')">
-        <span class="drawer-item-icon">🟢</span>
-        <span class="drawer-item-text">Report Found Item</span>
-      </button>
-
-      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('profile')">
-        <span class="drawer-item-icon">👤</span>
-        <span class="drawer-item-text">My Profile &amp; Settings</span>
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('guidelines')">
+        <span class="drawer-item-icon">📜</span>
+        <div class="drawer-item-text">
+          <b>Community Rules</b>
+          <small>Safe return &amp; handoff guidelines</small>
+        </div>
       </button>
     </div>
 
@@ -322,7 +294,7 @@
 <!-- Create Post Modal Dialog -->
 <div id="modal" class="overlay hide">
   <div class="dialog modern-modal-card">
-    <button class="x universal-back-arrow" type="button" onclick="closeForm()" aria-label="Close modal">✕</button>
+    <button class="modal-close-btn x" type="button" onclick="closeForm()" aria-label="Close modal">✕</button>
     <small class="eyebrow">HELP AN ITEM FIND ITS WAY</small>
     <h2 id="formTitle">Report an Item</h2>
     
@@ -548,24 +520,24 @@
   <input id="dateTo" type="date">
 </div>
 
-<!-- Apple iOS 12-Blade Activity Loading Indicator (Network-Driven) -->
+<!-- Authentic Apple iOS 12-Blade Activity Loading Indicator (Network-Driven, No Box) -->
 <div id="appleLoadingOverlay" class="apple-loading-overlay hide" aria-hidden="true" role="status">
-  <div class="apple-spinner-card">
-    <div class="apple-spinner" aria-label="Loading...">
-      <div class="apple-spinner-blade"></div>
-      <div class="apple-spinner-blade"></div>
-      <div class="apple-spinner-blade"></div>
-      <div class="apple-spinner-blade"></div>
-      <div class="apple-spinner-blade"></div>
-      <div class="apple-spinner-blade"></div>
-      <div class="apple-spinner-blade"></div>
-      <div class="apple-spinner-blade"></div>
-      <div class="apple-spinner-blade"></div>
-      <div class="apple-spinner-blade"></div>
-      <div class="apple-spinner-blade"></div>
-      <div class="apple-spinner-blade"></div>
-    </div>
-  </div>
+  <svg class="apple-spinner-svg" viewBox="0 0 36 36" width="42" height="42" xmlns="http://www.w3.org/2000/svg" aria-label="Loading...">
+    <g stroke="#3C3C43" stroke-width="2.75" stroke-linecap="round">
+      <line x1="18" y1="4.5" x2="18" y2="10.5" opacity="1.0" />
+      <line x1="24.75" y1="6.31" x2="21.75" y2="11.51" opacity="0.916" />
+      <line x1="29.69" y1="11.25" x2="24.49" y2="14.25" opacity="0.833" />
+      <line x1="31.5" y1="18" x2="25.5" y2="18" opacity="0.75" />
+      <line x1="29.69" y1="24.75" x2="24.49" y2="21.75" opacity="0.666" />
+      <line x1="24.75" y1="29.69" x2="21.75" y2="24.49" opacity="0.583" />
+      <line x1="18" y1="31.5" x2="18" y2="25.5" opacity="0.5" />
+      <line x1="11.25" y1="29.69" x2="14.25" y2="24.49" opacity="0.416" />
+      <line x1="6.31" y1="24.75" x2="11.51" y2="21.75" opacity="0.333" />
+      <line x1="4.5" y1="18" x2="10.5" y2="18" opacity="0.25" />
+      <line x1="6.31" y1="11.25" x2="11.51" y2="14.25" opacity="0.166" />
+      <line x1="11.25" y1="6.31" x2="14.25" y2="11.51" opacity="0.083" />
+    </g>
+  </svg>
 </div>
 
 <script src="/app.js?v=campus-clean-20261114"></script>

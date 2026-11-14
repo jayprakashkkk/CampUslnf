@@ -3968,7 +3968,7 @@ header.app-header {
 }
 
 /* --------------------------------------------------------------------------
-   APPLE iOS 12-BLADE ACTIVITY LOADING SPINNER
+   AUTHENTIC APPLE iOS 12-BLADE ACTIVITY LOADING SPINNER (NETWORK-DRIVEN, NO BOX)
    -------------------------------------------------------------------------- */
 .apple-loading-overlay {
   position: fixed;
@@ -3976,12 +3976,12 @@ header.app-header {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.22);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-  z-index: 10001;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 10005;
   opacity: 1;
-  transition: opacity 0.2s ease, visibility 0.2s ease;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
   pointer-events: auto;
 }
 .apple-loading-overlay.hide {
@@ -3989,49 +3989,14 @@ header.app-header {
   visibility: hidden;
   pointer-events: none;
 }
-.apple-spinner-card {
-  width: 78px;
-  height: 78px;
-  background: rgba(255, 255, 255, 0.94);
-  border-radius: 20px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.6);
+.apple-spinner-svg {
+  width: 44px;
+  height: 44px;
+  animation: apple-ios-spin 0.8s steps(12, end) infinite;
 }
-.apple-spinner {
-  position: relative;
-  width: 38px;
-  height: 38px;
-}
-.apple-spinner .apple-spinner-blade {
-  position: absolute;
-  left: 44.5%;
-  top: 37%;
-  width: 10%;
-  height: 26%;
-  border-radius: 999px;
-  background-color: #3C3C43;
-  transform-origin: center -50%;
-  animation: apple-spinner-fade 1s linear infinite;
-}
-.apple-spinner .apple-spinner-blade:nth-child(1)  { transform: rotate(0deg) translate(0, -140%); animation-delay: 0s; }
-.apple-spinner .apple-spinner-blade:nth-child(2)  { transform: rotate(30deg) translate(0, -140%); animation-delay: -0.9167s; }
-.apple-spinner .apple-spinner-blade:nth-child(3)  { transform: rotate(60deg) translate(0, -140%); animation-delay: -0.8333s; }
-.apple-spinner .apple-spinner-blade:nth-child(4)  { transform: rotate(90deg) translate(0, -140%); animation-delay: -0.75s; }
-.apple-spinner .apple-spinner-blade:nth-child(5)  { transform: rotate(120deg) translate(0, -140%); animation-delay: -0.6667s; }
-.apple-spinner .apple-spinner-blade:nth-child(6)  { transform: rotate(150deg) translate(0, -140%); animation-delay: -0.5833s; }
-.apple-spinner .apple-spinner-blade:nth-child(7)  { transform: rotate(180deg) translate(0, -140%); animation-delay: -0.5s; }
-.apple-spinner .apple-spinner-blade:nth-child(8)  { transform: rotate(210deg) translate(0, -140%); animation-delay: -0.4167s; }
-.apple-spinner .apple-spinner-blade:nth-child(9)  { transform: rotate(240deg) translate(0, -140%); animation-delay: -0.3333s; }
-.apple-spinner .apple-spinner-blade:nth-child(10) { transform: rotate(270deg) translate(0, -140%); animation-delay: -0.25s; }
-.apple-spinner .apple-spinner-blade:nth-child(11) { transform: rotate(300deg) translate(0, -140%); animation-delay: -0.1667s; }
-.apple-spinner .apple-spinner-blade:nth-child(12) { transform: rotate(330deg) translate(0, -140%); animation-delay: -0.0833s; }
-
-@keyframes apple-spinner-fade {
-  0% { opacity: 1; }
-  100% { opacity: 0.15; }
+@keyframes apple-ios-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* --------------------------------------------------------------------------
@@ -4052,6 +4017,7 @@ header.app-header {
   padding: 0;
   transition: all 0.2s ease;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  flex-shrink: 0;
 }
 .hamburger-menu-btn:hover {
   background: #FFF7EE;
@@ -4077,10 +4043,12 @@ header.app-header {
 }
 
 /* --------------------------------------------------------------------------
-   DESKTOP USER GREETING BUTTON & DROPDOWN
+   DESKTOP USER GREETING BUTTON (DIRECT CLICK OPENS PROFILE)
    -------------------------------------------------------------------------- */
 .desk-user-menu-wrap {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 .desk-greeting-btn {
   display: flex;
@@ -4088,7 +4056,7 @@ header.app-header {
   gap: 8px;
   background: #FFFFFF;
   border: 1px solid var(--insta-border);
-  padding: 5px 12px 5px 6px;
+  padding: 5px 14px 5px 6px;
   border-radius: 999px;
   cursor: pointer;
   font-family: inherit;
@@ -4098,6 +4066,7 @@ header.app-header {
 .desk-greeting-btn:hover {
   border-color: #E8944B;
   background: #FFF8F0;
+  transform: translateY(-1px);
 }
 .desk-greeting-avatar {
   width: 32px;
@@ -4123,68 +4092,9 @@ header.app-header {
   font-weight: 750;
   color: var(--insta-text-main);
 }
-.desk-greeting-arrow {
-  font-size: 10px;
-  color: var(--insta-text-muted);
-  transition: transform 0.2s ease;
-}
-.desk-greeting-btn[aria-expanded="true"] .desk-greeting-arrow {
-  transform: rotate(180deg);
-}
-.desk-user-dropdown {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  width: 200px;
-  background: #FFFFFF;
-  border: 1px solid var(--insta-border);
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-  padding: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  z-index: 1000;
-  animation: dropdown-pop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.desk-user-dropdown.hide {
-  display: none !important;
-}
-.desk-user-dropdown button {
-  width: 100%;
-  text-align: left;
-  background: none;
-  border: 0;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--insta-text-main);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: background 0.15s ease;
-}
-.desk-user-dropdown button:hover {
-  background: #FFF5EC;
-  color: var(--insta-primary);
-}
-.desk-user-dropdown button.dropdown-logout {
-  color: #D32F2F;
-}
-.desk-user-dropdown button.dropdown-logout:hover {
-  background: #FFF0F0;
-  color: #C62828;
-}
-.dropdown-divider {
-  height: 1px;
-  background: var(--insta-border);
-  margin: 4px 6px;
-}
 
 /* --------------------------------------------------------------------------
-   FULL ANIMATED SLIDE-DOWN MENU DRAWER
+   FULL ANIMATED SLIDE-DOWN MENU DRAWER (ZERO DUPLICATION)
    -------------------------------------------------------------------------- */
 .nav-drawer-overlay {
   position: fixed;
@@ -4192,7 +4102,7 @@ header.app-header {
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  z-index: 9998;
+  z-index: 9990;
   opacity: 1;
   transition: opacity 0.24s ease, visibility 0.24s ease;
 }
@@ -4239,71 +4149,6 @@ header.app-header {
   background: #EFE4D6;
   color: var(--insta-text-main);
 }
-.drawer-user-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
-  background: #FFFDF9;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-.drawer-user-card:hover {
-  background: #FFF7EE;
-}
-.drawer-user-avatar {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  background: #FFF0E2;
-  border: 2px solid #FADDC4;
-  color: var(--insta-primary);
-  font-weight: 850;
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-.drawer-user-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.drawer-user-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-}
-.drawer-user-name {
-  font-size: 14.5px;
-  font-weight: 800;
-  color: var(--insta-text-main);
-}
-.drawer-user-handle {
-  font-size: 12px;
-  color: var(--insta-text-muted);
-}
-.drawer-campus-tag {
-  font-size: 10px;
-  font-weight: 800;
-  background: #E8F5E9;
-  color: #2E7D32;
-  padding: 2px 8px;
-  border-radius: 999px;
-  align-self: flex-start;
-  margin-top: 3px;
-}
-.drawer-arrow {
-  font-size: 18px;
-  color: var(--insta-text-muted);
-}
-.drawer-divider {
-  height: 1px;
-  background: var(--insta-border);
-  margin: 6px 0;
-}
 .drawer-menu-list {
   display: flex;
   flex-direction: column;
@@ -4332,20 +4177,31 @@ header.app-header {
   transform: translateX(3px);
 }
 .drawer-item-icon {
-  font-size: 18px;
-  width: 24px;
+  font-size: 20px;
+  width: 28px;
   text-align: center;
+  flex-shrink: 0;
 }
 .drawer-item-text {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
-.drawer-badge {
-  font-size: 10px;
+.drawer-item-text b {
+  font-size: 13.5px;
   font-weight: 800;
-  background: #E8F5E9;
-  color: #2E7D32;
-  padding: 2px 8px;
-  border-radius: 999px;
+  color: var(--insta-text-main);
+}
+.drawer-item-text small {
+  font-size: 11.5px;
+  color: var(--insta-text-muted);
+  font-weight: 500;
+}
+.drawer-divider {
+  height: 1px;
+  background: var(--insta-border);
+  margin: 6px 0;
 }
 .drawer-footer {
   padding: 10px 14px 18px;
@@ -4372,6 +4228,34 @@ header.app-header {
 }
 
 /* --------------------------------------------------------------------------
+   MODAL CLOSE BUTTON (TOP-RIGHT PLACEMENT FIX)
+   -------------------------------------------------------------------------- */
+.modal-close-btn {
+  position: absolute !important;
+  top: 16px !important;
+  right: 16px !important;
+  left: auto !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  background: #F7EFE7 !important;
+  border: 1px solid #EFE2D4 !important;
+  color: var(--insta-text-main) !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  z-index: 10 !important;
+}
+.modal-close-btn:hover {
+  background: #F0E2D4 !important;
+  transform: scale(1.05) !important;
+}
+
+/* --------------------------------------------------------------------------
    VIEWPORT BREAKPOINTS: LAPTOP, TABLET & PHONE
    -------------------------------------------------------------------------- */
 
@@ -4385,16 +4269,19 @@ header.app-header {
   }
   header.app-header {
     height: 68px;
-    padding: 0 32px;
+    padding: 0 clamp(16px, 2.5vw, 32px);
   }
   .desktop-nav {
     display: flex !important;
+    gap: 8px;
   }
   .header-search-wrap {
     display: flex !important;
     align-items: center;
-    flex: 0 1 400px;
-    margin: 0 24px;
+    flex: 1 1 200px;
+    min-width: 170px;
+    max-width: 380px;
+    margin: 0 16px;
   }
   .standalone-search {
     display: none !important;
@@ -4408,6 +4295,12 @@ header.app-header {
   .hamburger-menu-btn {
     display: flex !important;
   }
+  .college-badge {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .feed-main-container {
     max-width: 1360px !important;
     width: 100% !important;
@@ -4416,15 +4309,65 @@ header.app-header {
   }
   .grid-feed-list {
     display: grid !important;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)) !important;
     gap: 24px !important;
   }
   .insta-post-card {
     display: flex !important;
     flex-direction: column !important;
+    height: 100% !important;
   }
-  .insta-post-card .insta-post-body {
+  .insta-post-body {
     flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .insta-post-title {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .insta-post-desc {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    flex: 1;
+  }
+  .insta-post-media {
+    height: 230px !important;
+    width: 100% !important;
+    background: #FDFBFA;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-bottom: 1px solid #FAF4EE;
+    cursor: zoom-in;
+  }
+  .insta-post-media img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+  }
+  .insta-post-no-media {
+    height: 110px !important;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 18px;
+    background: linear-gradient(135deg, #FFF9F3 0%, #FFF2E6 100%);
+    border-bottom: 1px solid #FAF4EE;
+  }
+  .insta-post-author-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 170px;
+  }
+  .insta-post-author-sub {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 170px;
   }
   .nav-drawer-overlay {
     display: flex;
@@ -4434,7 +4377,7 @@ header.app-header {
     padding-right: 28px;
   }
   .nav-drawer-panel {
-    width: 360px;
+    width: 340px;
     border-radius: 20px;
     transform: translateY(0) scale(1);
     transform-origin: top right;
@@ -4469,9 +4412,19 @@ header.app-header {
   .hamburger-menu-btn {
     display: flex !important;
   }
+  header.app-header {
+    height: 62px;
+    padding: 0 20px;
+  }
+  .college-badge {
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .standalone-search {
     display: block !important;
-    max-width: 800px !important;
+    max-width: 760px !important;
     margin: 12px auto 6px !important;
   }
   .feed-main-container {
@@ -4488,9 +4441,35 @@ header.app-header {
   .insta-post-card {
     display: flex !important;
     flex-direction: column !important;
+    height: 100% !important;
   }
-  .insta-post-card .insta-post-body {
+  .insta-post-body {
     flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .insta-post-title {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .insta-post-desc {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    flex: 1;
+  }
+  .insta-post-media {
+    height: 220px !important;
+    width: 100% !important;
+    object-fit: cover !important;
+  }
+  .insta-post-media img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+  }
+  .insta-post-no-media {
+    height: 100px !important;
   }
   .nav-drawer-overlay {
     display: flex;
@@ -4500,7 +4479,7 @@ header.app-header {
     padding-right: 20px;
   }
   .nav-drawer-panel {
-    width: 340px;
+    width: 320px;
     border-radius: 20px;
     transform: translateY(0) scale(1);
     transform-origin: top right;
@@ -4533,7 +4512,7 @@ header.app-header {
   }
   header.app-header {
     height: 56px;
-    padding: 0 14px;
+    padding: 0 12px;
   }
   /* Remove Logout button and "Hi, User" from top header on phone as requested! */
   .header-logout-btn, #profileButton, .desk-user-menu-wrap {
@@ -4542,6 +4521,15 @@ header.app-header {
   /* Show only 3-line hamburger menu button on top right of phone! */
   .hamburger-menu-btn {
     display: flex !important;
+  }
+  .college-badge {
+    max-width: 110px;
+    font-size: 9px;
+    padding: 2px 6px;
+    margin-left: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .feed-main-container {
     padding: 0 10px !important;
@@ -4561,17 +4549,20 @@ header.app-header {
   .insta-post-body {
     padding: 10px 12px;
   }
+  .insta-post-title {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  .insta-post-desc {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
   .insta-post-actions {
     padding: 8px 12px 10px;
   }
   .modern-chat-card {
     height: 96vh;
     border-radius: 16px;
-  }
-  .college-badge {
-    font-size: 9px;
-    padding: 2px 6px;
-    margin-left: 4px;
   }
   /* Full animated slide-down from the top header on mobile! */
   .nav-drawer-overlay {
