@@ -86,34 +86,45 @@
 
         <p id="authError" class="auth-error" role="alert" aria-live="polite"></p>
         <button type="submit" id="authSubmitButton" class="auth-primary">Log In</button>
-        <button type="button" id="forgotPasswordButton" class="auth-forgot-link">Forgot password?</button>
+        
+        <!-- Forgot Password Link: In login mode only, completely hidden in register mode -->
+        <div id="forgotPasswordWrap" class="forgot-password-wrap">
+          <button type="button" id="forgotPasswordButton" class="auth-forgot-link">Forgot password?</button>
+        </div>
+      </form>
+    </section>
 
-        <!-- Forgot Password Panel -->
-        <section id="forgotPasswordPanel" class="forgot-password-panel" hidden aria-label="Reset password">
-          <h3 id="forgotPasswordTitle">Reset your password</h3>
-          <p class="panel-subtitle">Enter your registered email or username to receive a 6-digit OTP code.</p>
-          <label for="resetEmail">Email or Username</label>
-          <input id="resetEmail" type="text" autocomplete="username" placeholder="e.g. jay or name@gmail.com">
-          <button type="button" id="sendResetOtpButton" class="auth-secondary">Send OTP</button>
+    <!-- Dedicated Forgot Password Panel (Only this panel shows when Forgot Password is clicked!) -->
+    <section id="forgotPasswordPanel" class="forgot-password-panel" hidden aria-label="Reset password">
+      <div class="forgot-panel-header">
+        <h2 id="forgotPasswordTitle" class="forgot-panel-title">Reset Password</h2>
+        <p class="panel-subtitle">Enter your registered email or username to receive a 6-digit OTP code.</p>
+      </div>
+
+      <div class="forgot-form-body">
+        <label for="resetEmail">Email or Username</label>
+        <input id="resetEmail" type="text" autocomplete="username" placeholder="e.g. rahul_01 or name@gmail.com" autocapitalize="none" autocorrect="off" spellcheck="false">
+        <button type="button" id="sendResetOtpButton" class="auth-primary" style="margin-top: 10px;">Send OTP</button>
+        
+        <div id="resetOtpFields" hidden>
+          <label for="resetOtp">Enter 6-digit OTP</label>
+          <input id="resetOtp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="e.g. 123456" style="letter-spacing: 4px; font-weight: 800; font-family: monospace;">
           
-          <div id="resetOtpFields" hidden>
-            <label for="resetOtp">Enter 6-digit OTP</label>
-            <input id="resetOtp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="e.g. 123456">
-            
-            <label for="resetNewPassword">New Password</label>
-            <div class="password-input-wrap">
-              <input id="resetNewPassword" type="password" autocomplete="new-password" minlength="6" placeholder="At least 6 characters">
-              <button type="button" id="toggleResetPassword" class="password-toggle-btn" aria-label="Show password" title="Show password">
-                <svg class="eye-icon eye-show" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                <svg class="eye-icon eye-hide" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-              </button>
-            </div>
-            <button type="button" id="verifyResetOtpButton" class="auth-primary">Verify OTP &amp; Reset Password</button>
+          <label for="resetNewPassword">New Password</label>
+          <div class="password-input-wrap">
+            <input id="resetNewPassword" type="password" autocomplete="new-password" minlength="6" placeholder="At least 6 characters">
+            <button type="button" id="toggleResetPassword" class="password-toggle-btn" aria-label="Show password" title="Show password">
+              <svg class="eye-icon eye-show" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              <svg class="eye-icon eye-hide" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+            </button>
           </div>
-          
-          <p id="resetPasswordMessage" class="auth-error" role="status" aria-live="polite"></p>
-          <button type="button" id="cancelResetPasswordButton" class="auth-forgot-link">Back to login</button>
-        </section>
+          <button type="button" id="verifyResetOtpButton" class="auth-primary" style="margin-top: 10px;">Verify OTP &amp; Reset Password</button>
+        </div>
+        
+        <p id="resetPasswordMessage" class="auth-error" role="status" aria-live="polite"></p>
+        <button type="button" id="cancelResetPasswordButton" class="auth-back-link">← Back to Log In</button>
+      </div>
+    </section>
       </form>
     </section>
   </section>

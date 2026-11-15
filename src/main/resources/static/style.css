@@ -216,9 +216,9 @@ body.auth-locked > main { display:none !important; }
 #authForm{display:grid;gap:8px}
 #authForm label{margin-top:5px;color:var(--ink);font-size:12px;font-weight:800}
 #authForm input{width:100%;min-height:47px;padding:12px 13px;border:1px solid #f2e7de;border-radius:11px;background:#fff;color:var(--ink);font:inherit;outline:none}
-.password-input-wrap{position:relative;display:flex;align-items:center;width:100%}
-.password-input-wrap input{width:100%;padding-right:44px!important}
-.password-toggle-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:transparent;border:none;cursor:pointer;padding:6px;display:flex;align-items:center;justify-content:center;color:#8c786a;border-radius:6px;transition:color .15s,background-color .15s}
+.password-input-wrap{position:relative;display:flex;align-items:center;width:100%;box-sizing:border-box}
+.password-input-wrap input{width:100%;padding-right:48px!important;box-sizing:border-box}
+.password-toggle-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:36px;height:36px;background:transparent;border:none;cursor:pointer;padding:0;margin:0;display:flex;align-items:center;justify-content:center;color:#8c786a;border-radius:8px;transition:color .15s,background-color .15s;z-index:5}
 .password-toggle-btn:hover{color:var(--p);background:#e8944b15}
 #authForm input:focus{border-color:var(--p);box-shadow:0 0 0 3px #e8944b1c}
 #authForm .auth-primary{margin-top:6px}
@@ -3099,24 +3099,58 @@ body {
 }
 
 .password-input-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
+
 .password-input-wrap input {
-  padding-right: 44px;
+  width: 100% !important;
+  padding-right: 48px !important;
+  box-sizing: border-box !important;
 }
+
 .password-toggle-btn {
-  position: absolute;
-  right: 10px;
-  background: none;
-  border: 0;
-  color: var(--insta-text-muted);
-  cursor: pointer;
-  padding: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: absolute !important;
+  right: 10px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  max-width: 36px !important;
+  max-height: 36px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #8C786A !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 8px !important;
+  transition: color 0.15s ease, background 0.15s ease !important;
+  z-index: 5 !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+.password-toggle-btn:hover {
+  color: var(--insta-primary, #E8944B) !important;
+  background: rgba(232, 148, 75, 0.12) !important;
+}
+
+.password-toggle-btn svg {
+  display: block !important;
+  width: 20px !important;
+  height: 20px !important;
+  stroke: currentColor !important;
+  fill: none !important;
+  pointer-events: none !important;
 }
 
 .auth-primary {
@@ -3226,12 +3260,19 @@ body {
   box-shadow: 0 4px 12px rgba(220, 38, 38, 0.08);
 }
 
+.forgot-password-wrap {
+  text-align: center;
+  margin-top: 10px;
+}
+.forgot-password-wrap[hidden] {
+  display: none !important;
+}
+
 .auth-forgot-link {
   display: inline-block;
   background: none;
   border: 0;
-  margin-top: 14px;
-  color: var(--insta-primary);
+  color: var(--insta-primary, #E8944B);
   font-size: 13px;
   font-weight: 750;
   cursor: pointer;
@@ -3242,6 +3283,48 @@ body {
 .auth-forgot-link:hover {
   background: rgba(232, 148, 75, 0.08);
   text-decoration: underline;
+}
+.auth-forgot-link[hidden] {
+  display: none !important;
+}
+
+.forgot-password-panel {
+  text-align: left;
+  animation: fadeInAuth 0.25s ease;
+}
+.forgot-password-panel[hidden] {
+  display: none !important;
+}
+
+.forgot-panel-header {
+  text-align: center;
+  margin-bottom: 18px;
+}
+.forgot-panel-title {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 850;
+  color: var(--insta-text-main, #3E3023);
+}
+
+.auth-back-link {
+  display: block;
+  width: 100%;
+  text-align: center;
+  background: none;
+  border: 0;
+  margin-top: 16px;
+  color: #8C786A;
+  font-size: 13.5px;
+  font-weight: 750;
+  cursor: pointer;
+  padding: 10px 14px;
+  border-radius: 10px;
+  transition: all 0.15s ease;
+}
+.auth-back-link:hover {
+  color: var(--insta-primary, #E8944B);
+  background: rgba(232, 148, 75, 0.08);
 }
 
 @media (max-width: 640px) {

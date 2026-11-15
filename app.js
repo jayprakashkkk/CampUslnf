@@ -1626,11 +1626,19 @@ function chooseAuthMode(mode) {
     pwdLabel.textContent = creating ? 'Password (min 6 characters) *' : 'Password *';
   }
 
-  // Forgot password link and panel (hidden in register mode)
+  // Forgot password wrap and panel: ONLY available in login mode, completely hidden in register mode
+  const forgotWrap = $('forgotPasswordWrap');
+  if (forgotWrap) {
+    forgotWrap.hidden = creating;
+    forgotWrap.style.display = creating ? 'none' : 'block';
+  }
   const forgotBtn = $('forgotPasswordButton');
-  if (forgotBtn) forgotBtn.hidden = creating;
+  if (forgotBtn) {
+    forgotBtn.hidden = creating;
+    forgotBtn.style.display = creating ? 'none' : 'inline-block';
+  }
   const forgotPanel = $('forgotPasswordPanel');
-  if (forgotPanel && creating) forgotPanel.hidden = true;
+  if (forgotPanel) forgotPanel.hidden = true;
 
   const titleEl = $('authFormTitle');
   if (titleEl) titleEl.textContent = creating ? 'Create new account' : 'Log In';
@@ -1776,15 +1784,29 @@ $('authUsername')?.addEventListener('input', (e) => {
 let resetOtpRequested=false;
 $('forgotPasswordButton')?.addEventListener('click',()=>{
   const panel=$('forgotPasswordPanel');
-  panel.hidden=false;
+  const choices=$('authChoices');
+  const formPanel=$('authFormPanel');
+
+  if(choices) choices.classList.add('hide');
+  if(formPanel) formPanel.classList.add('hide');
+  if(panel) panel.hidden=false;
+
   $('resetPasswordMessage').textContent='';
   $('resetEmail').value=$('authEmail')?.value||$('authUsername')?.value||'';
   $('resetOtpFields').hidden=true;
   resetOtpRequested=false;
+  setTimeout(()=>$('resetEmail')?.focus(), 60);
 });
 $('cancelResetPasswordButton')?.addEventListener('click',()=>{
-  $('forgotPasswordPanel').hidden=true;
-  $('resetPasswordMessage').textContent='';
+  const panel=$('forgotPasswordPanel');
+  const choices=$('authChoices');
+  const formPanel=$('authFormPanel');
+
+  if(panel) panel.hidden=true;
+  if(choices) choices.classList.remove('hide');
+  if(formPanel) formPanel.classList.remove('hide');
+
+  chooseAuthMode('login');
 });
 $('sendResetOtpButton')?.addEventListener('click',async()=>{
   const identifier=$('resetEmail').value.trim();
@@ -1834,7 +1856,14 @@ $('verifyResetOtpButton')?.addEventListener('click',async()=>{
     if(!r.ok){msg.textContent=d.message||'OTP invalid or expired. Request a new OTP.';return;}
     msg.textContent='✓ Password reset successfully! Redirecting to login…';
     setTimeout(()=>{
-      $('forgotPasswordPanel').hidden=true;
+      const panel=$('forgotPasswordPanel');
+      const choices=$('authChoices');
+      const formPanel=$('authFormPanel');
+
+      if(panel) panel.hidden=true;
+      if(choices) choices.classList.remove('hide');
+      if(formPanel) formPanel.classList.remove('hide');
+
       chooseAuthMode('login');
       $('authUsername').value=identifier;
       $('authPassword').value='';
