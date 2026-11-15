@@ -1878,14 +1878,13 @@ function resetPasswordVisibility(buttonId, inputId) {
   const input = $(inputId);
   if (!btn || !input) return;
   input.type = 'password';
+  btn.classList.remove('is-showing');
   btn.setAttribute('aria-label', 'Show password');
   btn.setAttribute('title', 'Show password');
   const eyeShow = btn.querySelector('.eye-show');
   const eyeHide = btn.querySelector('.eye-hide');
-  if (eyeShow && eyeHide) {
-    eyeShow.style.display = 'block';
-    eyeHide.style.display = 'none';
-  }
+  if (eyeShow) eyeShow.style.display = 'block';
+  if (eyeHide) eyeHide.style.display = 'none';
 }
 
 function setupPasswordToggle(buttonId, inputId) {
@@ -1893,16 +1892,16 @@ function setupPasswordToggle(buttonId, inputId) {
   const input = $(inputId);
   if (!btn || !input) return;
   btn.addEventListener('click', () => {
-    const isPassword = input.type === 'password';
-    input.type = isPassword ? 'text' : 'password';
-    btn.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
-    btn.setAttribute('title', isPassword ? 'Hide password' : 'Show password');
+    const isShowing = input.type === 'text';
+    const nextShowing = !isShowing;
+    input.type = nextShowing ? 'text' : 'password';
+    btn.classList.toggle('is-showing', nextShowing);
+    btn.setAttribute('aria-label', nextShowing ? 'Hide password' : 'Show password');
+    btn.setAttribute('title', nextShowing ? 'Hide password' : 'Show password');
     const eyeShow = btn.querySelector('.eye-show');
     const eyeHide = btn.querySelector('.eye-hide');
-    if (eyeShow && eyeHide) {
-      eyeShow.style.display = isPassword ? 'none' : 'block';
-      eyeHide.style.display = isPassword ? 'block' : 'none';
-    }
+    if (eyeShow) eyeShow.style.display = nextShowing ? 'none' : 'block';
+    if (eyeHide) eyeHide.style.display = nextShowing ? 'block' : 'none';
   });
 }
 setupPasswordToggle('toggleAuthPassword', 'authPassword');

@@ -3144,13 +3144,40 @@ body {
   background: rgba(232, 148, 75, 0.12) !important;
 }
 
+/* Strictly hide browser native reveal icons so only one custom icon is ever present */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none !important;
+}
+input::-webkit-credentials-auto-fill-button,
+input::-webkit-contacts-auto-fill-button {
+  visibility: hidden !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  right: 0 !important;
+}
+
 .password-toggle-btn svg {
-  display: block !important;
   width: 20px !important;
   height: 20px !important;
   stroke: currentColor !important;
   fill: none !important;
   pointer-events: none !important;
+}
+
+/* Crucial: Exactly one eye icon visible at a time */
+.password-toggle-btn .eye-show {
+  display: block !important;
+}
+.password-toggle-btn .eye-hide {
+  display: none !important;
+}
+
+.password-toggle-btn.is-showing .eye-show {
+  display: none !important;
+}
+.password-toggle-btn.is-showing .eye-hide {
+  display: block !important;
 }
 
 .auth-primary {
