@@ -105,12 +105,17 @@ public class AuthController {
         if (submittedUsername.isEmpty()) {
             return error(HttpStatus.BAD_REQUEST, "Please enter a username.");
         }
-        if (submittedUsername.length() > 50) {
-            return error(HttpStatus.BAD_REQUEST, "Username must be 50 characters or fewer.");
+        if (submittedUsername.length() < 3) {
+            return error(HttpStatus.BAD_REQUEST, "Username must be at least 3 characters long.");
         }
-        // No strength/complexity rules: any non-empty password is accepted.
-        if (password == null || password.isEmpty()) {
-            return error(HttpStatus.BAD_REQUEST, "Please enter a password.");
+        if (submittedUsername.length() > 30) {
+            return error(HttpStatus.BAD_REQUEST, "Username must be 30 characters or fewer.");
+        }
+        if (!submittedUsername.matches("^[a-z0-9_.]+$")) {
+            return error(HttpStatus.BAD_REQUEST, "Username can only contain lowercase letters, numbers, dots, and underscores.");
+        }
+        if (password == null || password.length() < 6) {
+            return error(HttpStatus.BAD_REQUEST, "Password must be at least 6 characters long.");
         }
 
         String usernameKey = submittedUsername;
@@ -134,6 +139,8 @@ public class AuthController {
         account.setCourse(course);
         account.setCollege(college);
         account.setPhone("");
+        String token = java.util.UUID.randomUUID().toString().replace("-", "") + Long.toHexString(System.currentTimeMillis());
+        account.setAuthToken(token);
         applyConfiguredOwner(account);
         try {
             account = users.saveAndFlush(account);
@@ -164,7 +171,9 @@ public class AuthController {
         }
         normalizeStoredUsername(account);
         boolean ownerBootstrapped = applyConfiguredOwner(account);
-        if (refreshUsernameChangeWindow(account, appNow()) || ownerBootstrapped) users.saveAndFlush(account);
+        String token = java.util.UUID.randomUUID().toString().replace("-", "") + Long.toHexString(System.currentTimeMillis());
+        account.setAuthToken(token);
+        if (refreshUsernameChangeWindow(account, appNow()) || ownerBootstrapped || true) users.saveAndFlush(account);
         startSession(request, account);
         return ResponseEntity.ok(userPayload(account));
     }
@@ -425,42 +434,38 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> me(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute(SESSION_USER_ID) == null) {
+        Long resolvedUserId = null;
+        if (session != null && session.getAttribute(SESSION_USER_ID) instanceof Long uid) {
+            resolvedUserId = uid;
+        } else {
+            String token = request.getHeader("X-Auth-Token");
+            if (token == null || token.isBlank()) {
+                String auth = request.getHeader("Authorization");
+                if (auth != null && auth.startsWith("Bearer ")) {
+                    token = auth.substring(7).trim();
+                }
+            }
+            if (token != null && !token.isBlank()) {
+                UserAccount byToken = users.findByAuthToken(token.trim()).orElse(null);
+                if (byToken != null) {
+                    resolvedUserId = byToken.getId();
+                    startSession(request, byToken);
+                }
+            }
+        }
+        if (resolvedUserId == null) {
             return ResponseEntity.ok(Map.of("authenticated", false));
         }
-        Object username = session.getAttribute(SESSION_USERNAME);
-        Object displayName = session.getAttribute(SESSION_DISPLAY_NAME);
-        Map<String, Object> body = new LinkedHashMap<>();
-        body.put("authenticated", true);
-        body.put("username", String.valueOf(username));
-        body.put("displayName", displayName == null ? String.valueOf(username) : String.valueOf(displayName));
-        body.put("phone", "");
-        body.put("course", "");
-        body.put("college", "CU");
-        body.put("collegeName", "CU (Chandigarh University)");
-        body.put("avatarId", "");
-        body.put("profileImageData", "");
-        body.put("bannerImageData", "");
-        body.put("role", "MEMBER");
-        Object userId = session.getAttribute(SESSION_USER_ID);
-        if (userId instanceof Long id) {
-            users.findById(id).ifPresent(account -> {
-                body.put("displayName", account.getDisplayName());
-                body.put("email", account.getEmail());
-                body.put("phone", account.getPhone());
-                body.put("course", account.getCourse());
-                body.put("college", account.getCollege());
-                body.put("collegeName", collegeDisplayName(account.getCollege()));
-                body.put("avatarId", account.getAvatarId());
-                boolean ownerBootstrapped = applyConfiguredOwner(account);
-                body.put("profileImageData", canUseCustomProfilePhoto(account) ? account.getProfileImageData() : "");
-                body.put("bannerImageData", canUseProfileBanner(account) ? account.getBannerImageData() : "");
-                body.put("role", account.getRole());
-                if (refreshUsernameChangeWindow(account, appNow()) || ownerBootstrapped) users.saveAndFlush(account);
-                addUsernamePolicyPayload(body, account);
-            });
+        final Long userId = resolvedUserId;
+        UserAccount account = users.findById(userId).orElse(null);
+        if (account == null) {
+            return ResponseEntity.ok(Map.of("authenticated", false));
         }
-        return ResponseEntity.ok(body);
+        boolean ownerBootstrapped = applyConfiguredOwner(account);
+        if (refreshUsernameChangeWindow(account, appNow()) || ownerBootstrapped) {
+            users.saveAndFlush(account);
+        }
+        return ResponseEntity.ok(userPayload(account));
     }
 
     @PostMapping("/profile")
@@ -551,7 +556,23 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Map<String, Object>> logout(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-        if (session != null) session.invalidate();
+        if (session != null) {
+            Object uid = session.getAttribute(SESSION_USER_ID);
+            if (uid instanceof Long id) {
+                users.findById(id).ifPresent(u -> {
+                    u.setAuthToken(null);
+                    users.saveAndFlush(u);
+                });
+            }
+            session.invalidate();
+        }
+        String token = request.getHeader("X-Auth-Token");
+        if (token != null && !token.isBlank()) {
+            users.findByAuthToken(token.trim()).ifPresent(u -> {
+                u.setAuthToken(null);
+                users.saveAndFlush(u);
+            });
+        }
         return ResponseEntity.ok(Map.of("authenticated", false, "message", "You have been logged out."));
     }
 
@@ -617,6 +638,7 @@ public class AuthController {
         body.put("profileImageData", canUseCustomProfilePhoto(account) ? account.getProfileImageData() : "");
         body.put("bannerImageData", canUseProfileBanner(account) ? account.getBannerImageData() : "");
         body.put("role", account.getRole());
+        body.put("token", account.getAuthToken() == null ? "" : account.getAuthToken());
         addUsernamePolicyPayload(body, account);
         return body;
     }

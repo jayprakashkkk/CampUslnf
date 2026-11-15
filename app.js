@@ -46,23 +46,39 @@ window.fetch = async function(input, init) {
     showGlobalSpinner();
   }
   try {
-    if (url.startsWith('/api/')) {
-      if (CAMPUS_API_BASE) {
+    if (url.startsWith('/api/') || url.includes('/api/')) {
+      if (url.startsWith('/api/') && CAMPUS_API_BASE) {
         url = CAMPUS_API_BASE.replace(/\/+$/, '') + url;
       }
       if (!init.credentials) {
         init.credentials = 'include';
       }
+      // Attach X-Auth-Token from localStorage for bulletproof cross-domain sessions
+      const authToken = localStorage.getItem('campus_auth_token');
+      if (authToken) {
+        if (!init.headers) init.headers = {};
+        if (init.headers instanceof Headers) {
+          if (!init.headers.has('X-Auth-Token')) init.headers.set('X-Auth-Token', authToken);
+        } else if (Array.isArray(init.headers)) {
+          init.headers.push(['X-Auth-Token', authToken]);
+        } else {
+          if (!init.headers['X-Auth-Token']) init.headers['X-Auth-Token'] = authToken;
+        }
+      }
+      const getFallbackUrl = (currentUrl) => {
+        const apiPath = currentUrl.includes('/api/') ? currentUrl.substring(currentUrl.indexOf('/api/')) : currentUrl;
+        return RAILWAY_BACKEND.replace(/\/+$/, '') + (apiPath.startsWith('/') ? apiPath : '/' + apiPath);
+      };
       try {
         const response = await _origFetch.call(this, url, init);
         if (response.status === 404 && !url.includes('railway.app') && window.location.hostname.includes('pages.dev')) {
-          const fallbackUrl = RAILWAY_BACKEND + (url.startsWith('/') ? url : '/' + url);
+          const fallbackUrl = getFallbackUrl(url);
           return await _origFetch.call(this, fallbackUrl, init);
         }
         return response;
       } catch (err) {
         if (!url.includes('railway.app') && window.location.hostname.includes('pages.dev')) {
-          const fallbackUrl = RAILWAY_BACKEND + (url.startsWith('/') ? url : '/' + url);
+          const fallbackUrl = getFallbackUrl(url);
           return await _origFetch.call(this, fallbackUrl, init);
         }
         throw err;
@@ -1516,14 +1532,30 @@ function showAuthGate() {
   chooseAuthMode('login');
 }
 
+function showAuthError(message, focusEl = null) {
+  const errorEl = $('authError');
+  if (errorEl) {
+    errorEl.textContent = message;
+  }
+  if (focusEl && typeof focusEl.focus === 'function') {
+    try { focusEl.focus(); } catch {}
+  }
+}
+
 function chooseAuthMode(mode) {
   authMode = mode;
   const creating = mode === 'register';
 
   const loginTab = $('showLoginButton');
   const regTab = $('showRegisterButton');
-  if (loginTab) loginTab.classList.toggle('active', !creating);
-  if (regTab) regTab.classList.toggle('active', creating);
+  if (loginTab) {
+    loginTab.classList.toggle('active', !creating);
+    loginTab.setAttribute('aria-selected', !creating ? 'true' : 'false');
+  }
+  if (regTab) {
+    regTab.classList.toggle('active', creating);
+    regTab.setAttribute('aria-selected', creating ? 'true' : 'false');
+  }
 
   const choices = $('authChoices');
   if (choices) choices.classList.remove('hide');
@@ -1532,10 +1564,23 @@ function chooseAuthMode(mode) {
 
   const errorEl = $('authError');
   if (errorEl) errorEl.textContent = '';
-  const formEl = $('authForm');
-  if (formEl) formEl.reset();
-  resetPasswordVisibility('toggleAuthPassword', 'authPassword');
 
+  const statusEl = $('authUsernameStatus');
+  if (statusEl) {
+    statusEl.hidden = true;
+    statusEl.className = 'auth-field-status';
+    statusEl.textContent = '';
+  }
+
+  // Clear password inputs and reset toggles
+  const pwdInput = $('authPassword');
+  if (pwdInput) pwdInput.value = '';
+  const confirmPwdInput = $('authConfirmPassword');
+  if (confirmPwdInput) confirmPwdInput.value = '';
+  resetPasswordVisibility('toggleAuthPassword', 'authPassword');
+  resetPasswordVisibility('toggleConfirmPassword', 'authConfirmPassword');
+
+  // Register-only fields
   const fields = $('authRegisterFields');
   if (fields) {
     fields.hidden = !creating;
@@ -1549,6 +1594,44 @@ function chooseAuthMode(mode) {
     });
   }
 
+  // Confirm password field (register only)
+  const confirmWrap = $('authConfirmPasswordWrap');
+  if (confirmWrap) {
+    confirmWrap.hidden = !creating;
+    if (confirmPwdInput) {
+      confirmPwdInput.disabled = !creating;
+      confirmPwdInput.required = creating;
+    }
+  }
+
+  // Username field label and placeholder adapt between login and create account
+  const uLabel = $('authUsernameLabel');
+  const uInput = $('authUsername');
+  if (uLabel) {
+    uLabel.textContent = creating ? 'Choose Username *' : 'Username or Email *';
+  }
+  if (uInput) {
+    uInput.placeholder = creating ? 'e.g. rahul_01 (3-30 letters/numbers)' : 'Enter username or email';
+    uInput.maxLength = creating ? 30 : 254;
+  }
+
+  // Password field placeholder and autocomplete
+  if (pwdInput) {
+    pwdInput.autocomplete = creating ? 'new-password' : 'current-password';
+    pwdInput.placeholder = creating ? 'Create password (min 6 characters)' : 'Enter password';
+    pwdInput.minLength = creating ? 6 : 1;
+  }
+  const pwdLabel = $('authPasswordLabel');
+  if (pwdLabel) {
+    pwdLabel.textContent = creating ? 'Password (min 6 characters) *' : 'Password *';
+  }
+
+  // Forgot password link and panel (hidden in register mode)
+  const forgotBtn = $('forgotPasswordButton');
+  if (forgotBtn) forgotBtn.hidden = creating;
+  const forgotPanel = $('forgotPasswordPanel');
+  if (forgotPanel && creating) forgotPanel.hidden = true;
+
   const titleEl = $('authFormTitle');
   if (titleEl) titleEl.textContent = creating ? 'Create new account' : 'Log In';
 
@@ -1557,12 +1640,6 @@ function chooseAuthMode(mode) {
 
   const welcomeTitle = $('authWelcomeTitle');
   if (welcomeTitle) welcomeTitle.textContent = creating ? 'Join CampUs' : 'Welcome to CampUs';
-
-  const pwdInput = $('authPassword');
-  if (pwdInput) {
-    pwdInput.autocomplete = creating ? 'new-password' : 'current-password';
-    pwdInput.placeholder = creating ? 'Create a password' : 'Enter password';
-  }
 
   const focusTarget = $(creating ? 'authFullName' : 'authUsername');
   if (focusTarget) focusTarget.focus();
@@ -1579,6 +1656,11 @@ function enterApp(user) {
   if (!$('authFormPanel').classList.contains('hide')) {
     finishCampusUiLayer('authForm');
   }
+
+  if (user.token) {
+    try { localStorage.setItem('campus_auth_token', user.token); } catch {}
+  }
+  try { localStorage.setItem('campus_user', JSON.stringify(user)); } catch {}
 
   currentUser = {
     username: user.username,
@@ -1622,11 +1704,15 @@ async function initAuth() {
       headers: { Accept: 'application/json' }
     });
 
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
 
     if (response.ok && data.authenticated) {
       enterApp(data);
     } else {
+      try {
+        localStorage.removeItem('campus_auth_token');
+        localStorage.removeItem('campus_user');
+      } catch {}
       showAuthGate();
     }
   } catch {
@@ -1634,13 +1720,65 @@ async function initAuth() {
   }
 }
 
+// Live debounced username check in Create Account mode
+let authUsernameCheckTimer = null;
+$('authUsername')?.addEventListener('input', (e) => {
+  if (authMode !== 'register') return;
+  const statusEl = $('authUsernameStatus');
+  if (!statusEl) return;
+  clearTimeout(authUsernameCheckTimer);
+  const val = e.target.value.trim().toLowerCase();
+  if (!val) {
+    statusEl.hidden = true;
+    statusEl.className = 'auth-field-status';
+    statusEl.textContent = '';
+    return;
+  }
+  if (val.length < 3) {
+    statusEl.hidden = false;
+    statusEl.className = 'auth-field-status hint';
+    statusEl.textContent = '⚠️ Username must be at least 3 characters.';
+    return;
+  }
+  if (val.length > 30) {
+    statusEl.hidden = false;
+    statusEl.className = 'auth-field-status error';
+    statusEl.textContent = '⚠️ Username must be 30 characters or fewer.';
+    return;
+  }
+  if (!/^[a-z0-9_.]+$/.test(val)) {
+    statusEl.hidden = false;
+    statusEl.className = 'auth-field-status error';
+    statusEl.textContent = '⚠️ Only lowercase letters, numbers, dots & underscores allowed.';
+    return;
+  }
+  statusEl.hidden = false;
+  statusEl.className = 'auth-field-status hint';
+  statusEl.textContent = 'Checking availability…';
+  authUsernameCheckTimer = setTimeout(async () => {
+    try {
+      const res = await fetch(`/api/auth/check-username?username=${encodeURIComponent(val)}`);
+      const data = await res.json().catch(() => ({}));
+      if (val !== $('authUsername')?.value.trim().toLowerCase()) return;
+      if (data.available) {
+        statusEl.className = 'auth-field-status available';
+        statusEl.textContent = '✓ ' + (data.message || 'Username is available.');
+      } else {
+        statusEl.className = 'auth-field-status taken';
+        statusEl.textContent = '✗ ' + (data.message || 'This username is already taken.');
+      }
+    } catch {
+      statusEl.hidden = true;
+    }
+  }, 300);
+});
 
 let resetOtpRequested=false;
 $('forgotPasswordButton')?.addEventListener('click',()=>{
   const panel=$('forgotPasswordPanel');
   panel.hidden=false;
   $('resetPasswordMessage').textContent='';
-  $('resetEmail').value=$('authEmail')?.value||'';
+  $('resetEmail').value=$('authEmail')?.value||$('authUsername')?.value||'';
   $('resetOtpFields').hidden=true;
   resetOtpRequested=false;
 });
@@ -1694,8 +1832,14 @@ $('verifyResetOtpButton')?.addEventListener('click',async()=>{
     const r=await fetch('/api/auth/reset-password',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({email:identifier,otp,newPassword:password})});
     const d=await r.json().catch(()=>({}));
     if(!r.ok){msg.textContent=d.message||'OTP invalid or expired. Request a new OTP.';return;}
-    msg.textContent='Password reset successfully! You can now log in with your new password.';
-    $('authUsername').value=identifier;$('authPassword').value='';$('resetOtpFields').hidden=true;
+    msg.textContent='✓ Password reset successfully! Redirecting to login…';
+    setTimeout(()=>{
+      $('forgotPasswordPanel').hidden=true;
+      chooseAuthMode('login');
+      $('authUsername').value=identifier;
+      $('authPassword').value='';
+      $('authPassword').focus();
+    }, 1500);
   }catch{msg.textContent='Could not connect. Please try again.';}
   finally{btn.disabled=false;btn.textContent='Verify OTP & reset password';}
 });
@@ -1733,51 +1877,139 @@ function setupPasswordToggle(buttonId, inputId) {
   });
 }
 setupPasswordToggle('toggleAuthPassword', 'authPassword');
+setupPasswordToggle('toggleConfirmPassword', 'authConfirmPassword');
 setupPasswordToggle('toggleResetPassword', 'resetNewPassword');
 
 $('showLoginButton')?.addEventListener('click',()=>chooseAuthMode('login'));
 $('showRegisterButton')?.addEventListener('click',()=>chooseAuthMode('register'));
+
 $('authForm')?.addEventListener('submit',async event=>{
   event.preventDefault();
-  const username=$('authUsername').value.trim().toLowerCase();
-  const password=$('authPassword').value;
-  const displayName=$('authFullName').value.trim();
-  const college=$('authCollege')?.value||'CU';
-  const course=$('authCourse').value.trim();
-  const email=$('authEmail').value.trim();
-  $('authError').textContent='';
-  const isRegister=authMode==='register';
-  if(isRegister&&!displayName){$('authError').textContent='Please enter your full name.';$('authFullName').focus();return;}
-  if(isRegister&&!college){$('authError').textContent='Please select your college.';$('authCollege').focus();return;}
-  if(isRegister&&!course){$('authError').textContent='Please enter your course.';$('authCourse').focus();return;}
-  if(isRegister&&!email){$('authError').textContent='Please enter your email address.';$('authEmail').focus();return;}
-  if(isRegister&&!$('authEmail').checkValidity()){$('authError').textContent='Please enter a valid email address.';$('authEmail').focus();return;}
-  if(!username){$('authError').textContent='Please enter a username.';$('authUsername').focus();return;}
-  if(password.length===0){$('authError').textContent='Please enter a password.';$('authPassword').focus();return;}
-  const button=$('authSubmitButton');
-  button.disabled=true;button.textContent=isRegister?'Creating account…':'Logging in…';
-  try{
-    const response=await fetch(isRegister?'/api/auth/register':'/api/auth/login',{
-      method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
-      body:JSON.stringify(isRegister?{username,password,displayName,course,email,college}:{username,password})
+  const errorEl = $('authError');
+  if (errorEl) errorEl.textContent = '';
+
+  const isRegister = authMode === 'register';
+  const username = ($('authUsername')?.value || '').trim().toLowerCase();
+  const password = $('authPassword')?.value || '';
+  const displayName = ($('authFullName')?.value || '').trim();
+  const college = $('authCollege')?.value || '';
+  const course = ($('authCourse')?.value || '').trim();
+  const email = ($('authEmail')?.value || '').trim().toLowerCase();
+  const confirmPassword = ($('authConfirmPassword')?.value || '');
+
+  if (isRegister) {
+    if (!displayName) {
+      showAuthError('Please enter your full name.', $('authFullName'));
+      return;
+    }
+    if (displayName.length > 100) {
+      showAuthError('Full name must be 100 characters or fewer.', $('authFullName'));
+      return;
+    }
+    if (!college) {
+      showAuthError('Please select your College / University.', $('authCollege'));
+      return;
+    }
+    if (!course) {
+      showAuthError('Please enter your course / branch.', $('authCourse'));
+      return;
+    }
+    if (course.length > 100) {
+      showAuthError('Course must be 100 characters or fewer.', $('authCourse'));
+      return;
+    }
+    if (!email) {
+      showAuthError('Please enter your email address.', $('authEmail'));
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showAuthError('Please enter a valid email address (e.g. name@gmail.com).', $('authEmail'));
+      return;
+    }
+    if (!username) {
+      showAuthError('Please choose a username.', $('authUsername'));
+      return;
+    }
+    if (username.length < 3) {
+      showAuthError('Username must be at least 3 characters.', $('authUsername'));
+      return;
+    }
+    if (username.length > 30) {
+      showAuthError('Username must be 30 characters or fewer.', $('authUsername'));
+      return;
+    }
+    if (!/^[a-z0-9_.]+$/.test(username)) {
+      showAuthError('Username can only contain lowercase letters, numbers, dots, and underscores.', $('authUsername'));
+      return;
+    }
+    if (!password) {
+      showAuthError('Please create a password.', $('authPassword'));
+      return;
+    }
+    if (password.length < 6) {
+      showAuthError('Password must be at least 6 characters long.', $('authPassword'));
+      return;
+    }
+    if (confirmPassword !== password) {
+      showAuthError('Passwords do not match. Please re-enter your password.', $('authConfirmPassword'));
+      return;
+    }
+  } else {
+    if (!username) {
+      showAuthError('Please enter your username or email address.', $('authUsername'));
+      return;
+    }
+    if (!password) {
+      showAuthError('Please enter your password.', $('authPassword'));
+      return;
+    }
+  }
+
+  const button = $('authSubmitButton');
+  if (button) {
+    button.disabled = true;
+    button.textContent = isRegister ? 'Creating account…' : 'Logging in…';
+  }
+
+  try {
+    const payload = isRegister
+      ? { username, password, displayName, course, email, college }
+      : { username, password };
+    const response = await fetch(isRegister ? '/api/auth/register' : '/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(payload)
     });
-    const data=await response.json().catch(()=>({}));
-    if(!response.ok){$('authError').textContent=data.message||(isRegister?'Could not create account. Please try again.':'Incorrect username or password. Please try again.');return;}
-    $('authPassword').value='';
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      showAuthError(data.message || (isRegister ? 'Could not create account. Please try again.' : 'Incorrect username or password. Please try again.'));
+      return;
+    }
+    if ($('authPassword')) $('authPassword').value = '';
+    if ($('authConfirmPassword')) $('authConfirmPassword').value = '';
     enterApp(data);
-    toast(isRegister?'Account created successfully. Welcome to CampUs!':'Welcome back, '+data.username+'!');
-  }catch{
-    $('authError').textContent='Could not connect to CampUs. Make sure the Java server is running, then try again.';
-  }finally{
-    button.disabled=false;button.textContent=isRegister?'Create Account':'Log In';
+    toast(isRegister ? 'Account created successfully! Welcome to CampUs 🎓' : 'Welcome back, ' + (data.displayName || data.username) + '! 👋');
+  } catch {
+    showAuthError('Could not connect to CampUs. Make sure the Java server is running, then try again.');
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = isRegister ? 'Create Account' : 'Log In';
+    }
   }
 });
+
 async function logout(){
   stopNotificationPolling();
   closeNavDrawer();
   closeMenu();closeProfileDropdown();closeNavPopup();closeProfileEditorPage();closeForm();
   const badge=$('campusCollegeBadge');if(badge)badge.hidden=true;
-  try{await fetch('/api/auth/logout',{method:'POST'});}catch{/* The local gate still closes access if the server is unavailable. */}
+  try{await fetch('/api/auth/logout',{method:'POST'});}catch{}
+  try{
+    localStorage.removeItem('campus_auth_token');
+    localStorage.removeItem('campus_user');
+  }catch{}
   showAuthGate();
   backToAuthChoices();
   toast('You have been logged out.');

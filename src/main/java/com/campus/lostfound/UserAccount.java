@@ -73,6 +73,10 @@ public class UserAccount {
     @Column(name = "username_changes_used")
     private Integer usernameChangesUsed;
 
+    // Resilient auth token for cross-origin and persistent sessions
+    @Column(name = "auth_token", length = 128)
+    private String authToken;
+
     public UserAccount() {}
 
     public Long getId() { return id; }
@@ -110,4 +114,6 @@ public class UserAccount {
     public void setUsernameChangeWindowStart(LocalDateTime usernameChangeWindowStart) { this.usernameChangeWindowStart = usernameChangeWindowStart; }
     public Integer getUsernameChangesUsed() { return usernameChangesUsed; }
     public void setUsernameChangesUsed(Integer usernameChangesUsed) { this.usernameChangesUsed = usernameChangesUsed; }
+    public String getAuthToken() { return authToken; }
+    public void setAuthToken(String authToken) { this.authToken = authToken; }
 }

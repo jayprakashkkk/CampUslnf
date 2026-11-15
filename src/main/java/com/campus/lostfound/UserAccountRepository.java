@@ -12,6 +12,7 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
     Optional<UserAccount> findByUsernameKey(String usernameKey);
     boolean existsByEmailKey(String emailKey);
     Optional<UserAccount> findByEmailKey(String emailKey);
+    Optional<UserAccount> findByAuthToken(String authToken);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from UserAccount u where u.id = :id")

@@ -28,47 +28,60 @@
     <h1 id="authWelcomeTitle">Welcome to CampUs</h1>
 
     <!-- Direct Segmented Tabs: Instant Switch between Login & Register -->
-    <div id="authChoices" class="auth-mode-tabs">
-      <button type="button" id="showLoginButton" class="auth-tab active" onclick="chooseAuthMode('login')">Log In</button>
-      <button type="button" id="showRegisterButton" class="auth-tab" onclick="chooseAuthMode('register')">Create Account</button>
+    <div id="authChoices" class="auth-mode-tabs" role="tablist" aria-label="Authentication mode">
+      <button type="button" id="showLoginButton" class="auth-tab active" role="tab" aria-selected="true" onclick="chooseAuthMode('login')">Log In</button>
+      <button type="button" id="showRegisterButton" class="auth-tab" role="tab" aria-selected="false" onclick="chooseAuthMode('register')">Create Account</button>
     </div>
 
     <!-- Direct Form Panel: No Double-Click Needed -->
     <section id="authFormPanel" aria-labelledby="authFormTitle">
       <h2 id="authFormTitle" class="visually-hidden">Log In</h2>
-      <form id="authForm" novalidate>
+      <form id="authForm" novalidate autocomplete="on">
         
         <!-- Registration Fields (Revealed when Create Account is tapped) -->
         <div id="authRegisterFields" class="auth-register-fields" hidden>
           <label for="authFullName">Full name *</label>
-          <input id="authFullName" name="displayName" type="text" autocomplete="name" maxlength="100" disabled placeholder="Enter your full name">
+          <input id="authFullName" name="displayName" type="text" autocomplete="name" maxlength="100" disabled placeholder="e.g. Rahul Sharma" autocapitalize="words">
           
           <label for="authCollege">Select your College / University *</label>
           <select id="authCollege" name="college" disabled required>
-            <option value="">Choose your campus...</option>
+            <option value="" disabled selected>Select your campus...</option>
+            <option value="CU">Chandigarh University (CU)</option>
             <option value="CGC_UNIV">CGC University</option>
-            <option value="CU">CU (Chandigarh University)</option>
             <option value="CGC_LANDRAN">CGC Landran</option>
-            <option value="LPU">LPU (Lovely Professional University)</option>
+            <option value="LPU">Lovely Professional University (LPU)</option>
           </select>
           
           <label for="authCourse">Course / Branch *</label>
-          <input id="authCourse" name="course" type="text" autocomplete="organization-title" maxlength="100" disabled placeholder="e.g. BCA, B.Tech, or MBA">
+          <input id="authCourse" name="course" type="text" autocomplete="organization-title" maxlength="100" disabled placeholder="e.g. BCA, B.Tech CSE, MBA" autocapitalize="words">
           
           <label for="authEmail">Email address *</label>
-          <input id="authEmail" name="email" type="email" autocomplete="email" maxlength="254" disabled placeholder="e.g. yourname@gmail.com">
+          <input id="authEmail" name="email" type="email" autocomplete="email" maxlength="254" disabled placeholder="e.g. name@gmail.com" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email">
         </div>
 
-        <label for="authUsername">Username *</label>
-        <input id="authUsername" name="username" type="text" autocomplete="username" maxlength="50" required placeholder="Enter username">
+        <label for="authUsername" id="authUsernameLabel">Username or Email *</label>
+        <input id="authUsername" name="username" type="text" autocomplete="username" maxlength="254" required placeholder="Enter username or email" autocapitalize="none" autocorrect="off" spellcheck="false">
+        <div id="authUsernameStatus" class="auth-field-status" hidden></div>
 
-        <label for="authPassword">Password *</label>
+        <label for="authPassword" id="authPasswordLabel">Password *</label>
         <div class="password-input-wrap">
           <input id="authPassword" name="password" type="password" autocomplete="current-password" required placeholder="Enter password">
           <button type="button" id="toggleAuthPassword" class="password-toggle-btn" aria-label="Show password" title="Show password">
             <svg class="eye-icon eye-show" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
             <svg class="eye-icon eye-hide" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
           </button>
+        </div>
+
+        <!-- Confirm Password Field (Shown only in Create Account mode) -->
+        <div id="authConfirmPasswordWrap" class="auth-confirm-wrap" hidden>
+          <label for="authConfirmPassword">Confirm Password *</label>
+          <div class="password-input-wrap">
+            <input id="authConfirmPassword" type="password" autocomplete="new-password" placeholder="Re-enter your password">
+            <button type="button" id="toggleConfirmPassword" class="password-toggle-btn" aria-label="Show password" title="Show password">
+              <svg class="eye-icon eye-show" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              <svg class="eye-icon eye-hide" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+            </button>
+          </div>
         </div>
 
         <p id="authError" class="auth-error" role="alert" aria-live="polite"></p>
