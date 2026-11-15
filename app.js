@@ -178,6 +178,7 @@ function closeCampusUiLayerFromBack(layer){
   else if(layer==='profileDropdown')closeProfileDropdown(true);
 }
 function closeTopUntrackedUiLayer(){
+  if($('imageLightbox')&&!$('imageLightbox').classList.contains('hide')){closeLightbox();return true;}
   if($('adminDashboardModal')&&!$('adminDashboardModal').classList.contains('hide')){closeAdminDashboard(true);return true;}
   if(navDrawerOpen){closeNavDrawer(true);return true;}
   if($('postDetailViewer')&&!$('postDetailViewer').classList.contains('hide')){closePostDetailViewer(true);return true;}
@@ -4314,3 +4315,115 @@ async function renderAdminLogs(force = false) {
     if (wrap) wrap.innerHTML = '<div class="empty">Could not load audit logs.</div>';
   }
 }
+
+
+/* --------------------------------------------------------------------------
+   TRACKPAD & TOUCH GESTURE: SWIPE LEFT-TO-RIGHT TO GO BACK
+   Supports two-finger trackpad horizontal swipe on macOS / Windows laptops
+   as well as touchscreen swipe gestures across the whole website.
+   -------------------------------------------------------------------------- */
+(function setupTrackpadSwipeBack() {
+  let trackpadAccumX = 0;
+  let trackpadAccumY = 0;
+  let trackpadResetTimer = null;
+  let isSwipeCooldown = false;
+
+  // Check if target is inside an element that can still scroll left horizontally
+  function canContainerScrollLeft(target) {
+    let el = target;
+    while (el && el !== document.body && el !== document.documentElement) {
+      if (el.scrollWidth > el.clientWidth + 8) {
+        const style = window.getComputedStyle(el);
+        const ox = style.overflowX;
+        if (ox === 'auto' || ox === 'scroll') {
+          // If the element has scrolled rightward, user is scrolling its contents
+          if (el.scrollLeft > 12) {
+            return true;
+          }
+        }
+      }
+      el = el.parentElement;
+    }
+    return false;
+  }
+
+  function handleSwipeBackAction() {
+    if (isSwipeCooldown) return;
+    isSwipeCooldown = true;
+    setTimeout(() => { isSwipeCooldown = false; }, 600);
+
+    // 1. Try closing any open overlay, modal or page first
+    const closed = closeTopUntrackedUiLayer();
+    if (closed) {
+      return;
+    }
+
+    // 2. If no modal is open, use browser history back
+    if (window.history.length > 1) {
+      window.history.back();
+    }
+  }
+
+  // Two-finger trackpad wheel listener for laptops
+  window.addEventListener('wheel', (e) => {
+    if (isSwipeCooldown) return;
+
+    // Trackpad horizontal displacement
+    const dx = e.deltaX;
+    const dy = e.deltaY;
+
+    // If target is inside a horizontally scrollable element that hasn't reached its start, ignore
+    if (canContainerScrollLeft(e.target)) {
+      trackpadAccumX = 0;
+      trackpadAccumY = 0;
+      return;
+    }
+
+    // Accumulate horizontal and vertical motion
+    trackpadAccumX += dx;
+    trackpadAccumY += Math.abs(dy);
+
+    clearTimeout(trackpadResetTimer);
+    trackpadResetTimer = setTimeout(() => {
+      trackpadAccumX = 0;
+      trackpadAccumY = 0;
+    }, 180);
+
+    // Swiping left-to-right (fingers sliding towards right):
+    // In natural scrolling on macOS/Windows, deltaX is negative (deltaX <= -55)
+    // Must be predominantly horizontal (|accumX| > accumY * 1.3)
+    if (trackpadAccumX <= -55 && Math.abs(trackpadAccumX) > trackpadAccumY * 1.3) {
+      trackpadAccumX = 0;
+      trackpadAccumY = 0;
+      handleSwipeBackAction();
+    }
+  }, { passive: true });
+
+  // Touchscreen / Touchpad touch event listeners
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchStartTime = 0;
+
+  window.addEventListener('touchstart', (e) => {
+    if (!e.touches || e.touches.length !== 1) return;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    touchStartTime = Date.now();
+  }, { passive: true });
+
+  window.addEventListener('touchend', (e) => {
+    if (!e.changedTouches || e.changedTouches.length !== 1 || isSwipeCooldown) return;
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const dx = endX - touchStartX;
+    const dy = endY - touchStartY;
+    const dt = Date.now() - touchStartTime;
+
+    // Left-to-right swipe: endX > startX + 60, under 500ms, mostly horizontal
+    if (dx > 60 && Math.abs(dx) > Math.abs(dy) * 1.4 && dt < 500) {
+      if (!canContainerScrollLeft(e.target)) {
+        handleSwipeBackAction();
+      }
+    }
+  }, { passive: true });
+})();
