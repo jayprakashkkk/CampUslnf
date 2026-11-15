@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="CampUs">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="stylesheet" href="/style.css?v=campus-clean-20261115f">
+  <link rel="stylesheet" href="/style.css?v=campus-clean-20261115g">
 </head>
 <body class="auth-locked">
 
@@ -200,6 +200,16 @@
 
     <!-- Unique Options (Zero Duplication with Home Screen / Bottom Bar) -->
     <div class="drawer-menu-list">
+      <!-- Admin Dashboard (Only visible to OWNER or ADMIN) -->
+      <button type="button" class="drawer-menu-item drawer-admin-item hide" id="drawerAdminBtn" onclick="handleDrawerNav('adminDashboard')">
+        <span class="drawer-item-icon">⚡</span>
+        <div class="drawer-item-text">
+          <b>Admin Dashboard</b>
+          <small>Manage users, reports, chat, alerts &amp; controls</small>
+        </div>
+        <span class="drawer-admin-badge" id="drawerAdminBadge">ADMIN</span>
+      </button>
+
       <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('myReports')">
         <span class="drawer-item-icon">📋</span>
         <div class="drawer-item-text">
@@ -280,6 +290,18 @@
 <!-- Main Feed Container (Optimized max-width: 680px for Phone, Tablet, Laptop) -->
 <main class="feed-main-container">
   
+  <!-- Campus Broadcast / Emergency Alert Banner (Site-wide) -->
+  <div id="campusAlertBanner" class="campus-alert-banner hide" role="region" aria-label="Campus Alert">
+    <div class="alert-banner-inner">
+      <span id="alertBannerIcon" class="alert-banner-icon">🚨</span>
+      <div class="alert-banner-content">
+        <b id="alertBannerTitle">Campus Alert</b>
+        <p id="alertBannerMessage">Important campus announcement...</p>
+      </div>
+      <button type="button" class="alert-banner-dismiss" onclick="dismissCampusAlert()" aria-label="Dismiss alert">✕</button>
+    </div>
+  </div>
+
   <!-- Status Filter Switcher Tabs -->
   <div class="insta-status-tabs" aria-label="Filter reports by status">
     <button type="button" class="status-tab active" data-tab-status="ALL" onclick="filterStats('ALL')">All (<span id="total">0</span>)</button>
@@ -1040,6 +1062,74 @@
   </div>
 </div>
 
+<!-- Master Admin Control Center & Site Dashboard -->
+<div id="adminDashboardModal" class="menu-fullscreen-page admin-dashboard-modal hide" role="dialog" aria-modal="true" aria-labelledby="adminDashboardTitle">
+  <div class="dialog admin-dashboard-dialog">
+    <!-- Top Executive Header -->
+    <header class="admin-topbar">
+      <div class="admin-topbar-left">
+        <button class="universal-back-circle-btn" type="button" onclick="closeAdminDashboard()" aria-label="Close admin dashboard">‹</button>
+        <div class="admin-title-wrap">
+          <div class="admin-title-row">
+            <h2 id="adminDashboardTitle">CampUs Control Center</h2>
+            <span class="admin-status-badge">● MASTER ADMIN</span>
+          </div>
+          <small class="admin-subtitle">Site-Wide Operations, Security &amp; Moderation</small>
+        </div>
+      </div>
+      <div class="admin-topbar-right">
+        <div class="admin-user-pill" id="adminUserPill">
+          <span class="admin-role-tag" id="adminRoleBadge">ADMIN</span>
+          <span id="adminUsernameDisplay">@admin</span>
+        </div>
+        <button type="button" class="admin-refresh-btn" onclick="refreshAdminData()" title="Refresh Dashboard" aria-label="Refresh Data">
+          <span>🔄</span>
+          <span class="desk-only-text">Refresh</span>
+        </button>
+        <button class="modal-close-btn" type="button" onclick="closeAdminDashboard()" aria-label="Close">✕</button>
+      </div>
+    </header>
+
+    <!-- Admin Sub-Navigation Tabs Bar -->
+    <div class="admin-nav-tabs-bar">
+      <nav class="admin-nav-tabs" role="tablist">
+        <button type="button" class="admin-tab-btn active" data-admin-tab="overview" onclick="switchAdminTab('overview')">
+          <span>📊 Overview</span>
+        </button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="users" onclick="switchAdminTab('users')">
+          <span>👥 Users</span>
+          <span class="admin-count-pill" id="adminTabUsersCount">0</span>
+        </button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="reports" onclick="switchAdminTab('reports')">
+          <span>📦 Reports &amp; Posts</span>
+          <span class="admin-count-pill" id="adminTabReportsCount">0</span>
+        </button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="comments" onclick="switchAdminTab('comments')">
+          <span>💬 Comments</span>
+          <span class="admin-count-pill" id="adminTabCommentsCount">0</span>
+        </button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="chat" onclick="switchAdminTab('chat')">
+          <span>📱 Community Chat</span>
+        </button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="broadcast" onclick="switchAdminTab('broadcast')">
+          <span>📢 Broadcast Alerts</span>
+        </button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="settings" onclick="switchAdminTab('settings')">
+          <span>⚙️ System &amp; Security</span>
+        </button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="logs" onclick="switchAdminTab('logs')">
+          <span>📜 Audit Logs</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Admin Content View -->
+    <div id="adminTabContent" class="admin-tab-content">
+      <div class="empty">Loading Control Center…</div>
+    </div>
+  </div>
+</div>
+
 <!-- Image Zoom Lightbox Container -->
 <div id="imageLightbox" class="image-lightbox hide" onclick="closeLightbox()" aria-modal="true" role="dialog">
   <img id="lightboxImg" src="" alt="Enlarged photo preview">
@@ -1101,6 +1191,6 @@
   </svg>
 </div>
 
-<script src="/app.js?v=campus-clean-20261115f"></script>
+<script src="/app.js?v=campus-clean-20261115g"></script>
 </body>
 </html>

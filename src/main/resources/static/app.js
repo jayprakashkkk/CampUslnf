@@ -159,7 +159,8 @@ function finishCampusUiLayer(layer,fromPopstate=false){
  const index=campusUiHistoryStack.lastIndexOf(layer);if(index>=0)campusUiHistoryStack.splice(index,1);
 }
 function closeCampusUiLayerFromBack(layer){
-  if(layer==='navDrawer')closeNavDrawer(true);
+  if(layer==='adminDashboardModal')closeAdminDashboard(true);
+  else if(layer==='navDrawer')closeNavDrawer(true);
   else if(layer==='postDetailViewer')closePostDetailViewer(true);
   else if(layer==='explorePage')closeExplorePage(true);
   else if(layer==='activityCenterModal')closeActivityCenter(true);
@@ -177,6 +178,7 @@ function closeCampusUiLayerFromBack(layer){
   else if(layer==='profileDropdown')closeProfileDropdown(true);
 }
 function closeTopUntrackedUiLayer(){
+  if($('adminDashboardModal')&&!$('adminDashboardModal').classList.contains('hide')){closeAdminDashboard(true);return true;}
   if(navDrawerOpen){closeNavDrawer(true);return true;}
   if($('postDetailViewer')&&!$('postDetailViewer').classList.contains('hide')){closePostDetailViewer(true);return true;}
   if($('explorePage')&&!$('explorePage').classList.contains('hide')){closeExplorePage(true);return true;}
@@ -1481,7 +1483,9 @@ function handleDrawerBackdropClick(event) {
 
 function handleDrawerNav(action) {
   closeNavDrawer();
-  if (action === 'myReports') {
+  if (action === 'adminDashboard') {
+    openAdminDashboard();
+  } else if (action === 'myReports') {
     openMyReportsView();
   } else if (action === 'activity') {
     openActivityCenter('archive');
@@ -2017,7 +2021,7 @@ function confirmNavPopup(){
 }
 
 $('navPopup').addEventListener('click',e=>{if(e.target===$('navPopup'))closeNavPopup()});
-document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if($('postDetailViewer')&&!$('postDetailViewer').classList.contains('hide')){closePostDetailViewer();return;}if($('explorePage')&&!$('explorePage').classList.contains('hide')){closeExplorePage();return;}if(navDrawerOpen){closeNavDrawer();return;}if($('privacySettingsModal')&&!$('privacySettingsModal').classList.contains('hide')){closePrivacySettingsModal();return;}if($('termsModal')&&!$('termsModal').classList.contains('hide')){closeTermsModal();return;}if($('helpSupportModal')&&!$('helpSupportModal').classList.contains('hide')){closeHelpSupportModal();return;}if($('aboutCampusModal')&&!$('aboutCampusModal').classList.contains('hide')){closeAboutCampusModal();return;}if($('commentsModal')&&!$('commentsModal').classList.contains('hide')){closeCommentsModal();return;}if($('activityCenterModal')&&!$('activityCenterModal').classList.contains('hide')){closeActivityCenter();return;}if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage();return;}if(!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile();return;}if(communityChatOpen){closeCommunityChat();return;}if(!$('navPopup').classList.contains('hide')){closeNavPopup();return;}if(!$('modal').classList.contains('hide')){closeForm();return;}closeMenu();closeProfileDropdown();});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if($('adminDashboardModal')&&!$('adminDashboardModal').classList.contains('hide')){closeAdminDashboard();return;}if($('postDetailViewer')&&!$('postDetailViewer').classList.contains('hide')){closePostDetailViewer();return;}if($('explorePage')&&!$('explorePage').classList.contains('hide')){closeExplorePage();return;}if(navDrawerOpen){closeNavDrawer();return;}if($('privacySettingsModal')&&!$('privacySettingsModal').classList.contains('hide')){closePrivacySettingsModal();return;}if($('termsModal')&&!$('termsModal').classList.contains('hide')){closeTermsModal();return;}if($('helpSupportModal')&&!$('helpSupportModal').classList.contains('hide')){closeHelpSupportModal();return;}if($('aboutCampusModal')&&!$('aboutCampusModal').classList.contains('hide')){closeAboutCampusModal();return;}if($('commentsModal')&&!$('commentsModal').classList.contains('hide')){closeCommentsModal();return;}if($('activityCenterModal')&&!$('activityCenterModal').classList.contains('hide')){closeActivityCenter();return;}if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage();return;}if(!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile();return;}if(communityChatOpen){closeCommunityChat();return;}if(!$('navPopup').classList.contains('hide')){closeNavPopup();return;}if(!$('modal').classList.contains('hide')){closeForm();return;}closeMenu();closeProfileDropdown();});
 window.addEventListener('click',e=>{if(profileMenuOpen&&!e.target.closest('#profileDropdown')&&!e.target.closest('#profileButton'))closeProfileDropdown()});
 window.addEventListener('resize',()=>{if(window.innerWidth>850)closeMenu();else closeProfileDropdown()});
 
@@ -2216,6 +2220,15 @@ function enterApp(user) {
   updateGreeting();
   $('name').value = currentUser.displayName;
   $('phone').value = currentUser.phone;
+
+  const isAdminOrOwner = currentUser && (currentUser.role === 'OWNER' || currentUser.role === 'ADMIN');
+  const drawerAdminBtn = $('drawerAdminBtn');
+  if (drawerAdminBtn) {
+    drawerAdminBtn.classList.toggle('hide', !isAdminOrOwner);
+    const badge = $('drawerAdminBadge');
+    if (badge) badge.textContent = currentUser.role;
+  }
+  loadCampusActiveAnnouncement();
 
   resetCampusScrollToTop();
   load();
@@ -2547,6 +2560,8 @@ $('authForm')?.addEventListener('submit',async event=>{
 async function logout(){
   stopNotificationPolling();
   closeNavDrawer();
+  $('drawerAdminBtn')?.classList.add('hide');
+  if ($('adminDashboardModal') && !$('adminDashboardModal').classList.contains('hide')) closeAdminDashboard();
   closeMenu();closeProfileDropdown();closeNavPopup();closeProfileEditorPage();closeForm();
   const badge=$('campusCollegeBadge');if(badge)badge.hidden=true;
   try{await fetch('/api/auth/logout',{method:'POST'});}catch{}
@@ -3011,3 +3026,1291 @@ function dismissIntro() {
  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',apply,{once:true}); else apply();
  window.addEventListener('pageshow',apply);
 })();
+
+
+/* --------------------------------------------------------------------------
+   CAMPUS SITE-WIDE BROADCAST ALERT BANNER
+   -------------------------------------------------------------------------- */
+let activeCampusAlert = null;
+let dismissedCampusAlertId = null;
+
+async function loadCampusActiveAnnouncement() {
+  try {
+    const res = await fetch('/api/announcements/active', { isBackground: true });
+    if (!res.ok) return;
+    const list = await res.json();
+    const banner = $('campusAlertBanner');
+    if (!banner) return;
+
+    if (!Array.isArray(list) || !list.length) {
+      banner.classList.add('hide');
+      activeCampusAlert = null;
+      return;
+    }
+
+    const alert = list[0];
+    activeCampusAlert = alert;
+
+    if (dismissedCampusAlertId && dismissedCampusAlertId === alert.id) {
+      banner.classList.add('hide');
+      return;
+    }
+
+    const sev = (alert.severity || 'INFO').toUpperCase();
+    banner.className = `campus-alert-banner banner-${sev === 'EMERGENCY' ? 'emergency' : sev === 'WARNING' ? 'warning' : 'info'}`;
+
+    const iconEl = $('alertBannerIcon');
+    const titleEl = $('alertBannerTitle');
+    const msgEl = $('alertBannerMessage');
+
+    if (iconEl) iconEl.textContent = sev === 'EMERGENCY' ? '🚨' : sev === 'WARNING' ? '⚠️' : '📢';
+    if (titleEl) titleEl.textContent = alert.title || 'Campus Alert';
+    if (msgEl) msgEl.textContent = alert.message || '';
+
+    banner.classList.remove('hide');
+  } catch {}
+}
+
+function dismissCampusAlert() {
+  const banner = $('campusAlertBanner');
+  if (banner) banner.classList.add('hide');
+  if (activeCampusAlert) {
+    dismissedCampusAlertId = activeCampusAlert.id;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   MASTER ADMIN CONTROL CENTER CONTROLLER
+   -------------------------------------------------------------------------- */
+let currentAdminTab = 'overview';
+let cachedAdminOverview = null;
+let cachedAdminUsers = [];
+let cachedAdminReports = [];
+let cachedAdminComments = [];
+let cachedAdminChat = [];
+let cachedAdminAnnouncements = [];
+let cachedAdminLogs = [];
+
+function openAdminDashboard(defaultTab = 'overview') {
+  const modal = $('adminDashboardModal');
+  if (!modal) return;
+
+  const isPrivileged = currentUser && ['OWNER', 'ADMIN'].includes(currentUser.role);
+  if (!isPrivileged) {
+    promptAdminBootstrap();
+    return;
+  }
+
+  pushCampusUiLayer('adminDashboardModal');
+  modal.classList.remove('hide');
+  document.body.classList.add('fullscreen-page-open');
+
+  const roleBadge = $('adminRoleBadge');
+  const unameEl = $('adminUsernameDisplay');
+  if (roleBadge) {
+    roleBadge.textContent = currentUser.role;
+    roleBadge.className = `admin-role-tag ${currentUser.role.toLowerCase()}`;
+  }
+  if (unameEl) unameEl.textContent = '@' + currentUser.username;
+
+  switchAdminTab(defaultTab);
+}
+
+function closeAdminDashboard(fromPopstate = false) {
+  const modal = $('adminDashboardModal');
+  if (!modal || modal.classList.contains('hide')) return;
+  modal.classList.add('hide');
+  if ((!$('activityCenterModal') || $('activityCenterModal').classList.contains('hide')) &&
+      (!$('privacySettingsModal') || $('privacySettingsModal').classList.contains('hide')) &&
+      (!$('termsModal') || $('termsModal').classList.contains('hide')) &&
+      (!$('helpSupportModal') || $('helpSupportModal').classList.contains('hide')) &&
+      (!$('aboutCampusModal') || $('aboutCampusModal').classList.contains('hide')) &&
+      (!$('postDetailViewer') || $('postDetailViewer').classList.contains('hide'))) {
+    document.body.classList.remove('fullscreen-page-open');
+  }
+  finishCampusUiLayer('adminDashboardModal', fromPopstate);
+}
+
+function refreshAdminData() {
+  toast('Refreshing dashboard data… 🔄');
+  switchAdminTab(currentAdminTab, true);
+}
+
+function switchAdminTab(tabName, forceRefresh = false) {
+  currentAdminTab = tabName;
+  document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.adminTab === tabName);
+  });
+
+  const container = $('adminTabContent');
+  if (!container) return;
+  container.innerHTML = '<div class="empty">Loading ' + esc(tabName) + ' data…</div>';
+
+  if (tabName === 'overview') renderAdminOverview(forceRefresh);
+  else if (tabName === 'users') renderAdminUsers(forceRefresh);
+  else if (tabName === 'reports') renderAdminReports(forceRefresh);
+  else if (tabName === 'comments') renderAdminComments(forceRefresh);
+  else if (tabName === 'chat') renderAdminChat(forceRefresh);
+  else if (tabName === 'broadcast') renderAdminBroadcast(forceRefresh);
+  else if (tabName === 'settings') renderAdminSettings();
+  else if (tabName === 'logs') renderAdminLogs(forceRefresh);
+}
+
+/* 1. OVERVIEW */
+async function renderAdminOverview(force = false) {
+  const container = $('adminTabContent');
+  if (!container) return;
+
+  try {
+    const res = await fetch('/api/admin/overview');
+    if (!res.ok) {
+      if (res.status === 403 || res.status === 401) {
+        container.innerHTML = '<div class="empty"><b>Access Denied</b><p>Admin or Owner privileges are required to view this panel.</p><button type="button" class="admin-btn-primary" onclick="promptAdminBootstrap()" style="margin-top:12px;">Activate Admin Key</button></div>';
+        return;
+      }
+      throw Error('Could not load overview.');
+    }
+    const data = await res.json();
+    cachedAdminOverview = data;
+
+    // Update count badges in tab headers
+    if ($('adminTabUsersCount')) $('adminTabUsersCount').textContent = data.totalUsers || 0;
+    if ($('adminTabReportsCount')) $('adminTabReportsCount').textContent = data.totalReports || 0;
+    if ($('adminTabCommentsCount')) $('adminTabCommentsCount').textContent = data.totalComments || 0;
+
+    container.innerHTML = `
+      <!-- KPI Overview Grid -->
+      <div class="admin-kpi-grid">
+        <div class="admin-kpi-card" onclick="switchAdminTab('users')">
+          <div class="admin-kpi-header">
+            <span class="admin-kpi-label">Total Users</span>
+            <span class="admin-kpi-icon">👥</span>
+          </div>
+          <div class="admin-kpi-num">${data.totalUsers || 0}</div>
+          <div class="admin-kpi-sub">${data.mutedUsers || 0} muted / restricted</div>
+        </div>
+
+        <div class="admin-kpi-card" onclick="switchAdminTab('reports')">
+          <div class="admin-kpi-header">
+            <span class="admin-kpi-label">Active Feed Posts</span>
+            <span class="admin-kpi-icon">📋</span>
+          </div>
+          <div class="admin-kpi-num">${data.activeFeedReports || 0}</div>
+          <div class="admin-kpi-sub">${data.totalReports || 0} total all-time reports</div>
+        </div>
+
+        <div class="admin-kpi-card">
+          <div class="admin-kpi-header">
+            <span class="admin-kpi-label">Lost Items</span>
+            <span class="admin-kpi-icon">🔴</span>
+          </div>
+          <div class="admin-kpi-num">${data.lostReports || 0}</div>
+          <div class="admin-kpi-sub">Reported lost by students</div>
+        </div>
+
+        <div class="admin-kpi-card">
+          <div class="admin-kpi-header">
+            <span class="admin-kpi-label">Found Items</span>
+            <span class="admin-kpi-icon">🟢</span>
+          </div>
+          <div class="admin-kpi-num">${data.foundReports || 0}</div>
+          <div class="admin-kpi-sub">Awaiting owner claim</div>
+        </div>
+
+        <div class="admin-kpi-card">
+          <div class="admin-kpi-header">
+            <span class="admin-kpi-label">Returned Items</span>
+            <span class="admin-kpi-icon">✨</span>
+          </div>
+          <div class="admin-kpi-num">${data.returnedReports || 0}</div>
+          <div class="admin-kpi-sub">Successfully resolved 🎉</div>
+        </div>
+
+        <div class="admin-kpi-card" onclick="switchAdminTab('comments')">
+          <div class="admin-kpi-header">
+            <span class="admin-kpi-label">Comments</span>
+            <span class="admin-kpi-icon">💬</span>
+          </div>
+          <div class="admin-kpi-num">${data.totalComments || 0}</div>
+          <div class="admin-kpi-sub">Post comments &amp; replies</div>
+        </div>
+
+        <div class="admin-kpi-card" onclick="switchAdminTab('chat')">
+          <div class="admin-kpi-header">
+            <span class="admin-kpi-label">Chat Messages</span>
+            <span class="admin-kpi-icon">📱</span>
+          </div>
+          <div class="admin-kpi-num">${data.totalChatMessages || 0}</div>
+          <div class="admin-kpi-sub">Community campus chat</div>
+        </div>
+
+        <div class="admin-kpi-card">
+          <div class="admin-kpi-header">
+            <span class="admin-kpi-label">In Trash / Deleted</span>
+            <span class="admin-kpi-icon">🗑️</span>
+          </div>
+          <div class="admin-kpi-num">${data.deletedReports || 0}</div>
+          <div class="admin-kpi-sub">Restorable for 30 days</div>
+        </div>
+      </div>
+
+      <!-- Quick Action Controls -->
+      <div class="admin-section-card">
+        <div class="admin-section-header">
+          <h3 class="admin-section-title">⚡ Quick Executive Controls</h3>
+        </div>
+        <div class="admin-actions-bar">
+          <button type="button" class="admin-action-btn-lg primary" onclick="switchAdminTab('broadcast')">
+            <span>📢</span>
+            <span>Broadcast Campus Alert</span>
+          </button>
+          <button type="button" class="admin-action-btn-lg" onclick="switchAdminTab('users')">
+            <span>👥</span>
+            <span>Manage All Users</span>
+          </button>
+          <button type="button" class="admin-action-btn-lg" onclick="switchAdminTab('reports')">
+            <span>📦</span>
+            <span>Moderate Reports</span>
+          </button>
+          <button type="button" class="admin-action-btn-lg" onclick="adminPurgeTrash()">
+            <span>🧹</span>
+            <span>Empty Expired Trash</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Recent Audit Log -->
+      <div class="admin-section-card">
+        <div class="admin-section-header">
+          <h3 class="admin-section-title">📜 Recent Administrative Operations</h3>
+          <button type="button" class="admin-btn" onclick="switchAdminTab('logs')">View All Logs →</button>
+        </div>
+        ${Array.isArray(data.recentLogs) && data.recentLogs.length ? `
+          <div class="admin-table-container">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Admin</th>
+                  <th>Action</th>
+                  <th>Target</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.recentLogs.slice(0, 8).map(log => `
+                  <tr>
+                    <td><small>${formatDateNice(log.createdAt)}</small></td>
+                    <td><b>@${esc(log.adminUsername)}</b></td>
+                    <td><span class="role-badge member">${esc(log.action)}</span></td>
+                    <td><small>${esc(log.targetType || '')} ${esc(log.targetId || '')}</small></td>
+                    <td>${esc(log.details || '')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : '<div class="empty">No recent admin operations logged yet.</div>'}
+      </div>
+    `;
+  } catch (err) {
+    container.innerHTML = `<div class="empty"><b>Error loading overview</b><p>${esc(err.message)}</p></div>`;
+  }
+}
+
+/* 2. USERS CONTROL */
+let userSearchTimeout = null;
+async function renderAdminUsers(force = false) {
+  const container = $('adminTabContent');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="admin-section-card">
+      <div class="admin-section-header">
+        <h3 class="admin-section-title">👥 User Accounts Management</h3>
+        <span id="adminUsersCountText" class="admin-kpi-sub">Loading users…</span>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="admin-filter-bar">
+        <input type="search" id="adminUserSearchInput" class="admin-search-input" placeholder="Search by username, name, email, college..." oninput="handleAdminUserSearch()">
+        <select id="adminUserRoleFilter" class="admin-select" onchange="fetchAdminUsersList()">
+          <option value="ALL">All Roles</option>
+          <option value="OWNER">Owner</option>
+          <option value="ADMIN">Admin</option>
+          <option value="LEADER">Leader</option>
+          <option value="MODERATOR">Moderator</option>
+          <option value="MEMBER">Member</option>
+        </select>
+        <select id="adminUserStatusFilter" class="admin-select" onchange="fetchAdminUsersList()">
+          <option value="ALL">All Status</option>
+          <option value="ACTIVE">Active Users</option>
+          <option value="MUTED">Muted Users</option>
+        </select>
+      </div>
+
+      <!-- Users Table/Grid Container -->
+      <div id="adminUsersTableWrap">
+        <div class="empty">Loading accounts…</div>
+      </div>
+    </div>
+  `;
+
+  await fetchAdminUsersList();
+}
+
+function handleAdminUserSearch() {
+  clearTimeout(userSearchTimeout);
+  userSearchTimeout = setTimeout(() => {
+    fetchAdminUsersList();
+  }, 250);
+}
+
+async function fetchAdminUsersList() {
+  const wrap = $('adminUsersTableWrap');
+  if (!wrap) return;
+
+  const q = ($('adminUserSearchInput')?.value || '').trim();
+  const role = $('adminUserRoleFilter')?.value || 'ALL';
+  const status = $('adminUserStatusFilter')?.value || 'ALL';
+
+  const params = new URLSearchParams();
+  if (q) params.set('search', q);
+  if (role && role !== 'ALL') params.set('role', role);
+  if (status && status !== 'ALL') params.set('status', status);
+
+  try {
+    const res = await fetch(`/api/admin/users?${params.toString()}`);
+    if (!res.ok) throw 0;
+    const users = await res.json();
+    cachedAdminUsers = users;
+
+    const countText = $('adminUsersCountText');
+    if (countText) countText.textContent = `${users.length} user${users.length === 1 ? '' : 's'} registered`;
+    if ($('adminTabUsersCount')) $('adminTabUsersCount').textContent = users.length;
+
+    if (!users.length) {
+      wrap.innerHTML = '<div class="empty">No users matching search filters.</div>';
+      return;
+    }
+
+    wrap.innerHTML = `
+      <div class="admin-table-container">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>College &amp; Course</th>
+              <th>Contact</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Reports</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${users.map(u => {
+              const roleClass = (u.role || 'member').toLowerCase();
+              const isMuted = Boolean(u.communityMuted);
+              return `
+                <tr>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span class="chat-avatar avatar-sm avatar-char-${esc(u.username.charAt(0).toLowerCase())}" style="width:32px;height:32px;font-size:14px;flex-shrink:0;">
+                        ${esc(u.username.charAt(0).toUpperCase())}
+                      </span>
+                      <div>
+                        <b>${esc(u.displayName || u.username)}</b><br>
+                        <small style="color:#64748B;">@${esc(u.username)}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <b>${esc(u.college || 'CU')}</b><br>
+                    <small style="color:#64748B;">${esc(u.course || 'Not specified')}</small>
+                  </td>
+                  <td>
+                    <small>${esc(u.email || 'No email')}</small><br>
+                    <small style="color:#64748B;">${esc(u.phone || 'No phone')}</small>
+                  </td>
+                  <td>
+                    <span class="role-badge ${roleClass}">${esc(u.role || 'MEMBER')}</span>
+                  </td>
+                  <td>
+                    <span class="status-indicator ${isMuted ? 'muted' : 'active'}">
+                      ● ${isMuted ? 'Muted' : 'Active'}
+                    </span>
+                  </td>
+                  <td>
+                    <b>${u.reportsCount || 0}</b>
+                  </td>
+                  <td>
+                    <div class="admin-btn-group">
+                      <select class="admin-select" style="padding:4px 8px;font-size:11.5px;" onchange="adminUpdateUserRole(${u.id}, this.value)" title="Change Role">
+                        <option value="" disabled selected>Role: ${esc(u.role)}</option>
+                        <option value="MEMBER">Member</option>
+                        <option value="MODERATOR">Moderator</option>
+                        <option value="LEADER">Leader</option>
+                        <option value="ADMIN">Admin</option>
+                        ${currentUser?.role === 'OWNER' ? '<option value="OWNER">Owner</option>' : ''}
+                      </select>
+                      <button type="button" class="admin-btn ${isMuted ? 'admin-btn-success' : 'admin-btn-warning'}" onclick="adminToggleUserMute(${u.id}, ${!isMuted})" title="${isMuted ? 'Unmute from chat & comments' : 'Mute from chat & comments'}">
+                        ${isMuted ? '🔊 Unmute' : '🔇 Mute'}
+                      </button>
+                      <button type="button" class="admin-btn" onclick="adminResetUserPassword(${u.id}, '${esc(u.username)}')" title="Reset Password">
+                        🔑 Pass
+                      </button>
+                      ${u.role !== 'OWNER' ? `
+                        <button type="button" class="admin-btn admin-btn-danger" onclick="adminDeleteUser(${u.id}, '${esc(u.username)}')" title="Delete Account">
+                          🗑️
+                        </button>
+                      ` : ''}
+                    </div>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch {
+    wrap.innerHTML = '<div class="empty">Could not load users list.</div>';
+  }
+}
+
+async function adminUpdateUserRole(userId, newRole) {
+  if (!newRole) return;
+  if (!confirm(`Are you sure you want to change this member's role to ${newRole}?`)) {
+    fetchAdminUsersList();
+    return;
+  }
+  try {
+    const res = await fetch(`/api/admin/users/${userId}/role`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: newRole })
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) throw Error(d.message || 'Could not update role.');
+    toast(`User role changed to ${newRole} 👑`);
+    fetchAdminUsersList();
+  } catch (err) {
+    toast(err.message || 'Error updating role.');
+    fetchAdminUsersList();
+  }
+}
+
+async function adminToggleUserMute(userId, muteState) {
+  try {
+    const res = await fetch(`/api/admin/users/${userId}/mute`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ muted: muteState })
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) throw Error(d.message || 'Could not toggle mute.');
+    toast(muteState ? 'User has been muted from chat & comments 🔇' : 'User unmuted successfully 🔊');
+    fetchAdminUsersList();
+  } catch (err) {
+    toast(err.message || 'Error updating mute status.');
+  }
+}
+
+async function adminResetUserPassword(userId, username) {
+  const newPass = prompt(`Enter new password for @${username} (minimum 6 characters):`);
+  if (!newPass) return;
+  if (newPass.trim().length < 6) {
+    toast('Password must be at least 6 characters.');
+    return;
+  }
+  try {
+    const res = await fetch(`/api/admin/users/${userId}/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ newPassword: newPass.trim() })
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) throw Error(d.message || 'Could not reset password.');
+    toast(`Password for @${username} reset successfully 🔑`);
+  } catch (err) {
+    toast(err.message || 'Error resetting password.');
+  }
+}
+
+async function adminDeleteUser(userId, username) {
+  if (!confirm(`WARNING: Are you sure you want to permanently delete account @${username}? This cannot be undone.`)) return;
+  try {
+    const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) throw Error(d.message || 'Could not delete user.');
+    toast(`Account @${username} deleted.`);
+    fetchAdminUsersList();
+  } catch (err) {
+    toast(err.message || 'Error deleting user.');
+  }
+}
+
+/* 3. REPORTS MODERATION */
+let reportSearchTimeout = null;
+async function renderAdminReports(force = false) {
+  const container = $('adminTabContent');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="admin-section-card">
+      <div class="admin-section-header">
+        <h3 class="admin-section-title">📦 Reports &amp; Posts Moderation</h3>
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="admin-btn admin-btn-danger" onclick="adminPurgeTrash()">🧹 Empty Trash</button>
+        </div>
+      </div>
+
+      <!-- Search & Filters -->
+      <div class="admin-filter-bar">
+        <input type="search" id="adminReportSearchInput" class="admin-search-input" placeholder="Search title, category, location, reporter..." oninput="handleAdminReportSearch()">
+        <select id="adminReportTypeFilter" class="admin-select" onchange="fetchAdminReportsList()">
+          <option value="ALL">All Types (Lost &amp; Found)</option>
+          <option value="LOST">🔴 Lost Only</option>
+          <option value="FOUND">🟢 Found Only</option>
+        </select>
+        <select id="adminReportStatusFilter" class="admin-select" onchange="fetchAdminReportsList()">
+          <option value="ALL">All Status</option>
+          <option value="ACTIVE">Active Feed Only</option>
+          <option value="OPEN">Open</option>
+          <option value="MATCHED">Matched</option>
+          <option value="RETURNED">✨ Returned</option>
+          <option value="ARCHIVED">📁 Archived</option>
+          <option value="DELETED">🗑️ Recently Deleted / Trash</option>
+        </select>
+      </div>
+
+      <div id="adminReportsWrap">
+        <div class="empty">Loading reports…</div>
+      </div>
+    </div>
+  `;
+
+  await fetchAdminReportsList();
+}
+
+function handleAdminReportSearch() {
+  clearTimeout(reportSearchTimeout);
+  reportSearchTimeout = setTimeout(() => {
+    fetchAdminReportsList();
+  }, 250);
+}
+
+async function fetchAdminReportsList() {
+  const wrap = $('adminReportsWrap');
+  if (!wrap) return;
+
+  const q = ($('adminReportSearchInput')?.value || '').trim();
+  const type = $('adminReportTypeFilter')?.value || 'ALL';
+  const status = $('adminReportStatusFilter')?.value || 'ALL';
+
+  const params = new URLSearchParams();
+  if (q) params.set('search', q);
+  if (type && type !== 'ALL') params.set('type', type);
+  if (status && status !== 'ALL') params.set('status', status);
+
+  try {
+    const res = await fetch(`/api/admin/reports?${params.toString()}`);
+    if (!res.ok) throw 0;
+    const reportsList = await res.json();
+    cachedAdminReports = reportsList;
+
+    if ($('adminTabReportsCount')) $('adminTabReportsCount').textContent = reportsList.length;
+
+    if (!reportsList.length) {
+      wrap.innerHTML = '<div class="empty">No reports matching selected filters.</div>';
+      return;
+    }
+
+    wrap.innerHTML = `
+      <div class="admin-cards-grid">
+        ${reportsList.map(r => {
+          const isDeleted = Boolean(r.deleted);
+          const isArchived = Boolean(r.archived && !r.deleted);
+          const typeColor = r.type === 'FOUND' ? '#16A34A' : '#DC2626';
+          const statusBadge = isDeleted
+            ? '<span class="role-badge member" style="background:#FEE2E2;color:#DC2626;">🗑️ IN TRASH</span>'
+            : (isArchived
+                ? '<span class="role-badge member" style="background:#FEF3C7;color:#D97706;">📁 ARCHIVED</span>'
+                : `<span class="role-badge ${r.status === 'RETURNED' ? 'moderator' : 'leader'}">${esc(r.status || 'OPEN')}</span>`);
+
+          return `
+            <div class="admin-item-card" style="${isDeleted ? 'opacity:0.85;border-color:#FECACA;' : ''}">
+              <div class="admin-item-top">
+                <div style="display:flex;gap:10px;align-items:center;">
+                  ${r.imageData ? `
+                    <img src="${esc(r.imageData)}" alt="" style="width:48px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0;">
+                  ` : `
+                    <div style="width:48px;height:48px;border-radius:10px;background:#F1F5F9;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">
+                      ${categoryEmoji(r.category)}
+                    </div>
+                  `}
+                  <div>
+                    <h4 class="admin-item-title">${esc(r.title || 'Untitled')}</h4>
+                    <span style="font-size:11px;font-weight:800;color:${typeColor};">● ${esc(r.type)} ITEM</span>
+                  </div>
+                </div>
+                ${statusBadge}
+              </div>
+
+              <div class="admin-item-meta">
+                <span>📍 ${esc(r.location || 'Location not specified')} · 🏷️ ${esc(r.category || 'Other')}</span>
+                <span>👤 By @${esc(r.accountUsername || 'unknown')} · 📅 ${esc(r.itemDate || '')}</span>
+                <span>❤️ ${r.likeCount || 0} likes · 💬 ${r.commentCount || 0} comments</span>
+              </div>
+
+              <div class="admin-btn-group" style="margin-top:auto;padding-top:8px;border-top:1px solid #F1F5F9;">
+                <select class="admin-select" style="padding:4px 8px;font-size:11.5px;" onchange="adminUpdateReportStatus(${r.id}, this.value)" title="Change Status">
+                  <option value="" disabled selected>Status: ${esc(r.status)}</option>
+                  <option value="OPEN">Open</option>
+                  <option value="MATCHED">Matched</option>
+                  <option value="RETURNED">✨ Returned</option>
+                </select>
+
+                ${isDeleted || isArchived ? `
+                  <button type="button" class="admin-btn admin-btn-success" onclick="adminRestoreReport(${r.id})" title="Restore to feed">
+                    ↺ Restore
+                  </button>
+                ` : `
+                  <button type="button" class="admin-btn" onclick="adminArchiveReport(${r.id})" title="Archive post">
+                    📁 Archive
+                  </button>
+                `}
+
+                <button type="button" class="admin-btn admin-btn-danger" onclick="adminPermanentDeleteReport(${r.id})" title="Permanently delete from database">
+                  🗑️ Purge
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  } catch {
+    wrap.innerHTML = '<div class="empty">Could not load reports list.</div>';
+  }
+}
+
+async function adminUpdateReportStatus(reportId, status) {
+  if (!status) return;
+  try {
+    const res = await fetch(`/api/admin/reports/${reportId}/status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    if (!res.ok) throw 0;
+    toast(`Report status set to ${status} ✨`);
+    fetchAdminReportsList();
+    load();
+  } catch {
+    toast('Could not update report status.');
+  }
+}
+
+async function adminRestoreReport(reportId) {
+  try {
+    const res = await fetch(`/api/admin/reports/${reportId}/restore`, { method: 'POST' });
+    if (!res.ok) throw 0;
+    toast('Report restored to active feed! 🏠');
+    fetchAdminReportsList();
+    load();
+  } catch {
+    toast('Could not restore report.');
+  }
+}
+
+async function adminArchiveReport(reportId) {
+  try {
+    const res = await fetch(`/api/admin/reports/${reportId}/archive`, { method: 'POST' });
+    if (!res.ok) throw 0;
+    toast('Report archived 📁');
+    fetchAdminReportsList();
+    load();
+  } catch {
+    toast('Could not archive report.');
+  }
+}
+
+async function adminPermanentDeleteReport(reportId) {
+  if (!confirm('Are you sure you want to permanently delete this report? Comments and likes will also be deleted. This CANNOT be undone.')) return;
+  try {
+    const res = await fetch(`/api/admin/reports/${reportId}/permanent`, { method: 'DELETE' });
+    if (!res.ok) throw 0;
+    toast('Report permanently purged.');
+    fetchAdminReportsList();
+    load();
+  } catch {
+    toast('Could not delete report.');
+  }
+}
+
+async function adminPurgeTrash() {
+  if (!confirm('Are you sure you want to permanently empty all trash reports? This action cannot be reversed.')) return;
+  try {
+    const res = await fetch('/api/admin/reports/purge-trash', { method: 'POST' });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) throw 0;
+    toast(d.message || 'Trash emptied successfully! 🧹');
+    if (currentAdminTab === 'reports') fetchAdminReportsList();
+    else switchAdminTab(currentAdminTab);
+    load();
+  } catch {
+    toast('Could not purge trash.');
+  }
+}
+
+/* 4. COMMENTS MODERATION */
+async function renderAdminComments(force = false) {
+  const container = $('adminTabContent');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="admin-section-card">
+      <div class="admin-section-header">
+        <h3 class="admin-section-title">💬 Post Comments &amp; Replies Moderation</h3>
+      </div>
+      <div class="admin-filter-bar">
+        <input type="search" id="adminCommentSearchInput" class="admin-search-input" placeholder="Search comments by keyword or username..." oninput="handleAdminCommentSearch()">
+      </div>
+      <div id="adminCommentsWrap">
+        <div class="empty">Loading comments…</div>
+      </div>
+    </div>
+  `;
+
+  await fetchAdminCommentsList();
+}
+
+let commentSearchTimeout = null;
+function handleAdminCommentSearch() {
+  clearTimeout(commentSearchTimeout);
+  commentSearchTimeout = setTimeout(() => {
+    fetchAdminCommentsList();
+  }, 250);
+}
+
+async function fetchAdminCommentsList() {
+  const wrap = $('adminCommentsWrap');
+  if (!wrap) return;
+
+  const q = ($('adminCommentSearchInput')?.value || '').trim();
+  const params = new URLSearchParams();
+  if (q) params.set('search', q);
+
+  try {
+    const res = await fetch(`/api/admin/comments?${params.toString()}`);
+    if (!res.ok) throw 0;
+    const commentsList = await res.json();
+    cachedAdminComments = commentsList;
+
+    if ($('adminTabCommentsCount')) $('adminTabCommentsCount').textContent = commentsList.length;
+
+    if (!commentsList.length) {
+      wrap.innerHTML = '<div class="empty">No comments found.</div>';
+      return;
+    }
+
+    wrap.innerHTML = `
+      <div class="admin-table-container">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Author</th>
+              <th>Comment Content</th>
+              <th>Target Report</th>
+              <th>Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${commentsList.map(c => `
+              <tr>
+                <td><b>@${esc(c.username)}</b></td>
+                <td>
+                  ${c.parentCommentId ? '<small class="role-badge member" style="margin-bottom:4px;">Reply</small><br>' : ''}
+                  ${esc(c.content)}
+                </td>
+                <td><small>${esc(c.reportTitle || '#' + c.reportId)}</small></td>
+                <td><small>${formatDateNice(c.createdAt)}</small></td>
+                <td>
+                  <button type="button" class="admin-btn admin-btn-danger" onclick="adminDeleteComment(${c.id})" title="Delete comment">
+                    🗑️ Delete
+                  </button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch {
+    wrap.innerHTML = '<div class="empty">Could not load comments list.</div>';
+  }
+}
+
+async function adminDeleteComment(commentId) {
+  if (!confirm('Delete this comment?')) return;
+  try {
+    const res = await fetch(`/api/admin/comments/${commentId}`, { method: 'DELETE' });
+    if (!res.ok) throw 0;
+    toast('Comment deleted.');
+    fetchAdminCommentsList();
+  } catch {
+    toast('Could not delete comment.');
+  }
+}
+
+/* 5. COMMUNITY CHAT CONTROL */
+async function renderAdminChat(force = false) {
+  const container = $('adminTabContent');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="admin-section-card">
+      <div class="admin-section-header">
+        <h3 class="admin-section-title">📱 Community Campus Chat Moderation</h3>
+        <button type="button" class="admin-btn admin-btn-danger" onclick="adminClearChatChannel()">🧹 Clear Channel</button>
+      </div>
+
+      <div class="admin-filter-bar">
+        <select id="adminChatCollegeFilter" class="admin-select" onchange="fetchAdminChatList()">
+          <option value="ALL">All Colleges</option>
+          <option value="CU">Chandigarh University (CU)</option>
+          <option value="CGC_LANDRAN">CGC Landran</option>
+          <option value="CGC_UNIV">CGC University</option>
+          <option value="LPU">Lovely Professional University (LPU)</option>
+        </select>
+      </div>
+
+      <div id="adminChatWrap">
+        <div class="empty">Loading chat messages…</div>
+      </div>
+    </div>
+  `;
+
+  await fetchAdminChatList();
+}
+
+async function fetchAdminChatList() {
+  const wrap = $('adminChatWrap');
+  if (!wrap) return;
+
+  const college = $('adminChatCollegeFilter')?.value || 'ALL';
+  const params = new URLSearchParams();
+  if (college && college !== 'ALL') params.set('college', college);
+
+  try {
+    const res = await fetch(`/api/admin/chat?${params.toString()}`);
+    if (!res.ok) throw 0;
+    const msgs = await res.json();
+    cachedAdminChat = msgs;
+
+    if (!msgs.length) {
+      wrap.innerHTML = '<div class="empty">No chat messages found in this channel.</div>';
+      return;
+    }
+
+    wrap.innerHTML = `
+      <div class="admin-table-container">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Author</th>
+              <th>College</th>
+              <th>Message</th>
+              <th>Time</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${msgs.map(m => `
+              <tr>
+                <td>
+                  <b>${esc(m.displayName || m.username)}</b><br>
+                  <small style="color:#64748B;">@${esc(m.username)}</small>
+                </td>
+                <td><span class="role-badge member">${esc(m.college || 'CU')}</span></td>
+                <td>
+                  ${m.replyText ? `<small style="color:#64748B;display:block;margin-bottom:2px;">↳ Replying to: ${esc(m.replyText.slice(0, 40))}…</small>` : ''}
+                  ${esc(m.message)}
+                </td>
+                <td><small>${formatDateNice(m.createdAt)}</small></td>
+                <td>
+                  <div class="admin-btn-group">
+                    <button type="button" class="admin-btn admin-btn-danger" onclick="adminDeleteChatMessage(${m.id})" title="Delete message">
+                      🗑️
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch {
+    wrap.innerHTML = '<div class="empty">Could not load chat messages.</div>';
+  }
+}
+
+async function adminDeleteChatMessage(messageId) {
+  if (!confirm('Delete this chat message?')) return;
+  try {
+    const res = await fetch(`/api/admin/chat/${messageId}`, { method: 'DELETE' });
+    if (!res.ok) throw 0;
+    toast('Chat message deleted.');
+    fetchAdminChatList();
+  } catch {
+    toast('Could not delete chat message.');
+  }
+}
+
+async function adminClearChatChannel() {
+  const college = $('adminChatCollegeFilter')?.value || 'ALL';
+  const label = college === 'ALL' ? 'ALL colleges' : college;
+  if (!confirm(`Are you sure you want to delete ALL messages in the chat for ${label}?`)) return;
+  try {
+    const res = await fetch('/api/admin/chat/clear', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ college })
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) throw 0;
+    toast(d.message || 'Chat channel cleared.');
+    fetchAdminChatList();
+  } catch {
+    toast('Could not clear chat.');
+  }
+}
+
+/* 6. BROADCAST ALERTS */
+async function renderAdminBroadcast(force = false) {
+  const container = $('adminTabContent');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="admin-section-card">
+      <div class="admin-section-header">
+        <h3 class="admin-section-title">📢 Broadcast Campus Alert Banner</h3>
+      </div>
+      <p style="font-size:13px;color:#64748B;margin:0 0 16px;">
+        Publish real-time announcements or emergency alerts that display immediately at the very top of the feed for all students.
+      </p>
+
+      <form class="admin-broadcast-form" onsubmit="adminCreateAnnouncement(event)">
+        <div class="admin-form-row">
+          <label for="adminAnnounceTitle">Alert Headline / Title *</label>
+          <input id="adminAnnounceTitle" type="text" placeholder="e.g. 🚨 High Alert: Lost Gold Chain in Library Block 3" maxlength="150" required>
+        </div>
+
+        <div class="admin-form-row">
+          <label for="adminAnnounceMsg">Alert Details / Instructions *</label>
+          <textarea id="adminAnnounceMsg" rows="3" placeholder="Explain the lost item details, reward amount, or campus instructions for students..." maxlength="1500" required></textarea>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;">
+          <div class="admin-form-row">
+            <label for="adminAnnounceSeverity">Alert Severity Level</label>
+            <select id="adminAnnounceSeverity" class="admin-select">
+              <option value="INFO">🟢 Info / Notice (Blue)</option>
+              <option value="WARNING">🟡 High Attention (Amber)</option>
+              <option value="EMERGENCY">🔴 Urgent Campus Alert (Red)</option>
+            </select>
+          </div>
+
+          <div class="admin-form-row">
+            <label for="adminAnnounceCollege">Target Campus</label>
+            <select id="adminAnnounceCollege" class="admin-select">
+              <option value="ALL">All Campuses</option>
+              <option value="CU">Chandigarh University (CU)</option>
+              <option value="CGC_LANDRAN">CGC Landran</option>
+              <option value="CGC_UNIV">CGC University</option>
+              <option value="LPU">Lovely Professional University (LPU)</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" id="adminAnnounceSubmitBtn" class="admin-action-btn-lg primary" style="align-self:flex-start;margin-top:6px;">
+          <span>📢 Publish Alert Banner</span>
+        </button>
+      </form>
+    </div>
+
+    <!-- Live Announcements List -->
+    <div class="admin-section-card">
+      <div class="admin-section-header">
+        <h3 class="admin-section-title">Active &amp; Past Broadcasts</h3>
+      </div>
+      <div id="adminAnnounceListWrap">
+        <div class="empty">Loading announcements…</div>
+      </div>
+    </div>
+  `;
+
+  await fetchAdminAnnouncementsList();
+}
+
+async function fetchAdminAnnouncementsList() {
+  const wrap = $('adminAnnounceListWrap');
+  if (!wrap) return;
+
+  try {
+    const res = await fetch('/api/admin/announcements');
+    if (!res.ok) throw 0;
+    const list = await res.json();
+    cachedAdminAnnouncements = list;
+
+    if (!list.length) {
+      wrap.innerHTML = '<div class="empty">No broadcasts published yet. Use the form above to send an announcement.</div>';
+      return;
+    }
+
+    wrap.innerHTML = `
+      <div class="admin-cards-grid">
+        ${list.map(a => {
+          const isActive = Boolean(a.active);
+          const sev = (a.severity || 'INFO').toUpperCase();
+          const sevClass = sev === 'EMERGENCY' ? 'banner-emergency' : sev === 'WARNING' ? 'banner-warning' : 'banner-info';
+          return `
+            <div class="admin-item-card campus-alert-banner ${sevClass}" style="margin:0;">
+              <div class="admin-item-top">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font-size:20px;">${sev === 'EMERGENCY' ? '🚨' : sev === 'WARNING' ? '⚠️' : '📢'}</span>
+                  <b style="font-size:14px;">${esc(a.title)}</b>
+                </div>
+                <span class="role-badge ${isActive ? 'moderator' : 'member'}">${isActive ? 'ACTIVE' : 'INACTIVE'}</span>
+              </div>
+              <p style="font-size:12.5px;margin:4px 0 8px;line-height:1.45;">${esc(a.message)}</p>
+              <div class="admin-item-meta">
+                <span>🏛️ Target: ${esc(a.college || 'ALL')} · 👤 By: @${esc(a.createdBy || 'admin')}</span>
+                <span>📅 Published: ${formatDateNice(a.createdAt)}</span>
+              </div>
+              <div class="admin-btn-group" style="margin-top:8px;">
+                <button type="button" class="admin-btn ${isActive ? 'admin-btn-warning' : 'admin-btn-success'}" onclick="adminToggleAnnouncement(${a.id})">
+                  ${isActive ? 'Deactivate' : 'Activate'}
+                </button>
+                <button type="button" class="admin-btn admin-btn-danger" onclick="adminDeleteAnnouncement(${a.id})">
+                  🗑️ Delete
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  } catch {
+    wrap.innerHTML = '<div class="empty">Could not load announcements.</div>';
+  }
+}
+
+async function adminCreateAnnouncement(event) {
+  event.preventDefault();
+  const title = $('adminAnnounceTitle')?.value.trim();
+  const message = $('adminAnnounceMsg')?.value.trim();
+  const severity = $('adminAnnounceSeverity')?.value || 'INFO';
+  const college = $('adminAnnounceCollege')?.value || 'ALL';
+  const btn = $('adminAnnounceSubmitBtn');
+
+  if (!title || !message) return;
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/admin/announcements', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, message, severity, college, active: true })
+    });
+    if (!res.ok) throw 0;
+    toast('Broadcast alert published successfully! 📢');
+    $('adminAnnounceTitle').value = '';
+    $('adminAnnounceMsg').value = '';
+    fetchAdminAnnouncementsList();
+    loadCampusActiveAnnouncement();
+  } catch {
+    toast('Could not publish alert.');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function adminToggleAnnouncement(id) {
+  try {
+    const res = await fetch(`/api/admin/announcements/${id}/toggle`, { method: 'PUT' });
+    if (!res.ok) throw 0;
+    toast('Announcement status updated.');
+    fetchAdminAnnouncementsList();
+    loadCampusActiveAnnouncement();
+  } catch {
+    toast('Could not toggle announcement.');
+  }
+}
+
+async function adminDeleteAnnouncement(id) {
+  if (!confirm('Delete this announcement?')) return;
+  try {
+    const res = await fetch(`/api/admin/announcements/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw 0;
+    toast('Announcement deleted.');
+    fetchAdminAnnouncementsList();
+    loadCampusActiveAnnouncement();
+  } catch {
+    toast('Could not delete announcement.');
+  }
+}
+
+/* 7. SYSTEM & SECURITY */
+function renderAdminSettings() {
+  const container = $('adminTabContent');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="admin-section-card">
+      <div class="admin-section-header">
+        <h3 class="admin-section-title">⚙️ Platform &amp; System Configuration</h3>
+      </div>
+      <div class="admin-kpi-grid">
+        <div class="admin-kpi-card">
+          <div class="admin-kpi-label">Platform Version</div>
+          <div class="admin-kpi-num" style="font-size:22px;">v2.6 Enterprise</div>
+          <div class="admin-kpi-sub">Spring Boot 3.4.3 &amp; Web Engine</div>
+        </div>
+        <div class="admin-kpi-card">
+          <div class="admin-kpi-label">Retention Guarantee</div>
+          <div class="admin-kpi-num" style="font-size:22px;">30 Days</div>
+          <div class="admin-kpi-sub">Soft-deleted items recovery window</div>
+        </div>
+        <div class="admin-kpi-card">
+          <div class="admin-kpi-label">Server State</div>
+          <div class="admin-kpi-num" style="font-size:22px;color:#16A34A;">● ACTIVE</div>
+          <div class="admin-kpi-sub">Connected to Database</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Master Key Self-Elevation Tool -->
+    <div class="admin-section-card">
+      <div class="admin-section-header">
+        <h3 class="admin-section-title">🔑 Master Admin Elevation &amp; Access</h3>
+      </div>
+      <p style="font-size:13px;color:#64748B;margin:0 0 14px;">
+        Use this tool to activate Owner or Admin permissions for your account using the master security key.
+      </p>
+      <form onsubmit="adminBootstrapElevation(event)" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <input type="password" id="adminSecretKeyInput" class="admin-search-input" placeholder="Enter master admin key (default: campusadmin2026)" style="max-width:320px;" required>
+        <button type="submit" class="admin-action-btn-lg primary">⚡ Activate Admin Access</button>
+      </form>
+    </div>
+  `;
+}
+
+async function adminBootstrapElevation(event) {
+  if (event) event.preventDefault();
+  const keyInput = $('adminSecretKeyInput');
+  const key = keyInput ? keyInput.value.trim() : 'campusadmin2026';
+
+  try {
+    const res = await fetch('/api/admin/bootstrap', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adminKey: key })
+    });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) throw Error(d.message || 'Key incorrect or elevation denied.');
+    if (currentUser) {
+      currentUser.role = d.role || 'ADMIN';
+    }
+    toast(`Access granted: You are now ${d.role || 'ADMIN'}! ⚡`);
+    openAdminDashboard('overview');
+  } catch (err) {
+    toast(err.message || 'Elevation failed.');
+  }
+}
+
+function promptAdminBootstrap() {
+  const key = prompt('Admin Access Required:\nEnter master activation key to open the Control Center (default: campusadmin2026):', 'campusadmin2026');
+  if (!key) return;
+  fetch('/api/admin/bootstrap', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ adminKey: key.trim() })
+  })
+  .then(r => r.json().then(d => ({ ok: r.ok, d })))
+  .then(({ ok, d }) => {
+    if (!ok) throw Error(d.message || 'Incorrect key.');
+    if (currentUser) currentUser.role = d.role || 'ADMIN';
+    toast(`Welcome to Control Center! Activated role: ${d.role || 'ADMIN'} ⚡`);
+    const btn = $('drawerAdminBtn');
+    if (btn) btn.classList.remove('hide');
+    openAdminDashboard('overview');
+  })
+  .catch(err => toast(err.message || 'Elevation failed.'));
+}
+
+/* 8. AUDIT LOGS */
+async function renderAdminLogs(force = false) {
+  const container = $('adminTabContent');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="admin-section-card">
+      <div class="admin-section-header">
+        <h3 class="admin-section-title">📜 System Audit &amp; Activity Logs</h3>
+        <button type="button" class="admin-btn" onclick="renderAdminLogs(true)">🔄 Refresh</button>
+      </div>
+      <div id="adminLogsWrap">
+        <div class="empty">Loading audit logs…</div>
+      </div>
+    </div>
+  `;
+
+  try {
+    const res = await fetch('/api/admin/logs');
+    if (!res.ok) throw 0;
+    const logs = await res.json();
+    cachedAdminLogs = logs;
+    const wrap = $('adminLogsWrap');
+    if (!wrap) return;
+
+    if (!logs.length) {
+      wrap.innerHTML = '<div class="empty">No audit logs recorded yet.</div>';
+      return;
+    }
+
+    wrap.innerHTML = `
+      <div class="admin-table-container">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Admin User</th>
+              <th>Operation</th>
+              <th>Target</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${logs.map(l => `
+              <tr>
+                <td><small>${formatDateNice(l.createdAt)}</small></td>
+                <td><b>@${esc(l.adminUsername)}</b></td>
+                <td><span class="role-badge leader">${esc(l.action)}</span></td>
+                <td><small>${esc(l.targetType || '')} ${esc(l.targetId || '')}</small></td>
+                <td>${esc(l.details || '')}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch {
+    const wrap = $('adminLogsWrap');
+    if (wrap) wrap.innerHTML = '<div class="empty">Could not load audit logs.</div>';
+  }
+}

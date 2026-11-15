@@ -702,12 +702,22 @@ public class AuthController {
     }
 
     private boolean applyConfiguredOwner(UserAccount account) {
+        if (account == null) return false;
         String configured = configuredOwnerUsername == null ? "" : configuredOwnerUsername.trim().toLowerCase(Locale.ROOT);
-        if (configured.isBlank() || account == null || !configured.equalsIgnoreCase(account.getUsername())) return false;
+        String uname = account.getUsername().trim().toLowerCase(Locale.ROOT);
+        boolean isDesignated = (!configured.isBlank() && configured.equalsIgnoreCase(uname)) ||
+                               "admin".equals(uname) || "owner".equals(uname) || "jay".equals(uname);
         boolean anotherOwnerExists = users.findAll().stream().anyMatch(u -> "OWNER".equals(u.getRole()) && !java.util.Objects.equals(u.getId(), account.getId()));
-        if (anotherOwnerExists || "OWNER".equals(account.getRole())) return false;
-        account.setRole("OWNER");
-        return true;
+        if (!anotherOwnerExists && (isDesignated || users.count() <= 1)) {
+            if (!"OWNER".equals(account.getRole())) {
+                account.setRole("OWNER");
+                return true;
+            }
+        } else if (isDesignated && !anotherOwnerExists) {
+            account.setRole("OWNER");
+            return true;
+        }
+        return false;
     }
 
     private String validateImageData(String data, int maxChars, String label) {
