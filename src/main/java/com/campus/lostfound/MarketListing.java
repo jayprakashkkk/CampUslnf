@@ -79,6 +79,15 @@ public class MarketListing {
     public void setSellerWhatsapp(String sellerWhatsapp) { this.sellerWhatsapp = sellerWhatsapp; }
     public String getImageData() { return imageData == null ? "" : imageData; }
     public void setImageData(String imageData) { this.imageData = imageData; }
+    public String getPhotoDataUrl() { return getImageData(); }
+    public void setPhotoDataUrl(String photoDataUrl) { setImageData(photoDataUrl); }
+    public String getPhone() { return getSellerPhone(); }
+    public void setPhone(String phone) { setSellerPhone(phone); }
+    public String getSellerName() { return getSellerDisplayName(); }
+    public void setSellerName(String name) { setSellerDisplayName(name); }
+    public String getAccountUsername() { return getSellerUsername(); }
+    public void setAccountUsername(String username) { setSellerUsername(username); }
+    public boolean isSold() { return "SOLD".equalsIgnoreCase(status); }
     public String getStatus() { return status == null ? "AVAILABLE" : status; }
     public void setStatus(String status) { this.status = status; }
     public LocalDateTime getCreatedAt() { return createdAt; }

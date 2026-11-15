@@ -28,6 +28,9 @@ public class ItemClaim {
     @Column(length = 1000)
     private String additionalProof;
 
+    @Column(columnDefinition = "text")
+    private String proofImageData;
+
     @Column(nullable = false, length = 20)
     private String status = "PENDING"; // PENDING, APPROVED, REJECTED
 
@@ -59,6 +62,8 @@ public class ItemClaim {
     public void setAnswer(String answer) { this.answer = answer; }
     public String getAdditionalProof() { return additionalProof; }
     public void setAdditionalProof(String additionalProof) { this.additionalProof = additionalProof; }
+    public String getProofImageData() { return proofImageData; }
+    public void setProofImageData(String proofImageData) { this.proofImageData = proofImageData; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     public LocalDateTime getCreatedAt() { return createdAt; }

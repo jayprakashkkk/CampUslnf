@@ -7924,3 +7924,12 @@ body[data-theme="dark"] {
 .admin-status-badge {
   display: none !important;
 }
+
+
+/* Dark mode loading overlay fix: prevents white milky fog on dark theme */
+[data-theme="dark"] .apple-loading-overlay {
+  background: rgba(0, 0, 0, 0.55) !important;
+}
+[data-theme="dark"] .apple-spinner-svg g {
+  stroke: #F4F4F6 !important;
+}

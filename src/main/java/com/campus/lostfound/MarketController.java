@@ -98,7 +98,14 @@ public class MarketController {
         payload.setSellerDisplayName(user.getDisplayName());
         payload.setCollege(user.getCollege());
         if (payload.getSellerPhone() == null || payload.getSellerPhone().isBlank()) {
-            payload.setSellerPhone(user.getPhone());
+            if (payload.getPhone() != null && !payload.getPhone().isBlank()) {
+                payload.setSellerPhone(payload.getPhone());
+            } else {
+                payload.setSellerPhone(user.getPhone());
+            }
+        }
+        if ((payload.getImageData() == null || payload.getImageData().isBlank()) && payload.getPhotoDataUrl() != null) {
+            payload.setImageData(payload.getPhotoDataUrl());
         }
         payload.setStatus("AVAILABLE");
 

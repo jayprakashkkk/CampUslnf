@@ -63,6 +63,10 @@ public class ItemClaimController {
         }
 
         ItemClaim claim = new ItemClaim(id, user.getUsername(), user.getDisplayName(), phone, answer, additionalProof);
+        String proofImage = body != null ? body.get("proofImage") : null;
+        if (proofImage != null && !proofImage.isBlank()) {
+            claim.setProofImageData(proofImage.trim());
+        }
         ItemClaim saved = claims.save(claim);
 
         // Notify report owner

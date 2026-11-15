@@ -16,24 +16,24 @@ function showGlobalSpinner() {
   activeForegroundRequests++;
   clearTimeout(spinnerHideTimer);
   if (!spinnerShowTimer) {
-    // Apple iOS HIG debounce: do not flash spinner for snappy network responses (< 280ms)
+    // Apple iOS HIG debounce: do not flash spinner for snappy network responses (< 500ms)
     spinnerShowTimer = setTimeout(() => {
       if (activeForegroundRequests > 0) {
         const overlay = document.getElementById('appleLoadingOverlay');
         if (overlay) {
           overlay.classList.remove('hide');
           overlay.setAttribute('aria-hidden', 'false');
-          // Safety watchdog: Auto-hide spinner if requests stall beyond 4.5s
+          // Safety watchdog: Auto-hide spinner if requests stall beyond 4s
           setTimeout(() => {
             if (activeForegroundRequests > 0) {
               activeForegroundRequests = 0;
               overlay.classList.add('hide');
               overlay.setAttribute('aria-hidden', 'true');
             }
-          }, 4500);
+          }, 4000);
         }
       }
-    }, 280);
+    }, 500);
   }
 }
 
@@ -63,6 +63,7 @@ window.fetch = async function(input, init) {
     url.includes('/api/notifications') || 
     url.includes('/api/community-chat') || 
     url.includes('/api/auth/check-username') || 
+    url.includes('/api/announcements') || 
     url.includes('/api/users/search') || 
     url.includes('/like') || 
     Boolean(init.isBackground || init.background);
@@ -545,15 +546,16 @@ function renderPostCardMarkup(r, all) {
   </article>`;
 }
 
-async function load(){
+async function load(retryCount = 0){
   try{
     const allRes=await fetch(myReportsOnly?'/api/reports?mine=true':'/api/reports');
     if(!allRes.ok){
       if(allRes.status===401){
-        $('total').textContent='0';$('lost').textContent='0';$('found').textContent='0';$('returned').textContent='0';$('resultCount').textContent='Backend connection required';$('grid').innerHTML='<div class="empty"><b>Welcome to CampUs</b><p>The website is open. Connect the CampUs backend to load reports and enable submissions.</p></div>';
+        $('total').textContent='0';$('lost').textContent='0';$('found').textContent='0';$('returned').textContent='0';$('resultCount').textContent='Log in to view campus reports';
+        $('grid').innerHTML='<div class="empty"><b>Campus Network</b><p>Please log in or create an account to view lost &amp; found items from your college.</p><button type="button" class="auth-primary" onclick="openAuthChoices()" style="margin-top:12px;">Log In / Sign Up →</button></div>';
         return;
       }
-      throw 0;
+      throw new Error(`HTTP ${allRes.status}`);
     }
     const all=await allRes.json();
     if(!myReportsOnly){
@@ -577,8 +579,13 @@ async function load(){
     $('grid').innerHTML=rows.map(r=>renderPostCardMarkup(r,all)).join('');
     checkDirectPostLink();
   }
-  catch{
-    $('grid').innerHTML='<div class="empty"><b>Backend not connected</b><p>Start the Java app, then refresh this page.</p></div>';
+  catch(err){
+    if(retryCount < 1){
+      // Graceful auto-retry once after 1.2s to absorb server cold-starts smoothly
+      setTimeout(()=>load(retryCount + 1), 1200);
+      return;
+    }
+    $('grid').innerHTML='<div class="empty"><b>Connecting to Campus Network…</b><p>The campus server is syncing. Tap below to reload the campus feed.</p><button type="button" class="auth-primary" onclick="load()" style="margin-top:12px;">🔄 Reload Campus Feed</button></div>';
   }
 }
 $('photo').addEventListener('change',()=>{const file=$('photo').files[0];if(!file){$('photoPreview').src='';$('photoPreview').classList.add('hide');return}if(!file.type.startsWith('image/')){toast('Please choose an image file.');$('photo').value='';return}const reader=new FileReader();reader.onload=()=>{$('photoPreview').src=reader.result;$('photoPreview').classList.remove('hide')};reader.onerror=()=>{toast('Could not read the photo. Please try another image.');$('photo').value='';$('photoPreview').src='';$('photoPreview').classList.add('hide')};reader.readAsDataURL(file)});
@@ -4377,6 +4384,12 @@ async function renderAdminLogs(force = false) {
       return;
     }
 
+    // If currently on Campus Market section, swipe back switches to Lost & Found feed
+    if (typeof activeCampusFeedView !== 'undefined' && activeCampusFeedView === 'market') {
+      switchFeedView('lostfound');
+      return;
+    }
+
     // 2. If no modal is open, use browser history back
     if (window.history.length > 1) {
       window.history.back();
@@ -4590,23 +4603,28 @@ function filterMarketCategory(cat) {
 function renderMarketCard(m) {
   const isFree = m.price <= 0;
   const priceDisplay = isFree ? 'FREE 🎁' : `₹${Math.round(m.price)}`;
+  const sellerUname = String(m.sellerUsername || m.accountUsername || '').toLowerCase();
+  const sellerDName = String(m.sellerDisplayName || m.sellerName || 'Student');
+  const sellerPhone = String(m.sellerPhone || m.phone || '');
+  const itemImage = m.imageData || m.photoDataUrl || '';
+  const isSoldItem = m.status === 'SOLD' || m.sold;
   const canManage = currentUser && (
-    (m.accountUsername && m.accountUsername.toLowerCase() === currentUser.username.toLowerCase()) ||
+    (sellerUname && sellerUname === currentUser.username.toLowerCase()) ||
     currentUser.role === 'OWNER' || currentUser.role === 'ADMIN'
   );
 
-  const cleanPhone = String(m.phone || '').replace(/[^0-9]/g, '');
+  const cleanPhone = sellerPhone.replace(/[^0-9]/g, '');
   const waPhone = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
-  const waText = encodeURIComponent(`Hi! I'm interested in buying your "${m.title}" listed for ${priceDisplay} on CampUs Market.`);
+  const waText = encodeURIComponent(`Hi ${sellerDName}! I'm interested in buying your "${m.title}" listed for ${priceDisplay} on CampUs Market.`);
   const waUrl = cleanPhone ? `https://wa.me/${waPhone}?text=${waText}` : '';
 
-  const photoHtml = m.photoDataUrl
-    ? `<img src="${esc(m.photoDataUrl)}" alt="${esc(m.title)}" class="market-card-img" loading="lazy" onclick="viewFullImage('${esc(m.photoDataUrl)}')">`
+  const photoHtml = itemImage
+    ? `<img src="${esc(itemImage)}" alt="${esc(m.title)}" class="market-card-img" loading="lazy" onclick="viewFullImage('${esc(itemImage)}')">`
     : `<div class="market-card-placeholder">${marketCategoryEmoji(m.category)}</div>`;
 
   return `
     <article class="market-card" id="market-card-${m.id}">
-      ${m.sold ? `<div class="market-sold-overlay"><span>✓ SOLD OUT</span></div>` : ''}
+      ${isSoldItem ? `<div class="market-sold-overlay"><span>✓ SOLD OUT</span></div>` : ''}
       <div class="market-card-img-wrap">
         ${photoHtml}
         <span class="market-price-badge ${isFree ? 'free' : ''}">${priceDisplay}</span>
@@ -4620,17 +4638,17 @@ function renderMarketCard(m) {
         
         <div class="market-card-footer">
           <div class="market-seller-info">
-            <div class="market-seller-avatar">${firstInitial(m.sellerName || 'S')}</div>
-            <span class="market-seller-name">${esc(m.sellerName || 'Student')}</span>
+            <div class="market-seller-avatar">${firstInitial(sellerDName)}</div>
+            <span class="market-seller-name">${esc(sellerDName)}</span>
           </div>
 
           ${canManage ? `
             <div style="display:flex; gap:6px;">
-              ${!m.sold ? `<button type="button" class="auth-primary" style="padding:6px 10px; font-size:11px; border-radius:8px;" onclick="markMarketSold(${m.id})">Mark Sold</button>` : ''}
+              ${!isSoldItem ? `<button type="button" class="auth-primary" style="padding:6px 10px; font-size:11px; border-radius:8px;" onclick="markMarketSold(${m.id})">Mark Sold</button>` : ''}
               <button type="button" class="action-btn-del" style="padding:6px 10px; font-size:11px;" onclick="deleteMarketListing(${m.id})">🗑</button>
             </div>
           ` : `
-            ${!m.sold && waUrl ? `
+            ${!isSoldItem && waUrl ? `
               <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="market-buy-btn">
                 <span>💬 Buy / Chat</span>
               </a>
@@ -4735,8 +4753,10 @@ async function handleMarketSubmit(e) {
     price,
     location,
     phone,
+    sellerPhone: phone,
     description,
-    photoDataUrl: marketPhotoBase64
+    photoDataUrl: marketPhotoBase64,
+    imageData: marketPhotoBase64
   };
 
   try {
@@ -5053,7 +5073,8 @@ async function fetchLeaderboard() {
   listEl.innerHTML = '<div class="empty">Loading leaderboard…</div>';
 
   try {
-    const res = await fetch('/api/leaderboard');
+    let res = await fetch('/api/users/leaderboard');
+    if (!res.ok) res = await fetch('/api/leaderboard');
     if (!res.ok) throw 0;
     const users = await res.json();
 
