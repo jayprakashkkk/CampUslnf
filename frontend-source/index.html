@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <title>CampUs | Lost & Found Community Hub</title>
   <link rel="icon" href="/campus-favicon-orange-20261022.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="/campus-favicon-orange-20261022.png">
@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="CampUs">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="stylesheet" href="/style.css?v=campus-clean-20261115d">
+  <link rel="stylesheet" href="/style.css?v=campus-clean-20261115e">
 </head>
 <body class="auth-locked">
 
@@ -271,9 +271,12 @@
   </nav>
 </div>
 
-<!-- Mobile Standalone Search Bar (Visible on Phone < 860px) -->
-<div class="board-search standalone-search" id="mobileSearchWrap" onclick="openExplorePage()">
-  <input id="mobileBoardSearch" type="search" placeholder="🔍 Search items, categories, or members..." aria-label="Search reports" autocomplete="off" readonly style="cursor: pointer;">
+<!-- Clean Single Search Bar on Home (Tap opens Dedicated Explore Search Page) -->
+<div class="standalone-search-wrap" id="mobileSearchWrap" onclick="openExplorePage()">
+  <div class="standalone-search-box">
+    <span class="standalone-search-icon" aria-hidden="true">🔍</span>
+    <input id="mobileBoardSearch" type="search" placeholder="Search items, categories, or members..." aria-label="Search reports" autocomplete="off" readonly style="cursor: pointer;">
+  </div>
 </div>
 
 <!-- Main Feed Container (Optimized max-width: 680px for Phone, Tablet, Laptop) -->
@@ -1100,6 +1103,6 @@
   </svg>
 </div>
 
-<script src="/app.js?v=campus-clean-20261115d"></script>
+<script src="/app.js?v=campus-clean-20261115e"></script>
 </body>
 </html>
