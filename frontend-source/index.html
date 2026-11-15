@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="CampUs">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="stylesheet" href="/style.css?v=campus-clean-20261115b">
+  <link rel="stylesheet" href="/style.css?v=campus-clean-20261115c">
 </head>
 <body class="auth-locked">
 
@@ -181,9 +181,8 @@
       </button>
     </div>
 
-    <!-- 3-Line Animated Hamburger Menu Button (Phone, Tablet, Laptop) -->
+    <!-- 2-Line Animated Menu Button (Phone, Tablet, Laptop) -->
     <button type="button" class="hamburger-menu-btn" id="menuToggleBtn" onclick="toggleNavDrawer()" aria-label="Open navigation menu" aria-expanded="false">
-      <span class="hamburger-bar"></span>
       <span class="hamburger-bar"></span>
       <span class="hamburger-bar"></span>
     </button>
@@ -571,11 +570,11 @@
 </div>
 
 <!-- Your Activity Center Modal (Archive, Recently Deleted, Likes) -->
-<div id="activityCenterModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="activityCenterTitle">
+<div id="activityCenterModal" class="menu-fullscreen-page hide" role="dialog" aria-modal="true" aria-labelledby="activityCenterTitle">
   <div class="dialog activity-center-dialog">
     <header class="activity-center-header">
       <div class="activity-header-left">
-        <button class="activity-back universal-back-arrow" type="button" onclick="closeActivityCenter()" aria-label="Back">‹</button>
+        <button class="activity-back universal-back-circle-btn" type="button" onclick="closeActivityCenter()" aria-label="Back">‹</button>
         <div>
           <h2 id="activityCenterTitle">Your Activity</h2>
           <small class="activity-subtitle">Manage your campus reports &amp; interactions</small>
@@ -608,7 +607,7 @@
 </div>
 
 <!-- Notification & Privacy Modal -->
-<div id="privacySettingsModal" class="overlay hide" onclick="if(event.target===this)closePrivacySettingsModal()" role="dialog" aria-modal="true" aria-labelledby="privacySettingsTitle">
+<div id="privacySettingsModal" class="menu-fullscreen-page hide" role="dialog" aria-modal="true" aria-labelledby="privacySettingsTitle">
   <div class="dialog info-sheet-dialog">
     <header class="info-sheet-header">
       <div class="info-header-left">
@@ -755,7 +754,7 @@
 </div>
 
 <!-- Terms & Conditions Modal -->
-<div id="termsModal" class="overlay hide" onclick="if(event.target===this)closeTermsModal()" role="dialog" aria-modal="true" aria-labelledby="termsModalTitle">
+<div id="termsModal" class="menu-fullscreen-page hide" role="dialog" aria-modal="true" aria-labelledby="termsModalTitle">
   <div class="dialog info-sheet-dialog">
     <header class="info-sheet-header">
       <div class="info-header-left">
@@ -851,7 +850,7 @@
 </div>
 
 <!-- Help & Support Modal -->
-<div id="helpSupportModal" class="overlay hide" onclick="if(event.target===this)closeHelpSupportModal()" role="dialog" aria-modal="true" aria-labelledby="helpSupportTitle">
+<div id="helpSupportModal" class="menu-fullscreen-page hide" role="dialog" aria-modal="true" aria-labelledby="helpSupportTitle">
   <div class="dialog info-sheet-dialog">
     <header class="info-sheet-header">
       <div class="info-header-left">
@@ -923,7 +922,7 @@
 </div>
 
 <!-- About CampUs Modal -->
-<div id="aboutCampusModal" class="overlay hide" onclick="if(event.target===this)closeAboutCampusModal()" role="dialog" aria-modal="true" aria-labelledby="aboutCampusTitle">
+<div id="aboutCampusModal" class="menu-fullscreen-page hide" role="dialog" aria-modal="true" aria-labelledby="aboutCampusTitle">
   <div class="dialog info-sheet-dialog">
     <header class="info-sheet-header">
       <div class="info-header-left">
@@ -1033,6 +1032,6 @@
   </svg>
 </div>
 
-<script src="/app.js?v=campus-clean-20261115b"></script>
+<script src="/app.js?v=campus-clean-20261115c"></script>
 </body>
 </html>

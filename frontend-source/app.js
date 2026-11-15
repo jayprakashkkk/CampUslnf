@@ -151,6 +151,7 @@ function finishCampusUiLayer(layer,fromPopstate=false){
 }
 function closeCampusUiLayerFromBack(layer){
   if(layer==='navDrawer')closeNavDrawer(true);
+  else if(layer==='activityCenterModal')closeActivityCenter(true);
   else if(layer==='privacySettingsModal')closePrivacySettingsModal(true);
   else if(layer==='termsModal')closeTermsModal(true);
   else if(layer==='helpSupportModal')closeHelpSupportModal(true);
@@ -671,15 +672,19 @@ function openActivityCenter(defaultTab = 'archive') {
   closeNavDrawer();
   const modal = $('activityCenterModal');
   if (!modal) return;
+  pushCampusUiLayer('activityCenterModal');
   modal.classList.remove('hide');
-  document.body.classList.add('activity-modal-open');
+  document.body.classList.add('fullscreen-page-open');
   switchActivityTab(defaultTab);
 }
 
-function closeActivityCenter() {
+function closeActivityCenter(fromPopstate = false) {
   const modal = $('activityCenterModal');
-  if (modal) modal.classList.add('hide');
-  document.body.classList.remove('activity-modal-open');
+  if (modal && !modal.classList.contains('hide')) {
+    modal.classList.add('hide');
+    document.body.classList.remove('fullscreen-page-open');
+    finishCampusUiLayer('activityCenterModal', fromPopstate);
+  }
 }
 
 async function switchActivityTab(tab) {
@@ -1250,7 +1255,7 @@ function openPrivacySettingsModal() {
   if (modal) {
     pushCampusUiLayer('privacySettingsModal');
     modal.classList.remove('hide');
-    document.body.classList.add('info-sheet-open');
+    document.body.classList.add('fullscreen-page-open');
   }
 }
 
@@ -1258,7 +1263,7 @@ function closePrivacySettingsModal(fromPopstate = false) {
   const modal = $('privacySettingsModal');
   if (modal && !modal.classList.contains('hide')) {
     modal.classList.add('hide');
-    document.body.classList.remove('info-sheet-open');
+    document.body.classList.remove('fullscreen-page-open');
     finishCampusUiLayer('privacySettingsModal', fromPopstate);
   }
 }
@@ -1272,7 +1277,7 @@ function openTermsModal() {
   if (modal) {
     pushCampusUiLayer('termsModal');
     modal.classList.remove('hide');
-    document.body.classList.add('info-sheet-open');
+    document.body.classList.add('fullscreen-page-open');
   }
 }
 
@@ -1280,7 +1285,7 @@ function closeTermsModal(fromPopstate = false) {
   const modal = $('termsModal');
   if (modal && !modal.classList.contains('hide')) {
     modal.classList.add('hide');
-    document.body.classList.remove('info-sheet-open');
+    document.body.classList.remove('fullscreen-page-open');
     finishCampusUiLayer('termsModal', fromPopstate);
   }
 }
@@ -1299,7 +1304,7 @@ function openHelpSupportModal() {
   if (modal) {
     pushCampusUiLayer('helpSupportModal');
     modal.classList.remove('hide');
-    document.body.classList.add('info-sheet-open');
+    document.body.classList.add('fullscreen-page-open');
   }
 }
 
@@ -1307,7 +1312,7 @@ function closeHelpSupportModal(fromPopstate = false) {
   const modal = $('helpSupportModal');
   if (modal && !modal.classList.contains('hide')) {
     modal.classList.add('hide');
-    document.body.classList.remove('info-sheet-open');
+    document.body.classList.remove('fullscreen-page-open');
     finishCampusUiLayer('helpSupportModal', fromPopstate);
   }
 }
@@ -1321,7 +1326,7 @@ function openAboutCampusModal() {
   if (modal) {
     pushCampusUiLayer('aboutCampusModal');
     modal.classList.remove('hide');
-    document.body.classList.add('info-sheet-open');
+    document.body.classList.add('fullscreen-page-open');
   }
 }
 
@@ -1329,7 +1334,7 @@ function closeAboutCampusModal(fromPopstate = false) {
   const modal = $('aboutCampusModal');
   if (modal && !modal.classList.contains('hide')) {
     modal.classList.add('hide');
-    document.body.classList.remove('info-sheet-open');
+    document.body.classList.remove('fullscreen-page-open');
     finishCampusUiLayer('aboutCampusModal', fromPopstate);
   }
 }
@@ -1683,7 +1688,7 @@ function confirmNavPopup(){
 }
 
 $('navPopup').addEventListener('click',e=>{if(e.target===$('navPopup'))closeNavPopup()});
-document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(navDrawerOpen){closeNavDrawer();return;}if($('commentsModal')&&!$('commentsModal').classList.contains('hide')){closeCommentsModal();return;}if($('activityCenterModal')&&!$('activityCenterModal').classList.contains('hide')){closeActivityCenter();return;}if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage();return;}if(!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile();return;}if(communityChatOpen){closeCommunityChat();return;}if(!$('navPopup').classList.contains('hide')){closeNavPopup();return;}if(!$('modal').classList.contains('hide')){closeForm();return;}closeMenu();closeProfileDropdown();});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(navDrawerOpen){closeNavDrawer();return;}if($('privacySettingsModal')&&!$('privacySettingsModal').classList.contains('hide')){closePrivacySettingsModal();return;}if($('termsModal')&&!$('termsModal').classList.contains('hide')){closeTermsModal();return;}if($('helpSupportModal')&&!$('helpSupportModal').classList.contains('hide')){closeHelpSupportModal();return;}if($('aboutCampusModal')&&!$('aboutCampusModal').classList.contains('hide')){closeAboutCampusModal();return;}if($('commentsModal')&&!$('commentsModal').classList.contains('hide')){closeCommentsModal();return;}if($('activityCenterModal')&&!$('activityCenterModal').classList.contains('hide')){closeActivityCenter();return;}if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage();return;}if(!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile();return;}if(communityChatOpen){closeCommunityChat();return;}if(!$('navPopup').classList.contains('hide')){closeNavPopup();return;}if(!$('modal').classList.contains('hide')){closeForm();return;}closeMenu();closeProfileDropdown();});
 window.addEventListener('click',e=>{if(profileMenuOpen&&!e.target.closest('#profileDropdown')&&!e.target.closest('#profileButton'))closeProfileDropdown()});
 window.addEventListener('resize',()=>{if(window.innerWidth>850)closeMenu();else closeProfileDropdown()});
 
