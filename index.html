@@ -157,12 +157,6 @@
     <button type="button" class="desk-nav-btn active" data-desk-nav="feed" onclick="switchNavTab('feed')">
       <span>🏠 Feed</span>
     </button>
-    <button type="button" class="desk-nav-btn" data-desk-nav="market" onclick="switchFeedView('market')">
-      <span>🛍️ Market</span>
-    </button>
-    <button type="button" class="desk-nav-btn" data-desk-nav="explore" onclick="switchNavTab('explore')">
-      <span>🔍 Search</span>
-    </button>
     <button type="button" class="desk-nav-btn desk-chat-btn" data-desk-nav="chat" onclick="openCommunityChat()">
       <span>💬 Chat</span>
       <span class="header-chat-dot"></span>
@@ -208,16 +202,6 @@
 
     <!-- Unique Options (Zero Duplication with Home Screen / Bottom Bar) -->
     <div class="drawer-menu-list">
-      <!-- Admin Dashboard (Only visible to OWNER or ADMIN) -->
-      <button type="button" class="drawer-menu-item drawer-admin-item hide" id="drawerAdminBtn" onclick="handleDrawerNav('adminDashboard')">
-        <span class="drawer-item-icon">⚡</span>
-        <div class="drawer-item-text">
-          <b>Admin Dashboard</b>
-          <small>Manage users, reports, chat, alerts &amp; controls</small>
-        </div>
-        <span class="drawer-admin-badge" id="drawerAdminBadge">ADMIN</span>
-      </button>
-
       <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('myReports')">
         <span class="drawer-item-icon">📋</span>
         <div class="drawer-item-text">
@@ -615,15 +599,7 @@
   <header class="community-profile-topbar">
     <button type="button" class="community-profile-back" onclick="closeChatUserProfile()" aria-label="Back">‹</button>
     <h2 id="communityProfilePageTitle">Member Profile</h2>
-    <div id="publicProfileOwnerActions" class="public-profile-owner-actions hide">
-      <button type="button" id="publicProfileRoleMenuButton" class="public-profile-role-menu-button" aria-label="Manage role" onclick="togglePublicProfileRoleMenu()">☰</button>
-      <div id="publicProfileRoleMenu" class="public-profile-role-menu" hidden>
-        <button type="button" data-role-choice="ADMIN" onclick="assignPublicProfileRole('ADMIN')">Make Admin</button>
-        <button type="button" data-role-choice="LEADER" onclick="assignPublicProfileRole('LEADER')">Make Leader</button>
-        <button type="button" data-role-choice="MODERATOR" onclick="assignPublicProfileRole('MODERATOR')">Make Moderator</button>
-        <button type="button" data-role-choice="MEMBER" onclick="assignPublicProfileRole('MEMBER')">Make Member</button>
-      </div>
-    </div>
+    <span></span>
   </header>
   <div id="communityProfileContent" class="community-profile-content">
     <div class="empty">Loading profile…</div>

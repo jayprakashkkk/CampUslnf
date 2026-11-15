@@ -243,7 +243,7 @@ function roleCanChangeUsername(role){return ['OWNER','ADMIN'].includes(String(ro
 function roleCanUploadPhoto(role){return true}
 function roleCanUploadBanner(role){return true}
 function roleCanManageMembers(role){return ['OWNER','ADMIN'].includes(String(role||'MEMBER').toUpperCase())}
-function roleBadgeMarkup(role){const label=roleLabel(role);return label?`<span class="role-badge role-${label.toLowerCase()}">~ ${label}</span>`:''}
+function roleBadgeMarkup(role){return ''}
 
 function toast(s){$('toast').textContent=s;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',3200)}
 function startNotificationPolling(){
@@ -2248,13 +2248,8 @@ function enterApp(user) {
   $('name').value = currentUser.displayName;
   $('phone').value = currentUser.phone;
 
-  const isAdminOrOwner = currentUser && (currentUser.role === 'OWNER' || currentUser.role === 'ADMIN');
   const drawerAdminBtn = $('drawerAdminBtn');
-  if (drawerAdminBtn) {
-    drawerAdminBtn.classList.toggle('hide', !isAdminOrOwner);
-    const badge = $('drawerAdminBadge');
-    if (badge) badge.textContent = currentUser.role;
-  }
+  if (drawerAdminBtn) drawerAdminBtn.classList.add('hide');
   loadCampusActiveAnnouncement();
 
   resetCampusScrollToTop();
@@ -2656,8 +2651,7 @@ function renderCommunityMessages(items,forceBottom){
    const fullName=String(m.displayName||m.username||'CampUs user').trim();
    const username=String(m.username||'');
    const avatar=`<button type="button" class="chat-avatar chat-avatar-button" aria-label="View ${esc(fullName)}'s profile" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${avatarInner(m.avatarId,fullName,m.profileImageUrl)}</button>`;
-   const authorRole=roleLabel(m.role);
-   const authorLine=authorRole?`<button type="button" class="chat-author-role" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${esc(fullName)} ${roleBadgeMarkup(m.role)}</button>`:'';
+   const authorLine=!mine?`<button type="button" class="chat-author-role" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${esc(fullName)}</button>`:'';
    return `<div class="chat-row ${mine?'mine':'theirs'}" data-message-id="${m.id}">${mine?'':avatar}<div class="chat-message-stack">${authorLine}<div class="chat-bubble" role="group" aria-label="Chat message">${m.replyText?`<div class="chat-quoted"><b>${esc(m.replyName||'Reply')}</b><br>${esc(m.replyText)}</div>`:''}<div class="chat-text">${esc(m.message)}</div><div class="chat-time">${chatTime(m.createdAt)}</div><div class="chat-actions"><button type="button" onclick="replyToChatMessage(${m.id})">↩ Reply</button>${m.canDelete?`<button type="button" onclick="deleteChatMessage(${m.id})">Delete</button>`:''}</div></div></div></div>`
  }).join('');
  box.querySelectorAll('.chat-row').forEach(row=>{
@@ -2810,9 +2804,8 @@ function renderPublicProfile(data){
  const editButton=isOwnProfile?'<div class="public-profile-own-actions"><button type="button" class="public-profile-edit-button" onclick="openProfileEditorPage()">Edit profile</button></div>':'';
  content.innerHTML=`<section class="public-profile-hero${hasBanner?' has-profile-banner':' no-profile-banner'}">${bannerMarkup}<div class="public-profile-avatar" aria-label="${esc(name)} avatar">${avatarInner(data.avatarId,name,data.profileImageUrl)}</div><h2>${esc(name)} ${roleBadgeMarkup(data.role)}</h2><p class="public-profile-handle">@${esc(data.username||'')}</p><div class="public-profile-course">${esc(data.course||'Course not provided')}</div><div class="public-profile-stats"><div><b>${Number(data.totalPosts)||0}</b><span>Posts</span></div><div><b>${Number(data.itemsReceivedBack)||0}</b><span>Received</span></div><div><b>${Number(data.itemsReturnedToOthers)||0}</b><span>Returned</span></div><div style="cursor:pointer;" onclick="openLeaderboardModal()" title="View Karma Leaderboard"><b style="color:var(--insta-primary);">⭐ ${Number(data.karmaPoints)||0}</b><span>${esc(data.karmaBadge||'Campus Friend')}</span></div></div>${editButton}</section><section class="public-profile-posts"><div class="public-profile-posts-heading"><h2>Posts</h2><span>${posts.length}</span></div><div class="public-profile-post-grid">${postCards}</div></section>`;
  $('communityProfilePageTitle').textContent=isOwnProfile?'Your profile':'Profile';
- const canOwnerManage=viewerRole==='OWNER'&&targetUsername!==''&&targetUsername!==viewerUsername&&targetRole!=='OWNER';
  const controls=$('publicProfileOwnerActions');
- if(controls)controls.classList.toggle('hide',!canOwnerManage);
+ if(controls)controls.classList.add('hide');
  const menu=$('publicProfileRoleMenu'),menuButton=$('publicProfileRoleMenuButton');
  if(menu){menu.hidden=true;menu.querySelectorAll('[data-role-choice]').forEach(button=>{const same=button.dataset.roleChoice===targetRole;button.disabled=same;button.setAttribute('aria-current',same?'true':'false');button.textContent=same?`Current role: ${button.dataset.roleLabel}`:button.dataset.roleAction;});}
  if(menuButton)menuButton.setAttribute('aria-expanded','false');

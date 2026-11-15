@@ -7914,3 +7914,13 @@ body[data-theme="dark"] {
   font-weight: 800;
   color: var(--insta-primary);
 }
+
+
+/* Hide all Admin / Owner badges, items and elevation menus */
+.role-badge,
+.drawer-admin-item,
+.public-profile-owner-actions,
+.drawer-admin-badge,
+.admin-status-badge {
+  display: none !important;
+}
