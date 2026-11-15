@@ -4784,13 +4784,13 @@ header.app-header {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(255, 252, 248, 0.45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   z-index: 10005;
   opacity: 1;
-  transition: opacity 0.18s ease, visibility 0.18s ease;
-  pointer-events: auto;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  pointer-events: none;
 }
 .apple-loading-overlay.hide {
   opacity: 0;

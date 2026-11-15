@@ -8,32 +8,42 @@ const CAMPUS_API_BASE = (function() {
   return '';
 })();
 
-let activeNetworkRequests = 0;
-let globalSpinnerTimer = null;
+let activeForegroundRequests = 0;
+let spinnerShowTimer = null;
+let spinnerHideTimer = null;
 
 function showGlobalSpinner() {
-  activeNetworkRequests++;
-  clearTimeout(globalSpinnerTimer);
-  const overlay = document.getElementById('appleLoadingOverlay');
-  if (overlay) {
-    overlay.classList.remove('hide');
-    overlay.setAttribute('aria-hidden', 'false');
+  activeForegroundRequests++;
+  clearTimeout(spinnerHideTimer);
+  if (!spinnerShowTimer) {
+    // Apple iOS HIG debounce: do not flash spinner for snappy network responses (< 280ms)
+    spinnerShowTimer = setTimeout(() => {
+      if (activeForegroundRequests > 0) {
+        const overlay = document.getElementById('appleLoadingOverlay');
+        if (overlay) {
+          overlay.classList.remove('hide');
+          overlay.setAttribute('aria-hidden', 'false');
+        }
+      }
+    }, 280);
   }
 }
 
 function hideGlobalSpinner() {
-  activeNetworkRequests = Math.max(0, activeNetworkRequests - 1);
-  if (activeNetworkRequests === 0) {
-    clearTimeout(globalSpinnerTimer);
-    globalSpinnerTimer = setTimeout(() => {
-      if (activeNetworkRequests === 0) {
+  activeForegroundRequests = Math.max(0, activeForegroundRequests - 1);
+  if (activeForegroundRequests === 0) {
+    clearTimeout(spinnerShowTimer);
+    spinnerShowTimer = null;
+    clearTimeout(spinnerHideTimer);
+    spinnerHideTimer = setTimeout(() => {
+      if (activeForegroundRequests === 0) {
         const overlay = document.getElementById('appleLoadingOverlay');
         if (overlay) {
           overlay.classList.add('hide');
           overlay.setAttribute('aria-hidden', 'true');
         }
       }
-    }, 120);
+    }, 80);
   }
 }
 
@@ -41,7 +51,14 @@ const _origFetch = window.fetch;
 window.fetch = async function(input, init) {
   let url = typeof input === 'string' ? input : (input instanceof Request ? input.url : String(input));
   init = init || {};
-  const isBackgroundPoll = url.includes('/api/notifications/unread-count') || url.includes('/api/auth/check-username');
+  const isBackgroundPoll = 
+    url.includes('/api/notifications') || 
+    url.includes('/api/community-chat') || 
+    url.includes('/api/auth/check-username') || 
+    url.includes('/api/users/search') || 
+    url.includes('/like') || 
+    Boolean(init.isBackground || init.background);
+
   if (!isBackgroundPoll) {
     showGlobalSpinner();
   }
