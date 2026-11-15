@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="CampUs">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="stylesheet" href="/style.css?v=campus-clean-20261115c">
+  <link rel="stylesheet" href="/style.css?v=campus-clean-20261115d">
 </head>
 <body class="auth-locked">
 
@@ -159,6 +159,9 @@
     <button type="button" class="desk-nav-btn active" data-desk-nav="feed" onclick="switchNavTab('feed')">
       <span>🏠 Feed</span>
     </button>
+    <button type="button" class="desk-nav-btn" data-desk-nav="explore" onclick="switchNavTab('explore')">
+      <span>🔍 Search</span>
+    </button>
     <button type="button" class="desk-nav-btn desk-chat-btn" data-desk-nav="chat" onclick="openCommunityChat()">
       <span>💬 Chat</span>
       <span class="header-chat-dot"></span>
@@ -269,8 +272,8 @@
 </div>
 
 <!-- Mobile Standalone Search Bar (Visible on Phone < 860px) -->
-<div class="board-search standalone-search" id="mobileSearchWrap">
-  <input id="mobileBoardSearch" type="search" placeholder="🔍 Search items, categories, or members..." aria-label="Search reports" autocomplete="off" oninput="syncMobileSearch(this.value)">
+<div class="board-search standalone-search" id="mobileSearchWrap" onclick="openExplorePage()">
+  <input id="mobileBoardSearch" type="search" placeholder="🔍 Search items, categories, or members..." aria-label="Search reports" autocomplete="off" readonly style="cursor: pointer;">
 </div>
 
 <!-- Main Feed Container (Optimized max-width: 680px for Phone, Tablet, Laptop) -->
@@ -321,6 +324,71 @@
     <span id="copyrightNotice">Copyright © 2026 CampUs. Built for students, powered by kindness.</span>
   </footer>
 </main>
+
+<!-- Dedicated Instagram-style Explore & Search Full Page -->
+<div id="explorePage" class="explore-page hide">
+  <!-- Top Sticky Instagram Search Bar Header -->
+  <header class="explore-topbar">
+    <div class="explore-search-row">
+      <button type="button" class="explore-back-btn universal-back-circle-btn" onclick="closeExplorePage()" aria-label="Back to feed">‹</button>
+      <div class="explore-search-input-wrap">
+        <span class="explore-search-icon">🔍</span>
+        <input id="exploreSearchInput" type="search" placeholder="Search items, categories, or members..." aria-label="Search" autocomplete="off" oninput="handleExploreSearch(this.value)">
+        <button type="button" id="exploreSearchClear" class="explore-search-clear hide" onclick="clearExploreSearch()" aria-label="Clear search">✕</button>
+      </div>
+    </div>
+
+    <!-- Type Filters (All, Lost, Found, Returned) -->
+    <div class="explore-type-pills">
+      <button type="button" class="explore-type-pill active" data-exp-type="" onclick="filterExploreType('')">All (<span id="exploreCountTotal">0</span>)</button>
+      <button type="button" class="explore-type-pill" data-exp-type="LOST" onclick="filterExploreType('LOST')">🔴 Lost</button>
+      <button type="button" class="explore-type-pill" data-exp-type="FOUND" onclick="filterExploreType('FOUND')">🟢 Found</button>
+      <button type="button" class="explore-type-pill" data-exp-type="RETURNED" onclick="filterExploreType('RETURNED')">✨ Returned</button>
+    </div>
+
+    <!-- Category Filter Chips Slider -->
+    <div class="explore-category-chips">
+      <button type="button" class="explore-cat-chip active" data-exp-cat="" onclick="filterExploreCategory('')">✨ All</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Electronics" onclick="filterExploreCategory('Electronics')">📱 Electronics</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="ID card" onclick="filterExploreCategory('ID card')">🪪 ID Cards</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Keys" onclick="filterExploreCategory('Keys')">🔑 Keys</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Wallet / purse" onclick="filterExploreCategory('Wallet / purse')">👛 Wallets</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Books / stationery" onclick="filterExploreCategory('Books / stationery')">📚 Books</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Clothing" onclick="filterExploreCategory('Clothing')">👕 Clothing</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Water bottle" onclick="filterExploreCategory('Water bottle')">🧴 Bottles</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Other" onclick="filterExploreCategory('Other')">📦 Other</button>
+    </div>
+  </header>
+
+  <!-- Member Search Suggestions (when typing member or search query) -->
+  <div id="exploreMemberResults" class="explore-member-results hide"></div>
+
+  <!-- Instagram-Style Explore Grid with Small Square Boxes -->
+  <main class="explore-grid-container">
+    <div id="exploreGrid" class="explore-grid" role="grid" aria-label="Explore posts">
+      <!-- Dynamically populated explore tiles -->
+    </div>
+  </main>
+</div>
+
+<!-- Full Post Detail Viewer (Tapped from Explore Grid) -->
+<div id="postDetailViewer" class="menu-fullscreen-page hide" role="dialog" aria-modal="true" aria-labelledby="postDetailTitle">
+  <div class="dialog info-sheet-dialog">
+    <header class="info-sheet-header">
+      <div class="info-header-left">
+        <button class="universal-back-circle-btn" type="button" onclick="closePostDetailViewer()" aria-label="Back to explore">‹</button>
+        <div>
+          <h2 id="postDetailTitle">Post Details</h2>
+          <small class="info-sheet-subtitle" id="postDetailSubtitle">CampUs Lost &amp; Found</small>
+        </div>
+      </div>
+      <button class="modal-close-btn" type="button" onclick="closePostDetailViewer()" aria-label="Close">✕</button>
+    </header>
+    <div class="info-sheet-body" id="postDetailBody" style="max-width: 680px; margin: 0 auto; padding-top: 16px;">
+      <!-- Post card content rendered here -->
+    </div>
+  </div>
+</div>
 
 <!-- Fixed Mobile Bottom Navigation Bar (Hidden on Desktop >= 860px) -->
 <nav class="bottom-app-nav" aria-label="Bottom Navigation">
@@ -1032,6 +1100,6 @@
   </svg>
 </div>
 
-<script src="/app.js?v=campus-clean-20261115c"></script>
+<script src="/app.js?v=campus-clean-20261115d"></script>
 </body>
 </html>

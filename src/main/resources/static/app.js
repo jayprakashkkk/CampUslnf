@@ -110,6 +110,7 @@ window.fetch = async function(input, init) {
 };
 
 let chosenType='', myReportsOnly=false, statFilter='', currentUser=null, authMode='login';
+let cachedAllReports=[], exploreSearchQuery='', exploreTypeFilter='', exploreCategoryFilter='', exploreSearchTimer=null, exploreMemberSearchSeq=0;
 let notificationRefreshTimer=null, communityMuted=false, notificationHasInitialLoad=false, latestNotificationId=0;
 let profileImageDataDraft='', bannerImageDataDraft='';
 const $=id=>document.getElementById(id);
@@ -151,6 +152,8 @@ function finishCampusUiLayer(layer,fromPopstate=false){
 }
 function closeCampusUiLayerFromBack(layer){
   if(layer==='navDrawer')closeNavDrawer(true);
+  else if(layer==='postDetailViewer')closePostDetailViewer(true);
+  else if(layer==='explorePage')closeExplorePage(true);
   else if(layer==='activityCenterModal')closeActivityCenter(true);
   else if(layer==='privacySettingsModal')closePrivacySettingsModal(true);
   else if(layer==='termsModal')closeTermsModal(true);
@@ -167,6 +170,8 @@ function closeCampusUiLayerFromBack(layer){
 }
 function closeTopUntrackedUiLayer(){
   if(navDrawerOpen){closeNavDrawer(true);return true;}
+  if($('postDetailViewer')&&!$('postDetailViewer').classList.contains('hide')){closePostDetailViewer(true);return true;}
+  if($('explorePage')&&!$('explorePage').classList.contains('hide')){closeExplorePage(true);return true;}
   if($('privacySettingsModal')&&!$('privacySettingsModal').classList.contains('hide')){closePrivacySettingsModal(true);return true;}
   if($('termsModal')&&!$('termsModal').classList.contains('hide')){closeTermsModal(true);return true;}
   if($('helpSupportModal')&&!$('helpSupportModal').classList.contains('hide')){closeHelpSupportModal(true);return true;}
@@ -380,20 +385,13 @@ function switchNavTab(tab) {
     btn.classList.toggle('active', btn.dataset.deskNav === tab);
   });
   if (tab === 'feed') {
+    closeExplorePage(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
     myReportsOnly = false;
     statFilter = '';
     load();
   } else if (tab === 'explore') {
-    const mobSearch = $('mobileBoardSearch');
-    const search = $('boardSearch');
-    if (mobSearch && window.innerWidth < 860) {
-      mobSearch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      mobSearch.focus();
-    } else if (search) {
-      search.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      search.focus();
-    }
+    openExplorePage();
   } else if (tab === 'chat') {
     openCommunityChat();
   } else if (tab === 'profile') {
@@ -426,27 +424,26 @@ function filterStats(which){statFilter=which;chosenType='';myReportsOnly=false;d
 function toggleMyReports(){statFilter='';myReportsOnly=!myReportsOnly;if($('myReports'))$('myReports').textContent=myReportsOnly?'Show all reports':'My reports';load()}
 function showMyReports(e){if(e)e.preventDefault();showNavPopup('myReports')}
 function passesFilters(r){const q=($('q')?.value||'').trim().toLowerCase(),cat=$('filterCategory')?.value||'',loc=($('filterLocation')?.value||'').trim().toLowerCase(),from=$('dateFrom')?.value||'',to=$('dateTo')?.value||'';const text=[r.title,r.category,r.location,r.description].join(' ').toLowerCase();if(q&&!text.includes(q))return false;if(cat&&r.category!==cat)return false;if(loc&&!String(r.location||'').toLowerCase().includes(loc))return false;if(from&&r.itemDate&&r.itemDate<from)return false;if(to&&r.itemDate&&r.itemDate>to)return false;return true}
-async function load(){try{const allRes=await fetch(myReportsOnly?'/api/reports?mine=true':'/api/reports');if(!allRes.ok){if(allRes.status===401){$('total').textContent='0';$('lost').textContent='0';$('found').textContent='0';$('returned').textContent='0';$('resultCount').textContent='Backend connection required';$('grid').innerHTML='<div class="empty"><b>Welcome to CampUs</b><p>The website is open. Connect the CampUs backend to load reports and enable submissions.</p></div>';return}throw 0}const all=await allRes.json();updatePoster(all);$('total').textContent=all.length;$('lost').textContent=all.filter(x=>x.type==='LOST').length;$('found').textContent=all.filter(x=>x.type==='FOUND').length;$('returned').textContent=all.filter(x=>x.status==='RETURNED').length;let rows=all.filter(r=>(!chosenType||r.type===chosenType)&&(!statFilter||statFilter==='ALL'||(statFilter==='LOST'&&r.type==='LOST')||(statFilter==='FOUND'&&r.type==='FOUND')||(statFilter==='RETURNED'&&r.status==='RETURNED'))&&passesFilters(r));$('resultCount').textContent=`${rows.length} report${rows.length===1?'':'s'} shown`;if(!rows.length){const hasSearch=($('q')?.value||'').trim()||$('filterCategory')?.value||($('filterLocation')?.value||'').trim()||$('dateFrom')?.value||$('dateTo')?.value||chosenType;const heading=myReportsOnly?'You have not submitted any reports yet':(hasSearch?'No matching reports found':'No lost or found items reported yet');const message=myReportsOnly?'Reports submitted from your account will appear here.':(hasSearch?'Try changing your search or filters, or clear them to see all reports.':'When someone reports a lost or found item, it will appear here. You can post a report anytime using the + button.');$('grid').innerHTML=`<div class="empty"><b>${heading}</b><p>${message}</p>${hasSearch?'<button type="button" class="light" onclick="clearFilters()" style="margin-top:12px;">Clear filters</button>':''}</div>`;return}
-$('grid').innerHTML=rows.map(r=>{
- const m=bestMatch(r,all);
- const authorName=String(r.ownerDisplayName||r.reporterName||'CampUs user').trim()||'CampUs user';
- const ownerUsername=String(r.accountUsername||'');
- const avatarContent=avatarInner(r.ownerAvatarId,authorName,r.ownerProfileImageUrl);
- const roleBadge=roleBadgeMarkup(r.ownerRole);
- const canEdit=!!(currentUser&&ownerUsername&&ownerUsername.toLowerCase()===currentUser.username.toLowerCase());
- const typeIsFound=String(r.type||'').toUpperCase()==='FOUND';
- const cleanPhone=String(r.reporterPhone||'').replace(/[^0-9]/g,'');
- const waPhone=cleanPhone.length===10?'91'+cleanPhone:cleanPhone;
- const waText=encodeURIComponent(`Hi ${authorName}! I saw your ${r.type} report for "${r.title}" on CampUs.`);
- const waUrl=cleanPhone?`https://wa.me/${waPhone}?text=${waText}`:'';
- const postTime=timeAgo(r.createdAt||r.itemDate);
- const collegeTag=r.college?collegeDisplayName(r.college):(currentUser?currentUser.collegeName:'Campus');
+function renderPostCardMarkup(r, all) {
+  const m = bestMatch(r, all || cachedAllReports || []);
+  const authorName = String(r.ownerDisplayName || r.reporterName || 'CampUs user').trim() || 'CampUs user';
+  const ownerUsername = String(r.accountUsername || '');
+  const avatarContent = avatarInner(r.ownerAvatarId, authorName, r.ownerProfileImageUrl);
+  const roleBadge = roleBadgeMarkup(r.ownerRole);
+  const canEdit = !!(currentUser && ownerUsername && ownerUsername.toLowerCase() === currentUser.username.toLowerCase());
+  const typeIsFound = String(r.type || '').toUpperCase() === 'FOUND';
+  const cleanPhone = String(r.reporterPhone || '').replace(/[^0-9]/g, '');
+  const waPhone = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
+  const waText = encodeURIComponent(`Hi ${authorName}! I saw your ${r.type} report for "${r.title}" on CampUs.`);
+  const waUrl = cleanPhone ? `https://wa.me/${waPhone}?text=${waText}` : '';
+  const postTime = timeAgo(r.createdAt || r.itemDate);
+  const collegeTag = r.college ? collegeDisplayName(r.college) : (currentUser ? currentUser.collegeName : 'Campus');
 
- const statusControl=canEdit
-  ? `<select class="action-status-select" onchange="updateStatus(${r.id},this.value)" aria-label="Update status"><option value="OPEN" ${r.status==='OPEN'?'selected':''}>● Open</option><option value="MATCHED" ${r.status==='MATCHED'?'selected':''}>● Matched</option><option value="RETURNED" ${r.status==='RETURNED'?'selected':''}>✓ Returned</option></select>`
-  : `<span class="insta-status-badge ${String(r.status||'').toUpperCase()==='RETURNED'?'returned':''}">${esc(r.status)}</span>`;
+  const statusControl = canEdit
+   ? `<select class="action-status-select" onchange="updateStatus(${r.id},this.value)" aria-label="Update status"><option value="OPEN" ${r.status==='OPEN'?'selected':''}>● Open</option><option value="MATCHED" ${r.status==='MATCHED'?'selected':''}>● Matched</option><option value="RETURNED" ${r.status==='RETURNED'?'selected':''}>✓ Returned</option></select>`
+   : `<span class="insta-status-badge ${String(r.status||'').toUpperCase()==='RETURNED'?'returned':''}">${esc(r.status)}</span>`;
 
- return `<article class="insta-post-card" id="post-card-${r.id}" data-report-id="${r.id}">
+  return `<article class="insta-post-card" id="post-card-${r.id}" data-report-id="${r.id}">
     <div class="insta-post-header">
       <button type="button" class="insta-post-author" onclick="openChatUserProfile('${esc(authorName)}','${esc(ownerUsername)}')" aria-label="View ${esc(authorName)}'s profile">
         <div class="insta-post-avatar">${avatarContent}</div>
@@ -511,11 +508,45 @@ $('grid').innerHTML=rows.map(r=>{
         </div>
       `}
     </div>
-  </article>`
-}).join('');
-checkDirectPostLink();
+  </article>`;
 }
-catch{$('grid').innerHTML='<div class="empty"><b>Backend not connected</b><p>Start the Java app, then refresh this page.</p></div>'}}
+
+async function load(){
+  try{
+    const allRes=await fetch(myReportsOnly?'/api/reports?mine=true':'/api/reports');
+    if(!allRes.ok){
+      if(allRes.status===401){
+        $('total').textContent='0';$('lost').textContent='0';$('found').textContent='0';$('returned').textContent='0';$('resultCount').textContent='Backend connection required';$('grid').innerHTML='<div class="empty"><b>Welcome to CampUs</b><p>The website is open. Connect the CampUs backend to load reports and enable submissions.</p></div>';
+        return;
+      }
+      throw 0;
+    }
+    const all=await allRes.json();
+    if(!myReportsOnly){
+      cachedAllReports=all;
+      renderExploreGrid();
+    }
+    updatePoster(all);
+    $('total').textContent=all.length;
+    $('lost').textContent=all.filter(x=>x.type==='LOST').length;
+    $('found').textContent=all.filter(x=>x.type==='FOUND').length;
+    $('returned').textContent=all.filter(x=>x.status==='RETURNED').length;
+    let rows=all.filter(r=>(!chosenType||r.type===chosenType)&&(!statFilter||statFilter==='ALL'||(statFilter==='LOST'&&r.type==='LOST')||(statFilter==='FOUND'&&r.type==='FOUND')||(statFilter==='RETURNED'&&r.status==='RETURNED'))&&passesFilters(r));
+    $('resultCount').textContent=`${rows.length} report${rows.length===1?'':'s'} shown`;
+    if(!rows.length){
+      const hasSearch=($('q')?.value||'').trim()||$('filterCategory')?.value||($('filterLocation')?.value||'').trim()||$('dateFrom')?.value||$('dateTo')?.value||chosenType;
+      const heading=myReportsOnly?'You have not submitted any reports yet':(hasSearch?'No matching reports found':'No lost or found items reported yet');
+      const message=myReportsOnly?'Reports submitted from your account will appear here.':(hasSearch?'Try changing your search or filters, or clear them to see all reports.':'When someone reports a lost or found item, it will appear here. You can post a report anytime using the + button.');
+      $('grid').innerHTML=`<div class="empty"><b>${heading}</b><p>${message}</p>${hasSearch?'<button type="button" class="light" onclick="clearFilters()" style="margin-top:12px;">Clear filters</button>':''}</div>`;
+      return;
+    }
+    $('grid').innerHTML=rows.map(r=>renderPostCardMarkup(r,all)).join('');
+    checkDirectPostLink();
+  }
+  catch{
+    $('grid').innerHTML='<div class="empty"><b>Backend not connected</b><p>Start the Java app, then refresh this page.</p></div>';
+  }
+}
 $('photo').addEventListener('change',()=>{const file=$('photo').files[0];if(!file){$('photoPreview').src='';$('photoPreview').classList.add('hide');return}if(!file.type.startsWith('image/')){toast('Please choose an image file.');$('photo').value='';return}const reader=new FileReader();reader.onload=()=>{$('photoPreview').src=reader.result;$('photoPreview').classList.remove('hide')};reader.onerror=()=>{toast('Could not read the photo. Please try another image.');$('photo').value='';$('photoPreview').src='';$('photoPreview').classList.add('hide')};reader.readAsDataURL(file)});
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeForm()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeForm()});
 $('form').addEventListener('submit',async e=>{e.preventDefault();const file=$('photo').files[0];let imageData=null;if(file){try{imageData=await compressProfileImage(file,1200,1200,0.8)}catch{try{imageData=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)})}catch{$('error').textContent='Could not read the photo. Please try another image.';return}}}
@@ -531,12 +562,14 @@ async function togglePostLike(id, btnEl) {
     const res = await fetch(`/api/reports/${id}/like`, { method: 'POST' });
     if (!res.ok) throw 0;
     const data = await res.json();
-    const countEl = document.querySelector(`.like-count-${id}`);
-    const heartIcon = document.querySelector(`.heart-icon-${id}`);
-    const likeBtn = btnEl || document.querySelector(`.like-btn-${id}`);
-    if (countEl) countEl.textContent = data.count || 0;
-    if (heartIcon) heartIcon.textContent = data.liked ? '❤️' : '🤍';
-    if (likeBtn) likeBtn.classList.toggle('active', data.liked);
+    document.querySelectorAll(`.like-count-${id}`).forEach(el => el.textContent = data.count || 0);
+    document.querySelectorAll(`.heart-icon-${id}`).forEach(el => el.textContent = data.liked ? '❤️' : '🤍');
+    document.querySelectorAll(`.like-btn-${id}`).forEach(el => el.classList.toggle('active', data.liked));
+    const cached = (cachedAllReports || []).find(x => x.id === id);
+    if (cached) {
+      cached.likedByMe = data.liked;
+      cached.likeCount = data.count || 0;
+    }
   } catch {
     toast('Could not update like.');
   }
@@ -600,6 +633,9 @@ async function archiveReport(id) {
     const res = await fetch(`/api/reports/${id}/archive`, { method: 'POST' });
     if (!res.ok) throw 0;
     toast('Post moved to Archive 📁');
+    if ($('postDetailViewer') && !$('postDetailViewer').classList.contains('hide')) {
+      closePostDetailViewer();
+    }
     load();
     if ($('communityProfilePage') && !$('communityProfilePage').classList.contains('hide')) {
       openOwnPublicProfile();
@@ -627,6 +663,9 @@ async function deleteReport(id, fromActivity = false) {
     const res = await fetch(`/api/reports/${id}`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
     if (!res.ok) throw 0;
     toast('Post moved to Recently Deleted (Restorable for 30 days) 🗑️');
+    if ($('postDetailViewer') && !$('postDetailViewer').classList.contains('hide')) {
+      closePostDetailViewer();
+    }
     load();
     if (fromActivity) {
       switchActivityTab('archive');
@@ -834,6 +873,280 @@ function viewPostFromActivity(reportId) {
       setTimeout(() => card.classList.remove('post-card-highlight'), 3500);
     }
   }, 400);
+}
+
+/* --------------------------------------------------------------------------
+   INSTAGRAM-STYLE EXPLORE & SEARCH PAGE
+   -------------------------------------------------------------------------- */
+async function ensureExploreReports() {
+  if (cachedAllReports && cachedAllReports.length > 0) {
+    renderExploreGrid();
+    return;
+  }
+  try {
+    const res = await fetch('/api/reports');
+    if (res.ok) {
+      cachedAllReports = await res.json();
+      renderExploreGrid();
+    }
+  } catch (err) {
+    console.error('Failed to load explore reports', err);
+  }
+}
+
+function openExplorePage() {
+  const page = $('explorePage');
+  if (!page) return;
+  pushCampusUiLayer('explorePage');
+  page.classList.remove('hide');
+  document.body.classList.add('explore-open');
+  document.querySelectorAll('.bottom-nav-item').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.nav === 'explore');
+  });
+  document.querySelectorAll('.desk-nav-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.deskNav === 'explore');
+  });
+  ensureExploreReports();
+  setTimeout(() => {
+    const input = $('exploreSearchInput');
+    if (input) {
+      input.focus();
+    }
+  }, 100);
+}
+
+function closeExplorePage(fromPopstate = false) {
+  const page = $('explorePage');
+  if (!page || page.classList.contains('hide')) return;
+  page.classList.add('hide');
+  document.body.classList.remove('explore-open');
+  document.querySelectorAll('.bottom-nav-item').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.nav === 'feed');
+  });
+  document.querySelectorAll('.desk-nav-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.deskNav === 'feed');
+  });
+  finishCampusUiLayer('explorePage', fromPopstate);
+}
+
+function filterExploreType(type) {
+  exploreTypeFilter = type || '';
+  document.querySelectorAll('.explore-type-pill').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.expType === exploreTypeFilter);
+  });
+  renderExploreGrid();
+}
+
+function filterExploreCategory(cat) {
+  exploreCategoryFilter = cat || '';
+  document.querySelectorAll('.explore-cat-chip').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.expCat === exploreCategoryFilter);
+  });
+  renderExploreGrid();
+}
+
+function clearExploreFilters() {
+  exploreTypeFilter = '';
+  exploreCategoryFilter = '';
+  exploreSearchQuery = '';
+  const input = $('exploreSearchInput');
+  if (input) input.value = '';
+  const clearBtn = $('exploreSearchClear');
+  if (clearBtn) clearBtn.classList.add('hide');
+  document.querySelectorAll('.explore-type-pill').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.expType === '');
+  });
+  document.querySelectorAll('.explore-cat-chip').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.expCat === '');
+  });
+  const memberWrap = $('exploreMemberResults');
+  if (memberWrap) {
+    memberWrap.innerHTML = '';
+    memberWrap.classList.add('hide');
+  }
+  renderExploreGrid();
+}
+
+function handleExploreSearch(val) {
+  exploreSearchQuery = String(val || '').trim();
+  const clearBtn = $('exploreSearchClear');
+  if (clearBtn) {
+    clearBtn.classList.toggle('hide', !exploreSearchQuery);
+  }
+  clearTimeout(exploreSearchTimer);
+  exploreSearchTimer = setTimeout(() => {
+    renderExploreGrid();
+    searchExploreMembers(exploreSearchQuery);
+  }, 150);
+}
+
+function clearExploreSearch() {
+  const input = $('exploreSearchInput');
+  if (input) {
+    input.value = '';
+    input.focus();
+  }
+  handleExploreSearch('');
+}
+
+async function searchExploreMembers(query) {
+  const wrap = $('exploreMemberResults');
+  if (!wrap) return;
+  const needle = String(query || '').trim().replace(/^@/, '').toLowerCase();
+  if (!needle || needle.length < 2) {
+    wrap.innerHTML = '';
+    wrap.classList.add('hide');
+    return;
+  }
+  const seq = ++exploreMemberSearchSeq;
+  try {
+    const res = await fetch(`/api/users/search?q=${encodeURIComponent(needle)}`, {
+      headers: { 'Accept': 'application/json' }
+    });
+    if (seq !== exploreMemberSearchSeq) return;
+    if (!res.ok) {
+      wrap.innerHTML = '';
+      wrap.classList.add('hide');
+      return;
+    }
+    const data = await res.json();
+    const members = Array.isArray(data.members) ? data.members : [];
+    if (!members.length) {
+      wrap.innerHTML = '';
+      wrap.classList.add('hide');
+      return;
+    }
+    wrap.innerHTML = members.slice(0, 4).map(m => {
+      const name = m.displayName || m.username || 'Member';
+      return `<button type="button" class="explore-member-item" onclick="openChatUserProfile('${esc(name)}','${esc(m.username)}')">
+        <div class="explore-member-avatar">${avatarInner(m.avatarId, name, m.profileImageUrl)}</div>
+        <div class="explore-member-info">
+          <b>${esc(name)} ${roleBadgeMarkup(m.role)}</b>
+          <small>@${esc(m.username || 'user')} · ${esc(m.course || collegeDisplayName(m.college) || 'Student')}</small>
+        </div>
+      </button>`;
+    }).join('');
+    wrap.classList.remove('hide');
+  } catch {
+    wrap.innerHTML = '';
+    wrap.classList.add('hide');
+  }
+}
+
+function renderExploreGrid() {
+  const grid = $('exploreGrid');
+  if (!grid) return;
+  let list = Array.isArray(cachedAllReports) ? cachedAllReports : [];
+
+  if (exploreTypeFilter) {
+    if (exploreTypeFilter === 'RETURNED') {
+      list = list.filter(r => String(r.status || '').toUpperCase() === 'RETURNED');
+    } else {
+      list = list.filter(r => String(r.type || '').toUpperCase() === exploreTypeFilter);
+    }
+  }
+
+  if (exploreCategoryFilter) {
+    list = list.filter(r => String(r.category || '').toLowerCase() === exploreCategoryFilter.toLowerCase());
+  }
+
+  if (exploreSearchQuery) {
+    const q = exploreSearchQuery.toLowerCase();
+    list = list.filter(r => {
+      const text = [
+        r.title,
+        r.category,
+        r.location,
+        r.description,
+        r.ownerDisplayName,
+        r.reporterName,
+        r.accountUsername
+      ].join(' ').toLowerCase();
+      return text.includes(q);
+    });
+  }
+
+  const countBadge = $('exploreCountTotal');
+  if (countBadge) {
+    countBadge.textContent = list.length;
+  }
+
+  if (!list.length) {
+    grid.innerHTML = `
+      <div class="explore-empty-state">
+        <span class="explore-empty-icon">🔍</span>
+        <b>No matching posts</b>
+        <p>Try searching for a different item name or clear your filters.</p>
+        ${(exploreTypeFilter || exploreCategoryFilter || exploreSearchQuery) ? '<button type="button" class="insta-action-pill" onclick="clearExploreFilters()" style="margin-top:12px;">Clear filters</button>' : ''}
+      </div>
+    `;
+    return;
+  }
+
+  grid.innerHTML = list.map(r => {
+    const isFound = String(r.type || '').toUpperCase() === 'FOUND';
+    const isReturned = String(r.status || '').toUpperCase() === 'RETURNED';
+    const badgeClass = isReturned ? 'returned' : (isFound ? 'found' : 'lost');
+    const badgeText = isReturned ? '✨ RETURNED' : (isFound ? '🟢 FOUND' : '🔴 LOST');
+    const likes = r.likeCount || 0;
+    const comments = r.commentCount || 0;
+    const hasImage = Boolean(r.imageData);
+
+    const mediaMarkup = hasImage
+      ? `<img src="${esc(r.imageData)}" alt="${esc(r.title)}" class="explore-tile-img" loading="lazy">`
+      : `<div class="explore-tile-nophoto">
+           <span class="explore-tile-nophoto-emoji">${categoryEmoji(r.category)}</span>
+           <span class="explore-tile-nophoto-title">${esc(r.title)}</span>
+         </div>`;
+
+    return `<button type="button" class="explore-tile" onclick="openPostDetail(${r.id})" aria-label="View ${esc(r.title)}">
+      ${mediaMarkup}
+      <span class="explore-tile-badge ${badgeClass}">${badgeText}</span>
+      <div class="explore-tile-overlay">
+        <div class="explore-tile-overlay-stats">
+          <span>❤️ ${likes}</span>
+          <span>💬 ${comments}</span>
+        </div>
+        <div class="explore-tile-overlay-title">${esc(r.title)}</div>
+      </div>
+    </button>`;
+  }).join('');
+}
+
+function openPostDetail(reportId) {
+  const viewer = $('postDetailViewer');
+  const body = $('postDetailBody');
+  if (!viewer || !body) return;
+
+  const r = (cachedAllReports || []).find(x => x.id === reportId);
+  if (!r) {
+    toast('Post details not found.');
+    return;
+  }
+
+  pushCampusUiLayer('postDetailViewer');
+  const titleEl = $('postDetailTitle');
+  const subEl = $('postDetailSubtitle');
+  if (titleEl) titleEl.textContent = r.type === 'LOST' ? 'Lost Item' : 'Found Item';
+  if (subEl) subEl.textContent = r.title || 'CampUs Post';
+
+  body.innerHTML = renderPostCardMarkup(r, cachedAllReports);
+  viewer.classList.remove('hide');
+  document.body.classList.add('fullscreen-page-open');
+}
+
+function closePostDetailViewer(fromPopstate = false) {
+  const viewer = $('postDetailViewer');
+  if (!viewer || viewer.classList.contains('hide')) return;
+  viewer.classList.add('hide');
+  if ((!$('activityCenterModal') || $('activityCenterModal').classList.contains('hide')) &&
+      (!$('privacySettingsModal') || $('privacySettingsModal').classList.contains('hide')) &&
+      (!$('termsModal') || $('termsModal').classList.contains('hide')) &&
+      (!$('helpSupportModal') || $('helpSupportModal').classList.contains('hide')) &&
+      (!$('aboutCampusModal') || $('aboutCampusModal').classList.contains('hide'))) {
+    document.body.classList.remove('fullscreen-page-open');
+  }
+  finishCampusUiLayer('postDetailViewer', fromPopstate);
 }
 
 /* --------------------------------------------------------------------------
@@ -1688,7 +2001,7 @@ function confirmNavPopup(){
 }
 
 $('navPopup').addEventListener('click',e=>{if(e.target===$('navPopup'))closeNavPopup()});
-document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(navDrawerOpen){closeNavDrawer();return;}if($('privacySettingsModal')&&!$('privacySettingsModal').classList.contains('hide')){closePrivacySettingsModal();return;}if($('termsModal')&&!$('termsModal').classList.contains('hide')){closeTermsModal();return;}if($('helpSupportModal')&&!$('helpSupportModal').classList.contains('hide')){closeHelpSupportModal();return;}if($('aboutCampusModal')&&!$('aboutCampusModal').classList.contains('hide')){closeAboutCampusModal();return;}if($('commentsModal')&&!$('commentsModal').classList.contains('hide')){closeCommentsModal();return;}if($('activityCenterModal')&&!$('activityCenterModal').classList.contains('hide')){closeActivityCenter();return;}if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage();return;}if(!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile();return;}if(communityChatOpen){closeCommunityChat();return;}if(!$('navPopup').classList.contains('hide')){closeNavPopup();return;}if(!$('modal').classList.contains('hide')){closeForm();return;}closeMenu();closeProfileDropdown();});
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if($('postDetailViewer')&&!$('postDetailViewer').classList.contains('hide')){closePostDetailViewer();return;}if($('explorePage')&&!$('explorePage').classList.contains('hide')){closeExplorePage();return;}if(navDrawerOpen){closeNavDrawer();return;}if($('privacySettingsModal')&&!$('privacySettingsModal').classList.contains('hide')){closePrivacySettingsModal();return;}if($('termsModal')&&!$('termsModal').classList.contains('hide')){closeTermsModal();return;}if($('helpSupportModal')&&!$('helpSupportModal').classList.contains('hide')){closeHelpSupportModal();return;}if($('aboutCampusModal')&&!$('aboutCampusModal').classList.contains('hide')){closeAboutCampusModal();return;}if($('commentsModal')&&!$('commentsModal').classList.contains('hide')){closeCommentsModal();return;}if($('activityCenterModal')&&!$('activityCenterModal').classList.contains('hide')){closeActivityCenter();return;}if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage();return;}if(!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile();return;}if(communityChatOpen){closeCommunityChat();return;}if(!$('navPopup').classList.contains('hide')){closeNavPopup();return;}if(!$('modal').classList.contains('hide')){closeForm();return;}closeMenu();closeProfileDropdown();});
 window.addEventListener('click',e=>{if(profileMenuOpen&&!e.target.closest('#profileDropdown')&&!e.target.closest('#profileButton'))closeProfileDropdown()});
 window.addEventListener('resize',()=>{if(window.innerWidth>850)closeMenu();else closeProfileDropdown()});
 
