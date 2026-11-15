@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="CampUs">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="stylesheet" href="/style.css?v=campus-clean-20261115">
+  <link rel="stylesheet" href="/style.css?v=campus-clean-20261115b">
 </head>
 <body class="auth-locked">
 
@@ -216,6 +216,22 @@
         </div>
       </button>
 
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('privacySettings')">
+        <span class="drawer-item-icon">🔒</span>
+        <div class="drawer-item-text">
+          <b>Notification &amp; Privacy</b>
+          <small>Alerts, chat sounds &amp; privacy controls</small>
+        </div>
+      </button>
+
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('termsConditions')">
+        <span class="drawer-item-icon">📜</span>
+        <div class="drawer-item-text">
+          <b>Terms &amp; Conditions</b>
+          <small>Campus rules, return guidelines &amp; policy</small>
+        </div>
+      </button>
+
       <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('campusInfo')">
         <span class="drawer-item-icon">🏛️</span>
         <div class="drawer-item-text">
@@ -224,19 +240,19 @@
         </div>
       </button>
 
-      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('soundToggle')">
-        <span class="drawer-item-icon">🔔</span>
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('helpSupport')">
+        <span class="drawer-item-icon">❓</span>
         <div class="drawer-item-text">
-          <b>Notifications &amp; Alerts</b>
-          <small id="drawerSoundStatus">Chat sounds enabled</small>
+          <b>Help &amp; Support</b>
+          <small>Lost &amp; found guides, recovery &amp; FAQs</small>
         </div>
       </button>
 
-      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('guidelines')">
-        <span class="drawer-item-icon">📜</span>
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('aboutCampus')">
+        <span class="drawer-item-icon">ℹ️</span>
         <div class="drawer-item-text">
-          <b>Community Rules</b>
-          <small>Safe return &amp; handoff guidelines</small>
+          <b>About CampUs</b>
+          <small>Platform version, safety &amp; mission</small>
         </div>
       </button>
     </div>
@@ -591,6 +607,371 @@
   </div>
 </div>
 
+<!-- Notification & Privacy Modal -->
+<div id="privacySettingsModal" class="overlay hide" onclick="if(event.target===this)closePrivacySettingsModal()" role="dialog" aria-modal="true" aria-labelledby="privacySettingsTitle">
+  <div class="dialog info-sheet-dialog">
+    <header class="info-sheet-header">
+      <div class="info-header-left">
+        <button class="universal-back-circle-btn" type="button" onclick="closePrivacySettingsModal()" aria-label="Back">‹</button>
+        <div>
+          <h2 id="privacySettingsTitle">Notification &amp; Privacy</h2>
+          <small class="info-sheet-subtitle">Alerts, chat sounds &amp; profile visibility</small>
+        </div>
+      </div>
+      <button class="modal-close-btn" type="button" onclick="closePrivacySettingsModal()" aria-label="Close">✕</button>
+    </header>
+
+    <div class="info-sheet-body">
+      <!-- Section 1: Notifications -->
+      <div class="pref-card-group">
+        <div class="pref-group-title">
+          <span>🔔</span> Notifications &amp; Alerts
+        </div>
+
+        <div class="pref-row">
+          <div class="pref-info">
+            <b>Campus Post Alerts</b>
+            <small>Receive notifications when new lost or found items are posted</small>
+          </div>
+          <label class="campus-switch">
+            <input type="checkbox" id="prefPostAlerts" checked onchange="savePrivacyPreferences()">
+            <span class="campus-slider"></span>
+          </label>
+        </div>
+
+        <div class="pref-row">
+          <div class="pref-info">
+            <b>Community Chat Alerts</b>
+            <small>Receive push banners when peers message in campus chat</small>
+          </div>
+          <label class="campus-switch">
+            <input type="checkbox" id="prefChatAlerts" checked onchange="savePrivacyPreferences()">
+            <span class="campus-slider"></span>
+          </label>
+        </div>
+
+        <div class="pref-row">
+          <div class="pref-info">
+            <b>Chat Sounds &amp; Chimes</b>
+            <small>Play subtle audio tone when new messages or reports arrive</small>
+          </div>
+          <label class="campus-switch">
+            <input type="checkbox" id="prefSoundAlerts" checked onchange="toggleSoundPreference(this.checked)">
+            <span class="campus-slider"></span>
+          </label>
+        </div>
+
+        <div class="pref-row">
+          <div class="pref-info">
+            <b>Status &amp; Claim Updates</b>
+            <small>Get notified when your item is marked Returned or verified</small>
+          </div>
+          <label class="campus-switch">
+            <input type="checkbox" id="prefClaimAlerts" checked onchange="savePrivacyPreferences()">
+            <span class="campus-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Section 2: Privacy Controls -->
+      <div class="pref-card-group">
+        <div class="pref-group-title">
+          <span>🔒</span> Privacy &amp; Contact Visibility
+        </div>
+
+        <div class="pref-block">
+          <div class="pref-info" style="margin-bottom: 8px;">
+            <b>Phone Number on Reports</b>
+            <small>Choose who can view your mobile number on your lost/found cards</small>
+          </div>
+          <div class="pref-radio-group">
+            <label class="pref-radio-label">
+              <input type="radio" name="phoneVisibility" value="campus" checked onchange="savePrivacyPreferences()">
+              <div class="pref-radio-text">
+                <b>Verified Campus Members (Recommended)</b>
+                <small>Only logged-in university students can see your phone number</small>
+              </div>
+            </label>
+            <label class="pref-radio-label">
+              <input type="radio" name="phoneVisibility" value="public" onchange="savePrivacyPreferences()">
+              <div class="pref-radio-text">
+                <b>Everyone (Public)</b>
+                <small>Visible to all visitors for fastest WhatsApp or direct calls</small>
+              </div>
+            </label>
+            <label class="pref-radio-label">
+              <input type="radio" name="phoneVisibility" value="hidden" onchange="savePrivacyPreferences()">
+              <div class="pref-radio-text">
+                <b>Hide Phone Number</b>
+                <small>Keep phone private; students reach you via CampUs Chat &amp; Comments</small>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="pref-row">
+          <div class="pref-info">
+            <b>Show Active Status</b>
+            <small>Let other campus members see when you are online</small>
+          </div>
+          <label class="campus-switch">
+            <input type="checkbox" id="prefActiveStatus" checked onchange="savePrivacyPreferences()">
+            <span class="campus-slider"></span>
+          </label>
+        </div>
+
+        <div class="pref-row">
+          <div class="pref-info">
+            <b>Include Profile in Member Search</b>
+            <small>Allow fellow students to look up your profile by name</small>
+          </div>
+          <label class="campus-switch">
+            <input type="checkbox" id="prefMemberSearch" checked onchange="savePrivacyPreferences()">
+            <span class="campus-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Section 3: Data & Retention Info -->
+      <div class="pref-card-group">
+        <div class="pref-group-title">
+          <span>🛡️</span> Data &amp; Safety Retention
+        </div>
+        <div class="pref-note-card">
+          <div class="pref-note-icon">⏳</div>
+          <div class="pref-note-text">
+            <b>30-Day Soft Delete Guarantee</b>
+            <p>Whenever you delete a report, it stays protected in your <b>Recently Deleted</b> vault for 30 days before permanent wipeout. You can restore it anytime.</p>
+            <button type="button" class="pref-shortcut-btn" onclick="openActivityFromPrivacy('deleted')">Open Recently Deleted →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pref-actions">
+        <button type="button" class="btn-primary pref-save-btn" onclick="savePrivacyPreferences(true)">Save &amp; Apply Preferences</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Terms & Conditions Modal -->
+<div id="termsModal" class="overlay hide" onclick="if(event.target===this)closeTermsModal()" role="dialog" aria-modal="true" aria-labelledby="termsModalTitle">
+  <div class="dialog info-sheet-dialog">
+    <header class="info-sheet-header">
+      <div class="info-header-left">
+        <button class="universal-back-circle-btn" type="button" onclick="closeTermsModal()" aria-label="Back">‹</button>
+        <div>
+          <h2 id="termsModalTitle">Terms &amp; Conditions</h2>
+          <small class="info-sheet-subtitle">CampUs Student Community Guidelines &amp; Code of Conduct</small>
+        </div>
+      </div>
+      <button class="modal-close-btn" type="button" onclick="closeTermsModal()" aria-label="Close">✕</button>
+    </header>
+
+    <div class="info-sheet-body">
+      <div class="terms-hero-badge">
+        <span class="terms-badge-icon">🏛️</span>
+        <div>
+          <b>Verified University Platform</b>
+          <p>Effective for all students, staff, and faculty on the CampUs network.</p>
+        </div>
+      </div>
+
+      <div class="terms-clauses-list">
+        <div class="terms-clause-card">
+          <div class="clause-num">1</div>
+          <div class="clause-content">
+            <b>Acceptance &amp; Campus Membership</b>
+            <p>By creating an account or posting on CampUs, you confirm that you are an active student, faculty, or staff member of the university network and agree to follow university discipline rules.</p>
+          </div>
+        </div>
+
+        <div class="terms-clause-card">
+          <div class="clause-num">2</div>
+          <div class="clause-content">
+            <b>Authenticity of Lost &amp; Found Reports</b>
+            <p>All items reported as Lost or Found must be genuine. Submitting false reports, prank posts, deceptive photos, or claiming property belonging to another student is strictly forbidden and subject to administrative disciplinary action.</p>
+          </div>
+        </div>
+
+        <div class="terms-clause-card">
+          <div class="clause-num">3</div>
+          <div class="clause-content">
+            <b>Mandatory Ownership Verification</b>
+            <p>Before handing over a found item, finders must require claimants to show verifiable proof (e.g., student ID verification, unlocking the phone / laptop screen, matching unique stickers or serial marks, or describing exact pouch contents).</p>
+          </div>
+        </div>
+
+        <div class="terms-clause-card">
+          <div class="clause-num">4</div>
+          <div class="clause-content">
+            <b>Safe Public Campus Handoffs</b>
+            <p>Physical exchanges of recovered items must take place in well-lit, central campus public areas (such as Central Library Reception, Security Guard Gate, Student Center, or Campus Department Helpdesks) during normal daytime hours.</p>
+          </div>
+        </div>
+
+        <div class="terms-clause-card">
+          <div class="clause-num">5</div>
+          <div class="clause-content">
+            <b>Community Chat &amp; Comment Conduct</b>
+            <p>CampUs maintains zero tolerance for cyber-bullying, harassment, abusive language, inappropriate photo uploads, spamming, unauthorized commercial advertisements, or solicitation in chat or comments.</p>
+          </div>
+        </div>
+
+        <div class="terms-clause-card">
+          <div class="clause-num">6</div>
+          <div class="clause-content">
+            <b>Privacy &amp; Contact Information Protection</b>
+            <p>Phone numbers, course details, and names shared on reports are strictly for returning lost items. Scraping, harvesting, or misusing student contact data for unsolicited outreach is a violation of user privacy and university regulations.</p>
+          </div>
+        </div>
+
+        <div class="terms-clause-card">
+          <div class="clause-num">7</div>
+          <div class="clause-content">
+            <b>30-Day Post Retention &amp; Permanent Wipeout</b>
+            <p>Deleted posts are preserved in 'Recently Deleted' for 30 calendar days to protect against accidental deletion. After 30 days, reports and associated media are permanently purged from the system.</p>
+          </div>
+        </div>
+
+        <div class="terms-clause-card">
+          <div class="clause-num">8</div>
+          <div class="clause-content">
+            <b>Limitation of Liability</b>
+            <p>CampUs provides the communication tools to help peers connect. The university and platform developers do not hold custodial possession of items and are not liable for unrecovered belongings or interpersonal disputes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="terms-footer-action">
+        <button type="button" class="btn-primary terms-accept-btn" onclick="acceptCampusTerms()">I Agree &amp; Understand</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Help & Support Modal -->
+<div id="helpSupportModal" class="overlay hide" onclick="if(event.target===this)closeHelpSupportModal()" role="dialog" aria-modal="true" aria-labelledby="helpSupportTitle">
+  <div class="dialog info-sheet-dialog">
+    <header class="info-sheet-header">
+      <div class="info-header-left">
+        <button class="universal-back-circle-btn" type="button" onclick="closeHelpSupportModal()" aria-label="Back">‹</button>
+        <div>
+          <h2 id="helpSupportTitle">Help &amp; Support</h2>
+          <small class="info-sheet-subtitle">Guides, FAQs &amp; Campus Emergency Helpdesk</small>
+        </div>
+      </div>
+      <button class="modal-close-btn" type="button" onclick="closeHelpSupportModal()" aria-label="Close">✕</button>
+    </header>
+
+    <div class="info-sheet-body">
+      <div class="faq-group">
+        <div class="faq-group-title">Frequently Asked Questions</div>
+
+        <details class="faq-accordion" open>
+          <summary><b>How do I report an item I lost or found?</b></summary>
+          <p>Tap the <b>＋ Report Item</b> button in the top navigation or bottom bar. Select <b>Lost</b> or <b>Found</b>, enter a clear title, select the item category, campus location (e.g. Block 3, Canteen, Library), and upload a photo if available.</p>
+        </details>
+
+        <details class="faq-accordion">
+          <summary><b>How do I mark an item as Returned?</b></summary>
+          <p>Go to the 3-line menu → <b>My Reports</b>. Click <b>Mark Returned ✨</b> on your post. This lets the whole campus know the item has been safely returned to its owner.</p>
+        </details>
+
+        <details class="faq-accordion">
+          <summary><b>Can I restore a post I deleted accidentally?</b></summary>
+          <p>Yes! Every deleted post is safely stored in <b>Recently Deleted</b> for 30 days. Open the 3-line menu → <b>Your Activity</b> → <b>Recently Deleted</b> tab, and tap <b>Restore 🔄</b>.</p>
+        </details>
+
+        <details class="faq-accordion">
+          <summary><b>How do I share a post on WhatsApp or Instagram?</b></summary>
+          <p>Every post card has a <b>Share</b> button at the bottom. Tap it to copy the link or share directly to your campus groups.</p>
+        </details>
+
+        <details class="faq-accordion">
+          <summary><b>What should I do if I find high-value items (laptops, gold, purse)?</b></summary>
+          <p>We recommend creating a Found report on CampUs, but depositing the physical item immediately with the <b>Central Campus Security Office</b> for secure safekeeping.</p>
+        </details>
+      </div>
+
+      <!-- Campus Emergency / Helpdesk Contact Card -->
+      <div class="support-contact-card">
+        <div class="support-card-header">
+          <span class="support-icon">🆘</span>
+          <div>
+            <b>Campus Security &amp; Proctor Office</b>
+            <small>For urgent campus assistance or lost high-value items</small>
+          </div>
+        </div>
+        <div class="support-contact-rows">
+          <div class="support-row">
+            <span>📍 Location:</span>
+            <b>Main Gate Security Office, Campus Center</b>
+          </div>
+          <div class="support-row">
+            <span>⏰ Hours:</span>
+            <b>24/7 Security Desk</b>
+          </div>
+          <div class="support-row">
+            <span>📧 Inquiries:</span>
+            <b>security-support@campus.edu</b>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- About CampUs Modal -->
+<div id="aboutCampusModal" class="overlay hide" onclick="if(event.target===this)closeAboutCampusModal()" role="dialog" aria-modal="true" aria-labelledby="aboutCampusTitle">
+  <div class="dialog info-sheet-dialog">
+    <header class="info-sheet-header">
+      <div class="info-header-left">
+        <button class="universal-back-circle-btn" type="button" onclick="closeAboutCampusModal()" aria-label="Back">‹</button>
+        <div>
+          <h2 id="aboutCampusTitle">About CampUs</h2>
+          <small class="info-sheet-subtitle">University Community Platform</small>
+        </div>
+      </div>
+      <button class="modal-close-btn" type="button" onclick="closeAboutCampusModal()" aria-label="Close">✕</button>
+    </header>
+
+    <div class="info-sheet-body" style="text-align: center; padding: 24px 20px;">
+      <div class="about-logo-badge">🎓</div>
+      <h3 style="margin: 12px 0 4px; font-size: 20px; font-weight: 850; color: var(--insta-text-main);">CampUs</h3>
+      <p style="font-size: 13px; color: var(--insta-primary); font-weight: 750; margin: 0 0 16px;">Version 2.5 (Campus Edition)</p>
+      
+      <div class="about-desc-card">
+        <p>CampUs is an intelligent, peer-to-peer lost and found and student community network designed exclusively for university campuses.</p>
+        <p>Our mission is to help every lost student possession find its way back home safely, quickly, and with total campus trust.</p>
+      </div>
+
+      <div class="about-highlights-grid">
+        <div class="about-highlight-box">
+          <b>⚡ Real-Time</b>
+          <small>Instant campus feed &amp; live chat</small>
+        </div>
+        <div class="about-highlight-box">
+          <b>🛡️ Verified</b>
+          <small>Authenticated college network</small>
+        </div>
+        <div class="about-highlight-box">
+          <b>🔒 Privacy-First</b>
+          <small>Configurable phone &amp; contact visibility</small>
+        </div>
+        <div class="about-highlight-box">
+          <b>🔄 30-Day Recovery</b>
+          <small>Recently Deleted safety guarantee</small>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px; font-size: 12px; color: var(--insta-text-muted);">
+        Made with 🧡 for college students &amp; university communities.
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Image Zoom Lightbox Container -->
 <div id="imageLightbox" class="image-lightbox hide" onclick="closeLightbox()" aria-modal="true" role="dialog">
   <img id="lightboxImg" src="" alt="Enlarged photo preview">
@@ -652,6 +1033,6 @@
   </svg>
 </div>
 
-<script src="/app.js?v=campus-clean-20261115"></script>
+<script src="/app.js?v=campus-clean-20261115b"></script>
 </body>
 </html>

@@ -151,6 +151,10 @@ function finishCampusUiLayer(layer,fromPopstate=false){
 }
 function closeCampusUiLayerFromBack(layer){
   if(layer==='navDrawer')closeNavDrawer(true);
+  else if(layer==='privacySettingsModal')closePrivacySettingsModal(true);
+  else if(layer==='termsModal')closeTermsModal(true);
+  else if(layer==='helpSupportModal')closeHelpSupportModal(true);
+  else if(layer==='aboutCampusModal')closeAboutCampusModal(true);
   else if(layer==='profileEditor')closeProfileEditorPage(true);
   else if(layer==='publicProfile')closeChatUserProfile(true);
   else if(layer==='communityChat')closeCommunityChat(true);
@@ -162,6 +166,10 @@ function closeCampusUiLayerFromBack(layer){
 }
 function closeTopUntrackedUiLayer(){
   if(navDrawerOpen){closeNavDrawer(true);return true;}
+  if($('privacySettingsModal')&&!$('privacySettingsModal').classList.contains('hide')){closePrivacySettingsModal(true);return true;}
+  if($('termsModal')&&!$('termsModal').classList.contains('hide')){closeTermsModal(true);return true;}
+  if($('helpSupportModal')&&!$('helpSupportModal').classList.contains('hide')){closeHelpSupportModal(true);return true;}
+  if($('aboutCampusModal')&&!$('aboutCampusModal').classList.contains('hide')){closeAboutCampusModal(true);return true;}
   if($('commentsModal')&&!$('commentsModal').classList.contains('hide')){closeCommentsModal();return true;}
   if($('activityCenterModal')&&!$('activityCenterModal').classList.contains('hide')){closeActivityCenter();return true;}
   if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage(true);return true;}
@@ -1100,7 +1108,7 @@ document.addEventListener('click',event=>{
  if(results&&!results.hidden&&!event.target.closest('.board-search'))hideUserSearchResults();
  if(!event.target.closest('#publicProfileOwnerActions'))closePublicProfileRoleMenu();
 });
-let timer;['q','filterCategory','filterLocation','dateFrom','dateTo'].forEach(id=>{const el=$(id);if(el)el.addEventListener(id==='q'||id==='filterLocation'?'input':'change',()=>{clearTimeout(timer);timer=setTimeout(load,220)})});initAuth();
+let timer;['q','filterCategory','filterLocation','dateFrom','dateTo'].forEach(id=>{const el=$(id);if(el)el.addEventListener(id==='q'||id==='filterLocation'?'input':'change',()=>{clearTimeout(timer);timer=setTimeout(load,220)})});initAuth();loadPrivacyPreferences();
 /* Profile button opens the phone navigation or the profile editor on desktop. */
 let menuOpen=false, profileMenuOpen=false, activeNavPopup='', selectedProfileAvatarId='';
 let mobileNavHomeParent=null, mobileNavHomeNextSibling=null;
@@ -1151,22 +1159,179 @@ function handleDrawerNav(action) {
     openMyReportsView();
   } else if (action === 'activity') {
     openActivityCenter('archive');
+  } else if (action === 'privacySettings') {
+    openPrivacySettingsModal();
+  } else if (action === 'termsConditions') {
+    openTermsModal();
   } else if (action === 'campusInfo') {
     const college = currentUser ? currentUser.collegeName : 'University Network';
     toast(`Verified Campus: ${college} 🏛️`);
-  } else if (action === 'soundToggle') {
-    toggleCommunityMute();
-    const isMuted = $('chatMuteButton')?.getAttribute('aria-pressed') === 'true';
-    const statusEl = $('drawerSoundStatus');
-    if (statusEl) statusEl.textContent = isMuted ? 'Notifications muted' : 'Chat sounds enabled';
-  } else if (action === 'guidelines') {
-    toast('CampUs Community: Always verify item ownership before returning items. 🤝');
+  } else if (action === 'helpSupport') {
+    openHelpSupportModal();
+  } else if (action === 'aboutCampus') {
+    openAboutCampusModal();
   }
 }
 
 function logoutFromDrawer() {
   closeNavDrawer();
   logout();
+}
+
+/* --------------------------------------------------------------------------
+   NOTIFICATION & PRIVACY SETTINGS
+   -------------------------------------------------------------------------- */
+function loadPrivacyPreferences() {
+  let prefs = {
+    postAlerts: true,
+    chatAlerts: true,
+    soundAlerts: !communityMuted,
+    claimAlerts: true,
+    phoneVisibility: 'campus',
+    activeStatus: true,
+    memberSearch: true
+  };
+  try {
+    const saved = localStorage.getItem('campus_privacy_settings');
+    if (saved) {
+      prefs = { ...prefs, ...JSON.parse(saved) };
+    }
+  } catch {}
+
+  if ($('prefPostAlerts')) $('prefPostAlerts').checked = !!prefs.postAlerts;
+  if ($('prefChatAlerts')) $('prefChatAlerts').checked = !!prefs.chatAlerts;
+  if ($('prefSoundAlerts')) $('prefSoundAlerts').checked = !communityMuted && !!prefs.soundAlerts;
+  if ($('prefClaimAlerts')) $('prefClaimAlerts').checked = !!prefs.claimAlerts;
+  if ($('prefActiveStatus')) $('prefActiveStatus').checked = !!prefs.activeStatus;
+  if ($('prefMemberSearch')) $('prefMemberSearch').checked = !!prefs.memberSearch;
+
+  const phoneRadios = document.querySelectorAll('input[name="phoneVisibility"]');
+  phoneRadios.forEach(r => {
+    r.checked = (r.value === (prefs.phoneVisibility || 'campus'));
+  });
+}
+
+function savePrivacyPreferences(showToast = false) {
+  const phoneVal = document.querySelector('input[name="phoneVisibility"]:checked')?.value || 'campus';
+  const prefs = {
+    postAlerts: $('prefPostAlerts') ? $('prefPostAlerts').checked : true,
+    chatAlerts: $('prefChatAlerts') ? $('prefChatAlerts').checked : true,
+    soundAlerts: $('prefSoundAlerts') ? $('prefSoundAlerts').checked : true,
+    claimAlerts: $('prefClaimAlerts') ? $('prefClaimAlerts').checked : true,
+    phoneVisibility: phoneVal,
+    activeStatus: $('prefActiveStatus') ? $('prefActiveStatus').checked : true,
+    memberSearch: $('prefMemberSearch') ? $('prefMemberSearch').checked : true
+  };
+  try {
+    localStorage.setItem('campus_privacy_settings', JSON.stringify(prefs));
+  } catch {}
+  if (showToast) {
+    toast('Notification & privacy preferences saved! 🔒');
+    closePrivacySettingsModal();
+  }
+}
+
+function toggleSoundPreference(enabled) {
+  if (enabled === communityMuted) {
+    toggleCommunityMute();
+  }
+  savePrivacyPreferences(false);
+}
+
+function openActivityFromPrivacy(tab) {
+  closePrivacySettingsModal();
+  openActivityCenter(tab);
+}
+
+function openPrivacySettingsModal() {
+  closeNavDrawer();
+  loadPrivacyPreferences();
+  const modal = $('privacySettingsModal');
+  if (modal) {
+    pushCampusUiLayer('privacySettingsModal');
+    modal.classList.remove('hide');
+    document.body.classList.add('info-sheet-open');
+  }
+}
+
+function closePrivacySettingsModal(fromPopstate = false) {
+  const modal = $('privacySettingsModal');
+  if (modal && !modal.classList.contains('hide')) {
+    modal.classList.add('hide');
+    document.body.classList.remove('info-sheet-open');
+    finishCampusUiLayer('privacySettingsModal', fromPopstate);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   TERMS & CONDITIONS MODAL
+   -------------------------------------------------------------------------- */
+function openTermsModal() {
+  closeNavDrawer();
+  const modal = $('termsModal');
+  if (modal) {
+    pushCampusUiLayer('termsModal');
+    modal.classList.remove('hide');
+    document.body.classList.add('info-sheet-open');
+  }
+}
+
+function closeTermsModal(fromPopstate = false) {
+  const modal = $('termsModal');
+  if (modal && !modal.classList.contains('hide')) {
+    modal.classList.add('hide');
+    document.body.classList.remove('info-sheet-open');
+    finishCampusUiLayer('termsModal', fromPopstate);
+  }
+}
+
+function acceptCampusTerms() {
+  closeTermsModal();
+  toast('Terms & Community Guidelines accepted! 🤝');
+}
+
+/* --------------------------------------------------------------------------
+   HELP & SUPPORT MODAL
+   -------------------------------------------------------------------------- */
+function openHelpSupportModal() {
+  closeNavDrawer();
+  const modal = $('helpSupportModal');
+  if (modal) {
+    pushCampusUiLayer('helpSupportModal');
+    modal.classList.remove('hide');
+    document.body.classList.add('info-sheet-open');
+  }
+}
+
+function closeHelpSupportModal(fromPopstate = false) {
+  const modal = $('helpSupportModal');
+  if (modal && !modal.classList.contains('hide')) {
+    modal.classList.add('hide');
+    document.body.classList.remove('info-sheet-open');
+    finishCampusUiLayer('helpSupportModal', fromPopstate);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   ABOUT CAMPUS MODAL
+   -------------------------------------------------------------------------- */
+function openAboutCampusModal() {
+  closeNavDrawer();
+  const modal = $('aboutCampusModal');
+  if (modal) {
+    pushCampusUiLayer('aboutCampusModal');
+    modal.classList.remove('hide');
+    document.body.classList.add('info-sheet-open');
+  }
+}
+
+function closeAboutCampusModal(fromPopstate = false) {
+  const modal = $('aboutCampusModal');
+  if (modal && !modal.classList.contains('hide')) {
+    modal.classList.add('hide');
+    document.body.classList.remove('info-sheet-open');
+    finishCampusUiLayer('aboutCampusModal', fromPopstate);
+  }
 }
 
 function openMyReportsView() {
