@@ -23,6 +23,14 @@ function showGlobalSpinner() {
         if (overlay) {
           overlay.classList.remove('hide');
           overlay.setAttribute('aria-hidden', 'false');
+          // Safety watchdog: Auto-hide spinner if requests stall beyond 4.5s
+          setTimeout(() => {
+            if (activeForegroundRequests > 0) {
+              activeForegroundRequests = 0;
+              overlay.classList.add('hide');
+              overlay.setAttribute('aria-hidden', 'true');
+            }
+          }, 4500);
         }
       }
     }, 280);
@@ -1990,9 +1998,17 @@ function confirmNavPopup(){
  const page=activeNavPopup;
  if(page==='profile'){openOwnPublicProfile();return;}
  if(page==='board'){
-  document.body.classList.add('browse-mode');$('board').classList.remove('default-list-mode');$('board').classList.add('browse-results-mode');if($('boardSearch'))$('boardSearch').value=$('navSearch').value;
-  $('q').value=$('navSearch').value;$('filterCategory').value=$('navCategory').value;$('filterLocation').value=$('navLocation').value;$('dateFrom').value=$('navDateFrom').value;$('dateTo').value=$('navDateTo').value;
-  chosenType=$('navType').value;myReportsOnly=false;
+  document.body.classList.add('browse-mode');
+  $('board')?.classList.remove('default-list-mode');
+  $('board')?.classList.add('browse-results-mode');
+  if($('boardSearch') && $('navSearch')) $('boardSearch').value=$('navSearch').value;
+  if($('q') && $('navSearch')) $('q').value=$('navSearch').value;
+  if($('filterCategory') && $('navCategory')) $('filterCategory').value=$('navCategory').value;
+  if($('filterLocation') && $('navLocation')) $('filterLocation').value=$('navLocation').value;
+  if($('dateFrom') && $('navDateFrom')) $('dateFrom').value=$('navDateFrom').value;
+  if($('dateTo') && $('navDateTo')) $('dateTo').value=$('navDateTo').value;
+  if($('navType')) chosenType=$('navType').value;
+  myReportsOnly=false;
   document.querySelectorAll('.type-tabs .tab').forEach(b=>b.classList.toggle('active', (chosenType===''&&b.textContent.trim()==='All items')||b.textContent.trim()===(chosenType==='LOST'?'Lost':chosenType==='FOUND'?'Found':'__none__')));
   closeNavPopup();load();
  }else if(page==='myReports'){
