@@ -46,6 +46,7 @@ public class ReportController {
             for (Report r : expired) {
                 postLikes.deleteByReportId(r.getId());
                 postComments.deleteByReportId(r.getId());
+                itemClaims.deleteByReportId(r.getId());
                 repo.delete(r);
             }
         } catch (Exception ignored) {}
@@ -297,6 +298,7 @@ public class ReportController {
         }
         postLikes.deleteByReportId(r.getId());
         postComments.deleteByReportId(r.getId());
+        itemClaims.deleteByReportId(r.getId());
         repo.delete(r);
         return ResponseEntity.noContent().build();
     }

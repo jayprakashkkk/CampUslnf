@@ -5,6 +5,18 @@ const CAMPUS_API_BASE = (function() {
   if (window.CAMPUS_API_BASE) return window.CAMPUS_API_BASE;
   const stored = localStorage.getItem('CAMPUS_API_BASE');
   if (stored) return stored;
+
+  const host = (window.location && window.location.hostname) || '';
+  const port = (window.location && window.location.port) || '';
+
+  // Auto-connect to Railway backend when hosted on Cloudflare Pages, Vercel, Netlify, GitHub Pages, or external host
+  if (host.includes('pages.dev') || host.includes('vercel.app') || host.includes('netlify.app') || host.includes('github.io') || (host && host !== 'localhost' && host !== '127.0.0.1' && !host.includes('railway.app'))) {
+    return RAILWAY_BACKEND;
+  }
+  // Auto-connect to port 8080 when running frontend on separate dev port (e.g. 5500, 3000, 5173) or via file://
+  if ((window.location && window.location.protocol === 'file:') || (port && port !== '8080' && (host === 'localhost' || host === '127.0.0.1'))) {
+    return 'http://localhost:8080';
+  }
   return '';
 })();
 
@@ -232,7 +244,22 @@ window.addEventListener('popstate',()=>{
  pushCampusBackGuard();
 });
 installCampusBackGuard();
-function openForm(type){$('form').reset();$('name').value=currentUser?.displayName||currentUser?.username||'';$('phone').value=currentUser?.phone||'';$('photoPreview').src='';$('photoPreview').classList.add('hide');setFormType(type||'LOST');pushCampusUiLayer('reportForm');$('modal').classList.remove('hide');$('error').textContent=''}
+function openForm(type){
+  $('form').reset();
+  $('name').value=currentUser?.displayName||currentUser?.username||'';
+  $('phone').value=currentUser?.phone||'';
+  $('photoPreview').src='';
+  $('photoPreview').classList.add('hide');
+  if($('itemDate')){
+    const today = new Date().toISOString().split('T')[0];
+    $('itemDate').max = today;
+    $('itemDate').value = today;
+  }
+  setFormType(type||'LOST');
+  pushCampusUiLayer('reportForm');
+  $('modal').classList.remove('hide');
+  $('error').textContent='';
+}
 function closeForm(fromPopstate=false){const wasOpen=!$('modal').classList.contains('hide');$('modal').classList.add('hide');if(wasOpen)finishCampusUiLayer('reportForm',fromPopstate)}
 function filterType(type,btn){chosenType=type;document.querySelectorAll('.type-tabs .tab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');load()}
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -580,9 +607,9 @@ async function load(retryCount = 0){
     checkDirectPostLink();
   }
   catch(err){
-    if(retryCount < 1){
-      // Graceful auto-retry once after 1.2s to absorb server cold-starts smoothly
-      setTimeout(()=>load(retryCount + 1), 1200);
+    if(retryCount < 2){
+      // Graceful auto-retry twice (1.2s, 2.4s) to absorb server cold-starts smoothly
+      setTimeout(()=>load(retryCount + 1), 1200 * (retryCount + 1));
       return;
     }
     $('grid').innerHTML='<div class="empty"><b>Connecting to Campus Network…</b><p>The campus server is syncing. Tap below to reload the campus feed.</p><button type="button" class="auth-primary" onclick="load()" style="margin-top:12px;">🔄 Reload Campus Feed</button></div>';
@@ -2264,7 +2291,7 @@ function enterApp(user) {
   startNotificationPolling();
 }
 
-async function initAuth() {
+async function initAuth(retryCount = 0) {
   try {
     const response = await fetch('/api/auth/me', {
       headers: { Accept: 'application/json' }
@@ -2274,14 +2301,27 @@ async function initAuth() {
 
     if (response.ok && data.authenticated) {
       enterApp(data);
-    } else {
+    } else if (response.status === 401 || (response.ok && data.authenticated === false)) {
       try {
         localStorage.removeItem('campus_auth_token');
         localStorage.removeItem('campus_user');
       } catch {}
       showAuthGate();
+    } else {
+      // Transient 502/503 or cold start: retry if user was previously authenticated
+      const savedToken = localStorage.getItem('campus_auth_token');
+      if (savedToken && retryCount < 2) {
+        setTimeout(() => initAuth(retryCount + 1), 1500 * (retryCount + 1));
+        return;
+      }
+      showAuthGate();
     }
   } catch {
+    const savedToken = localStorage.getItem('campus_auth_token');
+    if (savedToken && retryCount < 2) {
+      setTimeout(() => initAuth(retryCount + 1), 1500 * (retryCount + 1));
+      return;
+    }
     showAuthGate();
   }
 }
@@ -4376,21 +4416,34 @@ async function renderAdminLogs(force = false) {
   function handleSwipeBackAction() {
     if (isSwipeCooldown) return;
     isSwipeCooldown = true;
-    setTimeout(() => { isSwipeCooldown = false; }, 600);
+    setTimeout(() => { isSwipeCooldown = false; }, 400);
 
-    // 1. Try closing any open overlay, modal or page first
+    // 1. If lightbox is active, close it immediately
+    if ($('imageLightbox') && !$('imageLightbox').classList.contains('hide')) {
+      closeLightbox();
+      return;
+    }
+
+    // 2. If a tracked UI modal/page is active in history stack, trigger history back
+    // to cleanly trigger popstate handler and close the topmost layer
+    if (typeof campusUiHistoryStack !== 'undefined' && campusUiHistoryStack.length > 0) {
+      window.history.back();
+      return;
+    }
+
+    // 3. Try closing any open untracked overlay, modal or dropdown
     const closed = closeTopUntrackedUiLayer();
     if (closed) {
       return;
     }
 
-    // If currently on Campus Market section, swipe back switches to Lost & Found feed
+    // 4. If currently on Campus Market section, swipe back switches to Lost & Found feed
     if (typeof activeCampusFeedView !== 'undefined' && activeCampusFeedView === 'market') {
       switchFeedView('lostfound');
       return;
     }
 
-    // 2. If no modal is open, use browser history back
+    // 5. If no modal is open, use browser history back
     if (window.history.length > 1) {
       window.history.back();
     }
