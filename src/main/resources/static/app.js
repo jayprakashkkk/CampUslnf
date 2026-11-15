@@ -168,6 +168,10 @@ function closeCampusUiLayerFromBack(layer){
   else if(layer==='termsModal')closeTermsModal(true);
   else if(layer==='helpSupportModal')closeHelpSupportModal(true);
   else if(layer==='aboutCampusModal')closeAboutCampusModal(true);
+  else if(layer==='leaderboardModal')closeLeaderboardModal(true);
+  else if(layer==='claimsViewerModal')closeClaimsViewer(true);
+  else if(layer==='claimItemModal')closeClaimModal(true);
+  else if(layer==='marketModal')closeMarketModal(true);
   else if(layer==='profileEditor')closeProfileEditorPage(true);
   else if(layer==='publicProfile')closeChatUserProfile(true);
   else if(layer==='communityChat')closeCommunityChat(true);
@@ -183,6 +187,10 @@ function closeTopUntrackedUiLayer(){
   if(navDrawerOpen){closeNavDrawer(true);return true;}
   if($('postDetailViewer')&&!$('postDetailViewer').classList.contains('hide')){closePostDetailViewer(true);return true;}
   if($('explorePage')&&!$('explorePage').classList.contains('hide')){closeExplorePage(true);return true;}
+  if($('leaderboardModal')&&!$('leaderboardModal').classList.contains('hide')){closeLeaderboardModal(true);return true;}
+  if($('claimsViewerModal')&&!$('claimsViewerModal').classList.contains('hide')){closeClaimsViewer(true);return true;}
+  if($('claimItemModal')&&!$('claimItemModal').classList.contains('hide')){closeClaimModal(true);return true;}
+  if($('marketModal')&&!$('marketModal').classList.contains('hide')){closeMarketModal(true);return true;}
   if($('privacySettingsModal')&&!$('privacySettingsModal').classList.contains('hide')){closePrivacySettingsModal(true);return true;}
   if($('termsModal')&&!$('termsModal').classList.contains('hide')){closeTermsModal(true);return true;}
   if($('helpSupportModal')&&!$('helpSupportModal').classList.contains('hide')){closeHelpSupportModal(true);return true;}
@@ -351,6 +359,7 @@ function setFormType(type) {
   const lostBtn = $('modalTypeLost');
   const foundBtn = $('modalTypeFound');
   const title = $('formTitle');
+  const secWrap = $('foundSecretQuestionWrap');
   if (type === 'LOST') {
     if (lostBtn) {
       lostBtn.style.background = '#FEECE9';
@@ -363,6 +372,7 @@ function setFormType(type) {
       foundBtn.style.borderColor = '#EFE6DC';
     }
     if (title) title.textContent = 'Report a Lost Item';
+    if (secWrap) secWrap.classList.add('hide');
   } else {
     if (foundBtn) {
       foundBtn.style.background = '#E8F8F0';
@@ -375,6 +385,7 @@ function setFormType(type) {
       lostBtn.style.borderColor = '#EFE6DC';
     }
     if (title) title.textContent = 'Report a Found Item';
+    if (secWrap) secWrap.classList.remove('hide');
   }
 }
 
@@ -454,6 +465,15 @@ function renderPostCardMarkup(r, all) {
    ? `<select class="action-status-select" onchange="updateStatus(${r.id},this.value)" aria-label="Update status"><option value="OPEN" ${r.status==='OPEN'?'selected':''}>● Open</option><option value="MATCHED" ${r.status==='MATCHED'?'selected':''}>● Matched</option><option value="RETURNED" ${r.status==='RETURNED'?'selected':''}>✓ Returned</option></select>`
    : `<span class="insta-status-badge ${String(r.status||'').toUpperCase()==='RETURNED'?'returned':''}">${esc(r.status)}</span>`;
 
+  let claimActionHtml = '';
+  if (typeIsFound && String(r.status || '').toUpperCase() !== 'RETURNED') {
+    if (canEdit) {
+      claimActionHtml = `<button type="button" class="view-claims-btn" onclick="openClaimsViewer(${r.id})" title="Review submitted ownership claims"><span>👀 View Claims (${r.claimCount || 0})</span></button>`;
+    } else {
+      claimActionHtml = `<button type="button" class="claim-action-btn" onclick="openClaimModal(${r.id},'${esc(r.title)}','${esc(r.secretQuestion||'')}')"><span>✋ Claim Item</span></button>`;
+    }
+  }
+
   return `<article class="insta-post-card" id="post-card-${r.id}" data-report-id="${r.id}">
     <div class="insta-post-header">
       <button type="button" class="insta-post-author" onclick="openChatUserProfile('${esc(authorName)}','${esc(ownerUsername)}')" aria-label="View ${esc(authorName)}'s profile">
@@ -465,6 +485,7 @@ function renderPostCardMarkup(r, all) {
       </button>
       <div class="insta-post-badges">
         <span class="insta-type-badge ${typeIsFound?'found':'lost'}">${typeIsFound?'🟢 FOUND':'🔴 LOST'}</span>
+        ${r.matchScore && r.matchScore >= 40 ? `<span class="smart-match-score-pill" title="AI Match Confidence">✨ ${r.matchScore}% Match</span>` : ''}
         ${!canEdit?statusControl:''}
       </div>
     </div>
@@ -509,10 +530,12 @@ function renderPostCardMarkup(r, all) {
           <label class="owner-status-label">
             Status: ${statusControl}
           </label>
+          ${claimActionHtml}
           <button type="button" class="action-btn-del" onclick="deleteReport(${r.id})" title="Move to Recently Deleted (restorable for 30 days)">🗑 Delete</button>
         </div>
       ` : `
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;">
+          ${claimActionHtml}
           ${waUrl?`<a class="action-btn-whatsapp" href="${waUrl}" target="_blank" rel="noopener noreferrer"><span>💬 WhatsApp</span></a>`:''}
           ${cleanPhone?`<a class="action-btn-call" href="tel:${cleanPhone}"><span>📞 Call</span></a>`:''}
           <button type="button" class="action-btn-chat" onclick="askAboutItemInChat(${r.id},'${esc(r.title)}')"><span>💬 Ask in Chat</span></button>
@@ -561,8 +584,8 @@ async function load(){
 $('photo').addEventListener('change',()=>{const file=$('photo').files[0];if(!file){$('photoPreview').src='';$('photoPreview').classList.add('hide');return}if(!file.type.startsWith('image/')){toast('Please choose an image file.');$('photo').value='';return}const reader=new FileReader();reader.onload=()=>{$('photoPreview').src=reader.result;$('photoPreview').classList.remove('hide')};reader.onerror=()=>{toast('Could not read the photo. Please try another image.');$('photo').value='';$('photoPreview').src='';$('photoPreview').classList.add('hide')};reader.readAsDataURL(file)});
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeForm()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeForm()});
 $('form').addEventListener('submit',async e=>{e.preventDefault();const file=$('photo').files[0];let imageData=null;if(file){try{imageData=await compressProfileImage(file,1200,1200,0.8)}catch{try{imageData=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)})}catch{$('error').textContent='Could not read the photo. Please try another image.';return}}}
-let payload={imageData,type:$('type').value,title:$('title').value.trim(),category:$('category').value,location:$('location').value.trim(),itemDate:$('itemDate').value||null,reporterName:$('name').value.trim(),reporterPhone:$('phone').value.trim(),description:$('description').value.trim()};
-try{let res=await fetch('/api/reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!res.ok){let d=await res.json().catch(()=>({}));throw Error(d.message||'Please check the form and try again.')}const created=await res.json().catch(()=>null);$('form').reset();$('photoPreview').src='';$('photoPreview').classList.add('hide');closeForm();toast('Report submitted. Thanks for helping your campus! 💜');load()}catch(err){$('error').textContent=err.message||'Could not submit report.'}});
+let payload={imageData,type:$('type').value,title:$('title').value.trim(),category:$('category').value,location:$('location').value.trim(),itemDate:$('itemDate').value||null,reporterName:$('name').value.trim(),reporterPhone:$('phone').value.trim(),description:$('description').value.trim(),secretQuestion:$('secretQuestion')?$('secretQuestion').value.trim():''};
+try{let res=await fetch('/api/reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!res.ok){let d=await res.json().catch(()=>({}));throw Error(d.message||'Please check the form and try again.')}const created=await res.json().catch(()=>null);$('form').reset();if($('secretQuestion'))$('secretQuestion').value='';$('photoPreview').src='';$('photoPreview').classList.add('hide');closeForm();toast('Report submitted. Thanks for helping your campus! 💜');load()}catch(err){$('error').textContent=err.message||'Could not submit report.'}});
 async function updateStatus(id,status){try{let r=await fetch(`/api/reports/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});if(!r.ok)throw 0;toast('Status updated');load()}catch{toast('Could not update status')}}
 
 /* --------------------------------------------------------------------------
@@ -1144,6 +1167,7 @@ function openPostDetail(reportId) {
   body.innerHTML = renderPostCardMarkup(r, cachedAllReports);
   viewer.classList.remove('hide');
   document.body.classList.add('fullscreen-page-open');
+  loadSmartMatchesForDetail(r, body);
 }
 
 function closePostDetailViewer(fromPopstate = false) {
@@ -1499,6 +1523,8 @@ function handleDrawerNav(action) {
     toast(`Verified Campus: ${college} 🏛️`);
   } else if (action === 'helpSupport') {
     openHelpSupportModal();
+  } else if (action === 'leaderboard') {
+    openLeaderboardModal();
   } else if (action === 'aboutCampus') {
     openAboutCampusModal();
   }
@@ -2782,7 +2808,7 @@ function renderPublicProfile(data){
  const targetRole=String(data.role||'MEMBER').toUpperCase();
  const bannerMarkup=hasBanner?`<div class="public-profile-banner"><img src="${esc(data.bannerImageUrl)}" alt="${esc(name)} profile banner" loading="lazy"></div>`:'';
  const editButton=isOwnProfile?'<div class="public-profile-own-actions"><button type="button" class="public-profile-edit-button" onclick="openProfileEditorPage()">Edit profile</button></div>':'';
- content.innerHTML=`<section class="public-profile-hero${hasBanner?' has-profile-banner':' no-profile-banner'}">${bannerMarkup}<div class="public-profile-avatar" aria-label="${esc(name)} avatar">${avatarInner(data.avatarId,name,data.profileImageUrl)}</div><h2>${esc(name)} ${roleBadgeMarkup(data.role)}</h2><p class="public-profile-handle">@${esc(data.username||'')}</p><div class="public-profile-course">${esc(data.course||'Course not provided')}</div><div class="public-profile-stats"><div><b>${Number(data.totalPosts)||0}</b><span>Posts</span></div><div><b>${Number(data.itemsReceivedBack)||0}</b><span>Received back</span></div><div><b>${Number(data.itemsReturnedToOthers)||0}</b><span>Returned to others</span></div></div>${editButton}</section><section class="public-profile-posts"><div class="public-profile-posts-heading"><h2>Posts</h2><span>${posts.length}</span></div><div class="public-profile-post-grid">${postCards}</div></section>`;
+ content.innerHTML=`<section class="public-profile-hero${hasBanner?' has-profile-banner':' no-profile-banner'}">${bannerMarkup}<div class="public-profile-avatar" aria-label="${esc(name)} avatar">${avatarInner(data.avatarId,name,data.profileImageUrl)}</div><h2>${esc(name)} ${roleBadgeMarkup(data.role)}</h2><p class="public-profile-handle">@${esc(data.username||'')}</p><div class="public-profile-course">${esc(data.course||'Course not provided')}</div><div class="public-profile-stats"><div><b>${Number(data.totalPosts)||0}</b><span>Posts</span></div><div><b>${Number(data.itemsReceivedBack)||0}</b><span>Received</span></div><div><b>${Number(data.itemsReturnedToOthers)||0}</b><span>Returned</span></div><div style="cursor:pointer;" onclick="openLeaderboardModal()" title="View Karma Leaderboard"><b style="color:var(--insta-primary);">⭐ ${Number(data.karmaPoints)||0}</b><span>${esc(data.karmaBadge||'Campus Friend')}</span></div></div>${editButton}</section><section class="public-profile-posts"><div class="public-profile-posts-heading"><h2>Posts</h2><span>${posts.length}</span></div><div class="public-profile-post-grid">${postCards}</div></section>`;
  $('communityProfilePageTitle').textContent=isOwnProfile?'Your profile':'Profile';
  const canOwnerManage=viewerRole==='OWNER'&&targetUsername!==''&&targetUsername!==viewerUsername&&targetRole!=='OWNER';
  const controls=$('publicProfileOwnerActions');
@@ -4427,3 +4453,639 @@ async function renderAdminLogs(force = false) {
     }
   }, { passive: true });
 })();
+
+
+/* ==========================================================================
+   FEATURE 7: AMOLED BLACK DARK THEME SYSTEM
+   ========================================================================== */
+function initTheme() {
+  const saved = localStorage.getItem('campus_theme');
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const theme = saved ? saved : (prefersDark ? 'dark' : 'light');
+  applyTheme(theme);
+}
+
+function applyTheme(theme) {
+  if (theme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.body.setAttribute('data-theme', 'dark');
+    const hIcon = $('headerThemeIcon');
+    if (hIcon) hIcon.textContent = '☀️';
+    const dIcon = $('drawerThemeIcon');
+    if (dIcon) dIcon.textContent = '☀️';
+    const dText = $('drawerThemeText');
+    if (dText) dText.textContent = 'Switch to Light theme';
+    const dPill = $('drawerThemePill');
+    if (dPill) dPill.textContent = 'LIGHT';
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    document.body.removeAttribute('data-theme');
+    const hIcon = $('headerThemeIcon');
+    if (hIcon) hIcon.textContent = '🌙';
+    const dIcon = $('drawerThemeIcon');
+    if (dIcon) dIcon.textContent = '🌙';
+    const dText = $('drawerThemeText');
+    if (dText) dText.textContent = 'Switch to Amoled Black';
+    const dPill = $('drawerThemePill');
+    if (dPill) dPill.textContent = 'DARK';
+  }
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  const next = current === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('campus_theme', next);
+  applyTheme(next);
+  toast(next === 'dark' ? 'Amoled Dark Mode enabled 🌙' : 'Light Mode enabled ☀️');
+}
+
+// Auto init theme on script load
+try { initTheme(); } catch (e) {}
+
+/* ==========================================================================
+   CAMPUS FEED & STUDENT MARKETPLACE SWITCHER
+   ========================================================================== */
+let activeCampusFeedView = 'lostfound'; // 'lostfound' | 'market'
+let activeMarketCategory = '';
+let cachedMarketListings = [];
+
+function switchFeedView(mode) {
+  activeCampusFeedView = mode;
+  const lostTab = $('secSwitchLostFound');
+  const marketTab = $('secSwitchMarket');
+  const statusTabs = document.querySelector('.insta-status-tabs');
+  const storiesWrap = document.querySelector('.insta-stories-container');
+  const boardSec = $('board');
+  const marketSec = $('marketSection');
+  const deskNavBtns = document.querySelectorAll('.desk-nav-btn');
+
+  if (mode === 'market') {
+    if (lostTab) lostTab.classList.remove('active');
+    if (marketTab) marketTab.classList.add('active');
+    if (statusTabs) statusTabs.classList.add('hide');
+    if (storiesWrap) storiesWrap.classList.add('hide');
+    if (boardSec) boardSec.classList.add('hide');
+    if (marketSec) marketSec.classList.remove('hide');
+
+    deskNavBtns.forEach(b => {
+      b.classList.toggle('active', b.dataset.deskNav === 'market');
+    });
+
+    fetchMarketListings();
+  } else {
+    if (lostTab) lostTab.classList.add('active');
+    if (marketTab) marketTab.classList.remove('active');
+    if (statusTabs) statusTabs.classList.remove('hide');
+    if (storiesWrap) storiesWrap.classList.remove('hide');
+    if (boardSec) boardSec.classList.remove('hide');
+    if (marketSec) marketSec.classList.add('hide');
+
+    deskNavBtns.forEach(b => {
+      b.classList.toggle('active', b.dataset.deskNav === 'feed');
+    });
+  }
+}
+
+/* ==========================================================================
+   FEATURE 6: CAMPUS STUDENT MARKETPLACE (BUY & SELL)
+   ========================================================================== */
+async function fetchMarketListings(category) {
+  if (category !== undefined) activeMarketCategory = category;
+  const grid = $('marketGrid');
+  const countEl = $('marketResultCount');
+  if (!grid) return;
+
+  grid.innerHTML = '<div class="empty">Loading marketplace listings…</div>';
+
+  try {
+    const url = activeMarketCategory
+      ? `/api/market?category=${encodeURIComponent(activeMarketCategory)}`
+      : '/api/market';
+    const res = await fetch(url);
+    if (!res.ok) throw 0;
+    const items = await res.json();
+    cachedMarketListings = items;
+
+    if (countEl) {
+      countEl.textContent = `${items.length} ${items.length === 1 ? 'item' : 'items'} available in campus market`;
+    }
+
+    if (!items || items.length === 0) {
+      grid.innerHTML = `
+        <div class="empty" style="grid-column: 1/-1; padding: 40px 20px;">
+          <div style="font-size: 38px; margin-bottom: 8px;">🛍️</div>
+          <b>No items listed in this category yet</b>
+          <p style="font-size: 13px; color: var(--insta-text-muted); margin-top: 4px;">Be the first campus student to sell books, drafters, or essentials!</p>
+          <button type="button" class="market-sell-cta-btn" onclick="openMarketModal()" style="margin: 12px auto 0;">＋ List an Item</button>
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = items.map(m => renderMarketCard(m)).join('');
+  } catch (err) {
+    grid.innerHTML = '<div class="empty">Could not load marketplace listings. Connect backend and retry.</div>';
+  }
+}
+
+function filterMarketCategory(cat) {
+  document.querySelectorAll('.market-cat-chip').forEach(btn => {
+    btn.classList.toggle('active', (btn.dataset.mcat || '') === cat);
+  });
+  fetchMarketListings(cat);
+}
+
+function renderMarketCard(m) {
+  const isFree = m.price <= 0;
+  const priceDisplay = isFree ? 'FREE 🎁' : `₹${Math.round(m.price)}`;
+  const canManage = currentUser && (
+    (m.accountUsername && m.accountUsername.toLowerCase() === currentUser.username.toLowerCase()) ||
+    currentUser.role === 'OWNER' || currentUser.role === 'ADMIN'
+  );
+
+  const cleanPhone = String(m.phone || '').replace(/[^0-9]/g, '');
+  const waPhone = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
+  const waText = encodeURIComponent(`Hi! I'm interested in buying your "${m.title}" listed for ${priceDisplay} on CampUs Market.`);
+  const waUrl = cleanPhone ? `https://wa.me/${waPhone}?text=${waText}` : '';
+
+  const photoHtml = m.photoDataUrl
+    ? `<img src="${esc(m.photoDataUrl)}" alt="${esc(m.title)}" class="market-card-img" loading="lazy" onclick="viewFullImage('${esc(m.photoDataUrl)}')">`
+    : `<div class="market-card-placeholder">${marketCategoryEmoji(m.category)}</div>`;
+
+  return `
+    <article class="market-card" id="market-card-${m.id}">
+      ${m.sold ? `<div class="market-sold-overlay"><span>✓ SOLD OUT</span></div>` : ''}
+      <div class="market-card-img-wrap">
+        ${photoHtml}
+        <span class="market-price-badge ${isFree ? 'free' : ''}">${priceDisplay}</span>
+        <span class="market-condition-pill">${esc(m.condition || 'Used')}</span>
+      </div>
+      <div class="market-card-body">
+        <span class="market-card-cat">${marketCategoryEmoji(m.category)} ${esc(m.category)}</span>
+        <h3 class="market-card-title">${esc(m.title)}</h3>
+        ${m.description ? `<p class="market-card-desc">${esc(m.description)}</p>` : ''}
+        <div class="market-card-loc">📍 ${esc(m.location || 'Campus')}</div>
+        
+        <div class="market-card-footer">
+          <div class="market-seller-info">
+            <div class="market-seller-avatar">${firstInitial(m.sellerName || 'S')}</div>
+            <span class="market-seller-name">${esc(m.sellerName || 'Student')}</span>
+          </div>
+
+          ${canManage ? `
+            <div style="display:flex; gap:6px;">
+              ${!m.sold ? `<button type="button" class="auth-primary" style="padding:6px 10px; font-size:11px; border-radius:8px;" onclick="markMarketSold(${m.id})">Mark Sold</button>` : ''}
+              <button type="button" class="action-btn-del" style="padding:6px 10px; font-size:11px;" onclick="deleteMarketListing(${m.id})">🗑</button>
+            </div>
+          ` : `
+            ${!m.sold && waUrl ? `
+              <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="market-buy-btn">
+                <span>💬 Buy / Chat</span>
+              </a>
+            ` : ''}
+          `}
+        </div>
+      </div>
+    </article>`;
+}
+
+function marketCategoryEmoji(cat) {
+  if (!cat) return '🛍️';
+  if (cat.includes('Book') || cat.includes('Note')) return '📚';
+  if (cat.includes('Draft') || cat.includes('Lab')) return '📐';
+  if (cat.includes('Cycle') || cat.includes('Mobility')) return '🚲';
+  if (cat.includes('Hostel')) return '🛏️';
+  if (cat.includes('Elect')) return '🎧';
+  if (cat.includes('Fash') || cat.includes('Cloth')) return '👕';
+  if (cat.includes('Free')) return '🎁';
+  return '📦';
+}
+
+function openMarketModal() {
+  if (!currentUser) {
+    toast('Please log in to list an item in the Campus Market.');
+    openAuthChoices();
+    return;
+  }
+  const modal = $('marketModal');
+  if (!modal) return;
+  pushCampusUiLayer('marketModal');
+  modal.classList.remove('hide');
+  if ($('marketPhone') && currentUser.phone) {
+    $('marketPhone').value = currentUser.phone;
+  }
+}
+
+function closeMarketModal(fromPopstate = false) {
+  const modal = $('marketModal');
+  if (!modal || modal.classList.contains('hide')) return;
+  modal.classList.add('hide');
+  finishCampusUiLayer('marketModal', fromPopstate);
+}
+
+function toggleMarketFree(checkbox) {
+  const priceInput = $('marketPrice');
+  if (priceInput) {
+    if (checkbox.checked) {
+      priceInput.value = '0';
+      priceInput.disabled = true;
+    } else {
+      priceInput.disabled = false;
+      priceInput.value = '';
+    }
+  }
+}
+
+let marketPhotoBase64 = null;
+async function previewMarketPhoto(input) {
+  const file = input.files[0];
+  const preview = $('marketPhotoPreview');
+  if (!file) {
+    marketPhotoBase64 = null;
+    if (preview) { preview.src = ''; preview.classList.add('hide'); }
+    return;
+  }
+  try {
+    marketPhotoBase64 = await compressProfileImage(file, 1200, 1200, 0.8);
+    if (preview) {
+      preview.src = marketPhotoBase64;
+      preview.classList.remove('hide');
+    }
+  } catch (e) {
+    toast('Could not process photo. Please choose another.');
+  }
+}
+
+async function handleMarketSubmit(e) {
+  e.preventDefault();
+  const errorEl = $('marketError');
+  if (errorEl) errorEl.textContent = '';
+
+  const title = $('marketTitle').value.trim();
+  const category = $('marketCategory').value;
+  const condition = $('marketCondition').value;
+  const isFree = $('marketIsFree').checked;
+  const price = isFree ? 0 : parseFloat($('marketPrice').value || 0);
+  const location = $('marketLocation').value.trim();
+  const phone = $('marketPhone').value.trim();
+  const description = $('marketDescription').value.trim();
+
+  if (!title || !category || !condition || !location || !phone) {
+    if (errorEl) errorEl.textContent = 'Please fill out all required fields.';
+    return;
+  }
+
+  const payload = {
+    title,
+    category,
+    condition,
+    isFree,
+    price,
+    location,
+    phone,
+    description,
+    photoDataUrl: marketPhotoBase64
+  };
+
+  try {
+    const res = await fetch('/api/market', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw Error(d.message || 'Failed to list item in market.');
+    }
+    toast('Item listed in Campus Market! 🛍️');
+    $('marketForm').reset();
+    marketPhotoBase64 = null;
+    if ($('marketPhotoPreview')) $('marketPhotoPreview').classList.add('hide');
+    closeMarketModal();
+    fetchMarketListings();
+  } catch (err) {
+    if (errorEl) errorEl.textContent = err.message || 'Could not post to market.';
+  }
+}
+
+async function markMarketSold(id) {
+  if (!confirm('Mark this item as Sold?')) return;
+  try {
+    const res = await fetch(`/api/market/${id}/sold`, { method: 'POST' });
+    if (!res.ok) throw 0;
+    toast('Item marked as Sold! 🎉');
+    fetchMarketListings();
+  } catch {
+    toast('Could not update market status.');
+  }
+}
+
+async function deleteMarketListing(id) {
+  if (!confirm('Delete this market listing?')) return;
+  try {
+    const res = await fetch(`/api/market/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw 0;
+    toast('Market listing removed.');
+    fetchMarketListings();
+  } catch {
+    toast('Could not delete market listing.');
+  }
+}
+
+/* ==========================================================================
+   FEATURE 3: SECRET PROOF OF OWNERSHIP & ITEM CLAIM VERIFICATION
+   ========================================================================== */
+function openClaimModal(reportId, title, secretQuestion) {
+  if (!currentUser) {
+    toast('Please log in to submit an ownership claim.');
+    openAuthChoices();
+    return;
+  }
+
+  const modal = $('claimItemModal');
+  if (!modal) return;
+
+  $('claimReportId').value = reportId;
+  const targetTitleEl = $('claimItemTargetTitle');
+  if (targetTitleEl) targetTitleEl.textContent = `Submitting proof for: "${title}"`;
+
+  const questionBox = $('claimSecretQuestionBox');
+  const questionText = $('claimSecretQuestionText');
+  if (secretQuestion && secretQuestion.trim()) {
+    if (questionText) questionText.textContent = secretQuestion.trim();
+    if (questionBox) questionBox.classList.remove('hide');
+  } else {
+    if (questionBox) questionBox.classList.add('hide');
+  }
+
+  if ($('claimPhone') && currentUser.phone) {
+    $('claimPhone').value = currentUser.phone;
+  }
+
+  pushCampusUiLayer('claimItemModal');
+  modal.classList.remove('hide');
+}
+
+function closeClaimModal(fromPopstate = false) {
+  const modal = $('claimItemModal');
+  if (!modal || modal.classList.contains('hide')) return;
+  modal.classList.add('hide');
+  finishCampusUiLayer('claimItemModal', fromPopstate);
+}
+
+let claimProofBase64 = null;
+async function previewClaimProof(input) {
+  const file = input.files[0];
+  const preview = $('claimPhotoPreview');
+  if (!file) {
+    claimProofBase64 = null;
+    if (preview) { preview.src = ''; preview.classList.add('hide'); }
+    return;
+  }
+  try {
+    claimProofBase64 = await compressProfileImage(file, 1200, 1200, 0.8);
+    if (preview) {
+      preview.src = claimProofBase64;
+      preview.classList.remove('hide');
+    }
+  } catch (e) {
+    toast('Could not read image. Please select another.');
+  }
+}
+
+async function handleClaimSubmit(e) {
+  e.preventDefault();
+  const errorEl = $('claimError');
+  if (errorEl) errorEl.textContent = '';
+
+  const reportId = $('claimReportId').value;
+  const answer = $('claimAnswer').value.trim();
+  const additionalProof = $('claimAdditionalProof').value.trim();
+  const phone = $('claimPhone').value.trim();
+
+  if (!answer) {
+    if (errorEl) errorEl.textContent = 'Please provide details or answer the verification question.';
+    return;
+  }
+
+  const payload = {
+    answer,
+    additionalProof,
+    phone,
+    proofImage: claimProofBase64
+  };
+
+  try {
+    const res = await fetch(`/api/reports/${reportId}/claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw Error(d.message || 'Could not submit claim.');
+    }
+    toast('Claim submitted to founder! They will review your proof. 🛡️');
+    $('claimForm').reset();
+    claimProofBase64 = null;
+    if ($('claimPhotoPreview')) $('claimPhotoPreview').classList.add('hide');
+    closeClaimModal();
+    load();
+  } catch (err) {
+    if (errorEl) errorEl.textContent = err.message || 'Could not submit claim.';
+  }
+}
+
+async function openClaimsViewer(reportId) {
+  const modal = $('claimsViewerModal');
+  const container = $('claimsListContainer');
+  if (!modal || !container) return;
+
+  pushCampusUiLayer('claimsViewerModal');
+  modal.classList.remove('hide');
+  document.body.classList.add('fullscreen-page-open');
+  container.innerHTML = '<div class="empty">Loading submitted claims…</div>';
+
+  try {
+    const res = await fetch(`/api/reports/${reportId}/claims`);
+    if (!res.ok) throw 0;
+    const claims = await res.json();
+
+    if (!claims || claims.length === 0) {
+      container.innerHTML = `
+        <div class="empty">
+          <b>No claims submitted yet</b>
+          <p>When someone claims this item, their proof details and contact info will appear here.</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = claims.map(c => {
+      const cleanPhone = String(c.claimantPhone || '').replace(/[^0-9]/g, '');
+      const waPhone = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
+      const waText = encodeURIComponent(`Hi ${c.claimantDisplayName}! I saw your claim for the item I found on CampUs.`);
+      const waUrl = cleanPhone ? `https://wa.me/${waPhone}?text=${waText}` : '';
+
+      return `
+        <article class="claim-card-item" id="claim-card-${c.id}">
+          <div class="claim-card-header">
+            <div class="claim-claimant-info">
+              <div class="claim-avatar">${firstInitial(c.claimantDisplayName || 'C')}</div>
+              <div>
+                <b>${esc(c.claimantDisplayName)}</b>
+                <small style="display:block; color:var(--insta-text-muted);">@${esc(c.claimantUsername)} · ${timeAgo(c.createdAt)}</small>
+              </div>
+            </div>
+            <span class="status ${c.status === 'APPROVED' ? 'returned' : c.status === 'REJECTED' ? 'lost' : 'open'}">
+              ${c.status === 'APPROVED' ? '✓ APPROVED' : c.status === 'REJECTED' ? '✕ REJECTED' : '● PENDING REVIEW'}
+            </span>
+          </div>
+
+          <div class="claim-details-box">
+            <div class="claim-answer-label">Claimant's Proof / Answer:</div>
+            <p class="claim-answer-text">${esc(c.answer)}</p>
+            ${c.additionalProof ? `<p style="margin:6px 0 0; font-size:12px; color:var(--insta-text-muted);">${esc(c.additionalProof)}</p>` : ''}
+          </div>
+
+          ${c.proofImageData ? `
+            <div style="margin-top:4px;">
+              <span style="font-size:11px; font-weight:800; color:var(--insta-text-muted);">ATTACHED PROOF PHOTO:</span>
+              <img src="${esc(c.proofImageData)}" style="max-height:160px; border-radius:10px; display:block; margin-top:4px; cursor:pointer;" onclick="viewFullImage('${esc(c.proofImageData)}')" alt="Proof photo">
+            </div>
+          ` : ''}
+
+          <div class="claim-actions-row">
+            ${cleanPhone ? `
+              <a href="tel:${cleanPhone}" class="prof-act-btn" style="text-decoration:none;">📞 Call</a>
+              ${waUrl ? `<a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="prof-act-btn" style="text-decoration:none;">💬 WhatsApp</a>` : ''}
+            ` : ''}
+
+            ${c.status === 'PENDING' ? `
+              <button type="button" class="claim-reject-btn" onclick="rejectClaim(${c.id}, ${reportId})">Reject</button>
+              <button type="button" class="claim-approve-btn" onclick="approveClaim(${c.id}, ${reportId})">✓ Approve &amp; Return (+50 Karma!)</button>
+            ` : ''}
+          </div>
+        </article>`;
+    }).join('');
+  } catch (err) {
+    container.innerHTML = '<div class="empty">Could not load claims. Please try again.</div>';
+  }
+}
+
+function closeClaimsViewer(fromPopstate = false) {
+  const modal = $('claimsViewerModal');
+  if (!modal || modal.classList.contains('hide')) return;
+  modal.classList.add('hide');
+  document.body.classList.remove('fullscreen-page-open');
+  finishCampusUiLayer('claimsViewerModal', fromPopstate);
+}
+
+async function approveClaim(claimId, reportId) {
+  if (!confirm('Approve this claim? The item will be marked as RETURNED and you will be awarded +50 Karma Points!')) return;
+  try {
+    const res = await fetch(`/api/claims/${claimId}/approve`, { method: 'POST' });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw Error(d.message || 'Could not approve claim.');
+    }
+    toast('Claim approved! Item returned & +50 Karma Points awarded! ⭐');
+    closeClaimsViewer();
+    load();
+  } catch (err) {
+    toast(err.message || 'Could not approve claim.');
+  }
+}
+
+async function rejectClaim(claimId, reportId) {
+  if (!confirm('Reject this ownership claim?')) return;
+  try {
+    const res = await fetch(`/api/claims/${claimId}/reject`, { method: 'POST' });
+    if (!res.ok) throw 0;
+    toast('Claim rejected.');
+    openClaimsViewer(reportId);
+  } catch {
+    toast('Could not reject claim.');
+  }
+}
+
+/* ==========================================================================
+   FEATURE 1: AI SMART MATCHING SYSTEM
+   ========================================================================== */
+async function loadSmartMatchesForDetail(report, containerEl) {
+  if (!report || !containerEl) return;
+  try {
+    const res = await fetch(`/api/reports/${report.id}/matches`);
+    if (!res.ok) return;
+    const matches = await res.json();
+    if (!matches || matches.length === 0) return;
+
+    const top = matches[0];
+    const box = document.createElement('div');
+    box.className = 'smart-match-alert-box';
+    box.innerHTML = `
+      <div>
+        <div class="smart-match-title">🤖 AI Smart Match Alert</div>
+        <p class="smart-match-desc">Found similar ${top.type.toLowerCase()} item: <b>${esc(top.title)}</b> at ${esc(top.location)}</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="smart-match-score-pill">${top.matchScore}% Match</span>
+        <button type="button" class="auth-primary" style="padding:6px 10px; font-size:12px; border-radius:8px;" onclick="openPostDetail(${top.id})">View →</button>
+      </div>`;
+    containerEl.prepend(box);
+  } catch (e) {}
+}
+
+/* ==========================================================================
+   FEATURE 8: CAMPUS GOOD SAMARITANS KARMA LEADERBOARD
+   ========================================================================== */
+function openLeaderboardModal() {
+  const modal = $('leaderboardModal');
+  if (!modal) return;
+  pushCampusUiLayer('leaderboardModal');
+  modal.classList.remove('hide');
+  document.body.classList.add('fullscreen-page-open');
+  fetchLeaderboard();
+}
+
+function closeLeaderboardModal(fromPopstate = false) {
+  const modal = $('leaderboardModal');
+  if (!modal || modal.classList.contains('hide')) return;
+  modal.classList.add('hide');
+  document.body.classList.remove('fullscreen-page-open');
+  finishCampusUiLayer('leaderboardModal', fromPopstate);
+}
+
+async function fetchLeaderboard() {
+  const listEl = $('leaderboardList');
+  if (!listEl) return;
+  listEl.innerHTML = '<div class="empty">Loading leaderboard…</div>';
+
+  try {
+    const res = await fetch('/api/leaderboard');
+    if (!res.ok) throw 0;
+    const users = await res.json();
+
+    if (!users || users.length === 0) {
+      listEl.innerHTML = '<div class="empty">No points recorded yet. Be the first to return an item!</div>';
+      return;
+    }
+
+    listEl.innerHTML = users.map((u, i) => {
+      const rankEmoji = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
+      return `
+        <div class="leaderboard-row">
+          <div class="leaderboard-rank">${rankEmoji}</div>
+          <div class="leaderboard-avatar">${avatarInner(u.avatarId, u.displayName, u.profileImageUrl)}</div>
+          <div class="leaderboard-user-details">
+            <div class="leaderboard-user-name">${esc(u.displayName)}</div>
+            <div class="leaderboard-user-sub">@${esc(u.username)} · ${esc(u.college || 'Campus')}</div>
+          </div>
+          <div class="leaderboard-points-wrap">
+            <span class="leaderboard-points">⭐ ${u.karmaPoints || 0}</span>
+            <span class="leaderboard-badge-tag">${esc(u.karmaBadge || 'Campus Friend')}</span>
+          </div>
+        </div>`;
+    }).join('');
+  } catch (err) {
+    listEl.innerHTML = '<div class="empty">Could not load leaderboard.</div>';
+  }
+}

@@ -157,6 +157,9 @@
     <button type="button" class="desk-nav-btn active" data-desk-nav="feed" onclick="switchNavTab('feed')">
       <span>🏠 Feed</span>
     </button>
+    <button type="button" class="desk-nav-btn" data-desk-nav="market" onclick="switchFeedView('market')">
+      <span>🛍️ Market</span>
+    </button>
     <button type="button" class="desk-nav-btn" data-desk-nav="explore" onclick="switchNavTab('explore')">
       <span>🔍 Search</span>
     </button>
@@ -172,6 +175,11 @@
   <!-- Right Actions: Desktop "Hi, User" Greeting & 3-Line Animated Hamburger Menu -->
   <div class="header-right-actions">
     
+    <!-- Dark Mode Quick Toggle Button -->
+    <button type="button" class="theme-toggle-btn" id="headerThemeBtn" onclick="toggleTheme()" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <span id="headerThemeIcon">🌙</span>
+    </button>
+
     <!-- Desktop/Tablet User Greeting (Direct click opens Profile!) -->
     <div class="desk-user-menu-wrap" id="deskUserMenuWrap">
       <button type="button" class="desk-greeting-btn" id="deskUserGreetingBtn" onclick="openDesktopProfile()" aria-label="View My Profile" title="Click to view My Profile">
@@ -258,6 +266,23 @@
         </div>
       </button>
 
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('leaderboard')">
+        <span class="drawer-item-icon">🏆</span>
+        <div class="drawer-item-text">
+          <b>Karma Leaderboard</b>
+          <small>Campus Good Samaritans &amp; badges</small>
+        </div>
+      </button>
+
+      <button type="button" class="drawer-menu-item" onclick="toggleTheme()">
+        <span class="drawer-item-icon" id="drawerThemeIcon">🌙</span>
+        <div class="drawer-item-text">
+          <b>Dark Mode</b>
+          <small id="drawerThemeText">Switch to Amoled Black</small>
+        </div>
+        <span class="drawer-theme-pill" id="drawerThemePill">Dark</span>
+      </button>
+
       <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('aboutCampus')">
         <span class="drawer-item-icon">ℹ️</span>
         <div class="drawer-item-text">
@@ -290,6 +315,17 @@
 <!-- Main Feed Container (Optimized max-width: 680px for Phone, Tablet, Laptop) -->
 <main class="feed-main-container">
   
+  <!-- Campus Main Switcher: Lost & Found vs Campus Market -->
+  <div class="campus-section-switcher" role="tablist" aria-label="Campus Section">
+    <button type="button" class="section-switch-btn active" id="secSwitchLostFound" onclick="switchFeedView('lostfound')">
+      <span>📦 Lost &amp; Found</span>
+    </button>
+    <button type="button" class="section-switch-btn" id="secSwitchMarket" onclick="switchFeedView('market')">
+      <span>🛍️ Campus Market</span>
+      <span class="market-new-badge">NEW</span>
+    </button>
+  </div>
+
   <!-- Campus Broadcast / Emergency Alert Banner (Site-wide) -->
   <div id="campusAlertBanner" class="campus-alert-banner hide" role="region" aria-label="Campus Alert">
     <div class="alert-banner-inner">
@@ -334,6 +370,44 @@
     <!-- Live Post Grid / Instagram Feed Cards -->
     <div id="grid" class="grid-feed-list">
       <div class="empty">Loading campus feed…</div>
+    </div>
+  </section>
+
+  <!-- Campus Student Marketplace Section -->
+  <section id="marketSection" class="market-section hide" aria-label="Campus Buy and Sell Marketplace">
+    <div class="market-hero-card">
+      <div class="market-hero-content">
+        <div class="market-hero-badge">🎓 STUDENT MARKETPLACE</div>
+        <h2 class="market-hero-title">Campus Buy &amp; Sell</h2>
+        <p class="market-hero-subtitle">Affordable textbooks, drafters, lab coats, cycles &amp; hostel essentials from verified students.</p>
+      </div>
+      <button type="button" class="market-sell-cta-btn" onclick="openMarketModal()">
+        <span>＋ Sell an Item</span>
+      </button>
+    </div>
+
+    <!-- Market Category Filter Slider -->
+    <div class="market-categories-wrap">
+      <div class="market-categories-list">
+        <button type="button" class="market-cat-chip active" data-mcat="" onclick="filterMarketCategory('')">✨ All Items</button>
+        <button type="button" class="market-cat-chip" data-mcat="Books & Notes" onclick="filterMarketCategory('Books & Notes')">📚 Books &amp; Notes</button>
+        <button type="button" class="market-cat-chip" data-mcat="Drafter & Lab" onclick="filterMarketCategory('Drafter & Lab')">📐 Drafter &amp; Lab</button>
+        <button type="button" class="market-cat-chip" data-mcat="Cycles & Mobility" onclick="filterMarketCategory('Cycles & Mobility')">🚲 Cycles</button>
+        <button type="button" class="market-cat-chip" data-mcat="Hostel Essentials" onclick="filterMarketCategory('Hostel Essentials')">🛏️ Hostel</button>
+        <button type="button" class="market-cat-chip" data-mcat="Electronics" onclick="filterMarketCategory('Electronics')">🎧 Electronics</button>
+        <button type="button" class="market-cat-chip" data-mcat="Fashion & Merch" onclick="filterMarketCategory('Fashion & Merch')">👕 Clothing</button>
+        <button type="button" class="market-cat-chip" data-mcat="Free / Giveaways" onclick="filterMarketCategory('Free / Giveaways')">🎁 Free Giveaways</button>
+      </div>
+    </div>
+
+    <!-- Market Results Meta -->
+    <div class="board-meta">
+      <span id="marketResultCount">Loading marketplace listings…</span>
+    </div>
+
+    <!-- Market Grid -->
+    <div id="marketGrid" class="market-grid">
+      <div class="empty">Loading marketplace listings…</div>
     </div>
   </section>
 
@@ -478,6 +552,12 @@
         <label class="wide">Description
           <textarea id="description" rows="3" placeholder="Color, brand, distinguishing marks or identifiers..."></textarea>
         </label>
+        <div id="foundSecretQuestionWrap" class="wide hide">
+          <label>Founder's Secret Question <span class="optional">(Fake Claim Prevention)</span>
+            <input id="secretQuestion" placeholder="e.g. What is the lock screen wallpaper? / Which key is missing?">
+            <small class="hint">When someone claims this item, they must answer this question to prove genuine ownership.</small>
+          </label>
+        </div>
         <label class="wide">Item photo <span class="optional">(optional)</span>
           <input id="photo" type="file" accept="image/*">
           <small class="hint">Upload a photo to show the community. Automatically compressed.</small>
@@ -1138,6 +1218,180 @@
     <div class="actions">
       <button type="button" class="light" onclick="closeNavPopup()">Cancel</button>
       <button type="button" id="navPopupOk" onclick="confirmNavPopup()">Okay →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Post to Market Modal -->
+<div id="marketModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="marketModalTitle">
+  <div class="dialog modern-modal-card">
+    <button class="modal-close-btn x" type="button" onclick="closeMarketModal()" aria-label="Close modal">✕</button>
+    <small class="eyebrow">CAMPUS MARKETPLACE</small>
+    <h2 id="marketModalTitle">Sell or Give Away an Item</h2>
+    
+    <form id="marketForm" onsubmit="handleMarketSubmit(event)">
+      <div class="fields">
+        <label>Item Name *
+          <input id="marketTitle" required placeholder="e.g. ED Drafter / Notes / Lab Coat / Cycle">
+        </label>
+        
+        <label>Category *
+          <select id="marketCategory" required>
+            <option value="">Select category</option>
+            <option value="Books & Notes">Books &amp; Notes</option>
+            <option value="Drafter & Lab">Drafter &amp; Lab Gear</option>
+            <option value="Cycles & Mobility">Cycles &amp; Mobility</option>
+            <option value="Hostel Essentials">Hostel Essentials (Kettle, Mattress, etc.)</option>
+            <option value="Electronics">Electronics &amp; Accessories</option>
+            <option value="Fashion & Merch">Fashion &amp; Campus Merch</option>
+            <option value="Free / Giveaways">Free Giveaways 🎁</option>
+            <option value="Other">Other Items</option>
+          </select>
+        </label>
+
+        <label>Condition *
+          <select id="marketCondition" required>
+            <option value="Like New">Like New (Barely used)</option>
+            <option value="Good" selected>Good (Working fine)</option>
+            <option value="Fair">Fair (Noticeable wear)</option>
+            <option value="Brand New">Brand New (Unopened)</option>
+          </select>
+        </label>
+
+        <label>Price (₹) *
+          <div class="price-input-row" style="display:flex; align-items:center; gap:10px;">
+            <input id="marketPrice" type="number" min="0" step="1" placeholder="e.g. 250" required style="flex:1;">
+            <label class="free-item-checkbox" style="display:flex; align-items:center; gap:6px; font-weight:600; cursor:pointer; font-size:13px;">
+              <input type="checkbox" id="marketIsFree" onchange="toggleMarketFree(this)"> Free 🎁
+            </label>
+          </div>
+        </label>
+
+        <label>Campus Location / Hostel *
+          <input id="marketLocation" required placeholder="e.g. Boys Hostel 4 / Central Library">
+        </label>
+
+        <label>Mobile / WhatsApp Number *
+          <input id="marketPhone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="e.g. 9876543210 (Buyers will chat on WhatsApp)">
+        </label>
+
+        <label class="wide">Description
+          <textarea id="marketDescription" rows="3" placeholder="Condition details, reason for selling, semester, etc."></textarea>
+        </label>
+
+        <label class="wide">Item Photo <span class="optional">(Recommended)</span>
+          <input id="marketPhoto" type="file" accept="image/*" onchange="previewMarketPhoto(this)">
+          <small class="hint">Photos help sell items 5x faster!</small>
+          <img id="marketPhotoPreview" class="photo-preview hide" alt="Item preview">
+        </label>
+      </div>
+
+      <p id="marketError" class="auth-error"></p>
+
+      <div class="modal-single-action">
+        <button type="submit" id="marketSubmitBtn" class="auth-primary">List in Campus Market →</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Claim Item / Proof of Ownership Modal -->
+<div id="claimItemModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="claimModalTitle">
+  <div class="dialog modern-modal-card">
+    <button class="modal-close-btn x" type="button" onclick="closeClaimModal()" aria-label="Close claim modal">✕</button>
+    <small class="eyebrow">VERIFY OWNERSHIP</small>
+    <h2 id="claimModalTitle">Claim This Item</h2>
+    <p class="modal-claim-subtitle" id="claimItemTargetTitle" style="margin:4px 0 14px; font-size:13px; color:var(--insta-text-muted);">Submitting proof for item</p>
+    
+    <form id="claimForm" onsubmit="handleClaimSubmit(event)">
+      <input type="hidden" id="claimReportId">
+
+      <div id="claimSecretQuestionBox" class="claim-secret-box hide" style="margin-bottom:12px; padding:12px; border-radius:12px; background:rgba(255,107,0,0.08); border:1px dashed var(--insta-primary);">
+        <div class="secret-box-header" style="font-weight:700; font-size:12px; color:var(--insta-primary); margin-bottom:4px;">
+          <span>🔒 Founder's Verification Question:</span>
+        </div>
+        <p id="claimSecretQuestionText" class="secret-box-question" style="font-size:14px; font-weight:600; margin:0; color:var(--insta-text-main);"></p>
+      </div>
+
+      <div class="fields">
+        <label>Answer / Specific Identifying Details *
+          <textarea id="claimAnswer" rows="3" required placeholder="Describe details only the genuine owner would know: lock screen wallpaper, specific scratches, unique sticker, keychain color, engraved initials, or serial marks..."></textarea>
+        </label>
+
+        <label>Additional Proof or Notes <span class="optional">(optional)</span>
+          <textarea id="claimAdditionalProof" rows="2" placeholder="Where/when you lost it, purchase details, brand specifics..."></textarea>
+        </label>
+
+        <label>Your Mobile / WhatsApp Number *
+          <input id="claimPhone" type="tel" inputmode="tel" required placeholder="e.g. 9876543210 (Founder will contact you to return)">
+        </label>
+
+        <label class="wide">Proof Image <span class="optional">(optional)</span>
+          <input id="claimProofImage" type="file" accept="image/*" onchange="previewClaimProof(this)">
+          <small class="hint">Upload purchase bill, box picture, or an old photo showing you with the item.</small>
+          <img id="claimPhotoPreview" class="photo-preview hide" alt="Claim proof preview">
+        </label>
+      </div>
+
+      <p id="claimError" class="auth-error"></p>
+
+      <div class="modal-single-action">
+        <button type="submit" id="claimSubmitBtn" class="auth-primary">Submit Ownership Claim →</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Received Claims Viewer Modal for Founder -->
+<div id="claimsViewerModal" class="menu-fullscreen-page hide" role="dialog" aria-modal="true" aria-labelledby="claimsViewerTitle">
+  <div class="dialog info-sheet-dialog">
+    <header class="info-sheet-header">
+      <div class="info-header-left">
+        <button class="universal-back-circle-btn" type="button" onclick="closeClaimsViewer()" aria-label="Back">‹</button>
+        <div>
+          <h2 id="claimsViewerTitle">Ownership Claims</h2>
+          <small class="info-sheet-subtitle" id="claimsViewerSubtitle">Review proofs submitted by claimants</small>
+        </div>
+      </div>
+    </header>
+
+    <div class="info-sheet-body" style="max-width: 680px; margin: 0 auto; padding-top: 16px;">
+      <div id="claimsListContainer" class="claims-list-container">
+        <div class="empty">Loading submitted claims…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Campus Good Samaritans Karma Leaderboard Modal -->
+<div id="leaderboardModal" class="menu-fullscreen-page hide" role="dialog" aria-modal="true" aria-labelledby="leaderboardTitle">
+  <div class="dialog info-sheet-dialog">
+    <header class="info-sheet-header">
+      <div class="info-header-left">
+        <button class="universal-back-circle-btn" type="button" onclick="closeLeaderboardModal()" aria-label="Back">‹</button>
+        <div>
+          <h2 id="leaderboardTitle">Campus Good Samaritans</h2>
+          <small class="info-sheet-subtitle">Kindness &amp; Returns Hall of Fame</small>
+        </div>
+      </div>
+    </header>
+
+    <div class="info-sheet-body" style="max-width: 680px; margin: 0 auto; padding-top: 16px;">
+      <!-- Hero Karma Banner -->
+      <div class="karma-hero-banner">
+        <div class="karma-hero-trophy">🏆</div>
+        <h3>Campus Karma Points &amp; Badges</h3>
+        <p>Earn Karma points every time you report found items, verify ownership, and safely reunite lost belongings with campus students.</p>
+        <div class="karma-rules-row">
+          <span class="karma-rule-pill">🟢 Return an Item: +50 Karma</span>
+          <span class="karma-rule-pill">✨ Successful Claim: +20 Karma</span>
+        </div>
+      </div>
+
+      <!-- Leaderboard List -->
+      <div id="leaderboardList" class="leaderboard-list">
+        <div class="empty">Loading leaderboard…</div>
+      </div>
     </div>
   </div>
 </div>

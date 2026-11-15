@@ -3,11 +3,8 @@ package com.campus.lostfound;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,17 +18,20 @@ public class ReportController {
     private final NotificationService notificationService;
     private final PostLikeRepository postLikes;
     private final PostCommentRepository postComments;
+    private final ItemClaimRepository itemClaims;
 
     public ReportController(ReportRepository repo,
                             UserAccountRepository users,
                             NotificationService notificationService,
                             PostLikeRepository postLikes,
-                            PostCommentRepository postComments) {
+                            PostCommentRepository postComments,
+                            ItemClaimRepository itemClaims) {
         this.repo = repo;
         this.users = users;
         this.notificationService = notificationService;
         this.postLikes = postLikes;
         this.postComments = postComments;
+        this.itemClaims = itemClaims;
     }
 
     /**
@@ -66,6 +66,7 @@ public class ReportController {
         }
         report.setLikeCount(postLikes.countByReportId(report.getId()));
         report.setCommentCount(postComments.countByReportId(report.getId()));
+        report.setClaimCount(itemClaims.countByReportId(report.getId()));
         if (currentUsername != null && !currentUsername.isBlank()) {
             report.setLikedByMe(postLikes.existsByReportIdAndUsername(report.getId(), currentUsername));
         } else {
@@ -134,9 +135,29 @@ public class ReportController {
         r.setAccountUsername(AuthController.currentUsername(request));
         UserAccount currentAcc = currentUser(request);
         r.setCollege(currentAcc == null ? "CU" : currentAcc.getCollege());
+        r.setSecretQuestion(r.getSecretQuestion() != null ? r.getSecretQuestion().trim() : null);
         Report saved = repo.save(r);
         users.findByUsernameKey(r.getAccountUsername().toLowerCase(java.util.Locale.ROOT))
                 .ifPresent(actor -> notificationService.notifyReportCreated(saved, actor));
+
+        // Auto-check for AI Smart Match >= 65% and alert matched owner
+        try {
+            List<Report> matches = getMatches(saved.getId(), request);
+            if (!matches.isEmpty() && matches.get(0).getMatchScore() >= 65) {
+                Report topMatch = matches.get(0);
+                users.findByUsernameKey(topMatch.getAccountUsername().toLowerCase(Locale.ROOT)).ifPresent(matchedOwner -> {
+                    notificationService.notifyGeneral(
+                            matchedOwner.getId(),
+                            "SMART_MATCH",
+                            "AI Smart Match Found! 🤖",
+                            "Someone just posted a " + saved.getType().toLowerCase() + " item (\"" + saved.getTitle() + "\") matching your report (" + topMatch.getMatchScore() + "% match)!",
+                            saved.getAccountUsername(),
+                            saved.getId()
+                    );
+                });
+            }
+        } catch (Exception ignored) {}
+
         populateReportMeta(saved, r.getAccountUsername());
         return saved;
     }
@@ -154,7 +175,14 @@ public class ReportController {
         if (!List.of("OPEN", "MATCHED", "RETURNED").contains(status)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status");
         }
+        String oldStatus = r.getStatus();
         r.setStatus(status);
+        if ("RETURNED".equalsIgnoreCase(status) && !"RETURNED".equalsIgnoreCase(oldStatus)) {
+            users.findByUsernameKey(r.getAccountUsername().toLowerCase(java.util.Locale.ROOT)).ifPresent(u -> {
+                u.setKarmaPoints(u.getKarmaPoints() + 50);
+                users.save(u);
+            });
+        }
         Report saved = repo.save(r);
         populateReportMeta(saved, currentUser);
         return saved;
@@ -438,6 +466,68 @@ public class ReportController {
         postComments.delete(comment);
         return ResponseEntity.noContent().build();
     }
+
+    // --------------------------------------------------------------------------
+    // AI SMART MATCHING
+    // --------------------------------------------------------------------------
+    @GetMapping("/{id}/matches")
+    public List<Report> getMatches(@PathVariable Long id, HttpServletRequest request) {
+        requireLogin(request);
+        Report target = repo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        String oppType = "LOST".equalsIgnoreCase(target.getType()) ? "FOUND" : "LOST";
+
+        List<Report> candidates = repo.findAll().stream()
+                .filter(r -> oppType.equalsIgnoreCase(r.getType()) && !r.isDeleted() && !r.isArchived() && !"RETURNED".equalsIgnoreCase(r.getStatus()))
+                .filter(r -> target.getCollege() == null || r.getCollege() == null || target.getCollege().equalsIgnoreCase(r.getCollege()))
+                .toList();
+
+        List<Report> matches = new ArrayList<>();
+        String targetText = (target.getTitle() + " " + target.getCategory() + " " + target.getLocation() + " " + (target.getDescription() != null ? target.getDescription() : "")).toLowerCase(Locale.ROOT);
+        Set<String> targetTokens = tokenize(targetText);
+
+        for (Report c : candidates) {
+            int score = 0;
+            // 1. Category match (+35%)
+            if (target.getCategory() != null && target.getCategory().equalsIgnoreCase(c.getCategory())) {
+                score += 35;
+            }
+            // 2. Text tokens overlap (up to +45%)
+            String candText = (c.getTitle() + " " + c.getCategory() + " " + c.getLocation() + " " + (c.getDescription() != null ? c.getDescription() : "")).toLowerCase(Locale.ROOT);
+            Set<String> candTokens = tokenize(candText);
+            long common = targetTokens.stream().filter(candTokens::contains).count();
+            if (!targetTokens.isEmpty()) {
+                double overlapRatio = (double) common / Math.min(targetTokens.size(), candTokens.size());
+                score += (int) (overlapRatio * 45);
+            }
+            // 3. Date proximity (up to +20%)
+            if (target.getItemDate() != null && c.getItemDate() != null) {
+                long days = Math.abs(ChronoUnit.DAYS.between(target.getItemDate(), c.getItemDate()));
+                if (days <= 2) score += 20;
+                else if (days <= 5) score += 12;
+                else if (days <= 10) score += 6;
+            } else {
+                score += 10;
+            }
+
+            if (score >= 40) {
+                populateReportMeta(c, AuthController.currentUsername(request));
+                c.setMatchScore(Math.min(99, score));
+                matches.add(c);
+            }
+        }
+
+        matches.sort(Comparator.comparing(Report::getMatchScore, Comparator.reverseOrder()));
+        return matches;
+    }
+
+    private Set<String> tokenize(String text) {
+        if (text == null) return Collections.emptySet();
+        return Arrays.stream(text.toLowerCase(Locale.ROOT).split("[\\s,.-]+"))
+                .filter(w -> w.length() > 2 && !STOP_WORDS.contains(w))
+                .collect(Collectors.toSet());
+    }
+
+    private static final Set<String> STOP_WORDS = Set.of("the", "and", "item", "lost", "found", "with", "for", "near", "from", "have", "please", "this", "that");
 
     private void requireLogin(HttpServletRequest request) {
         if (!AuthController.isLoggedIn(request)) {

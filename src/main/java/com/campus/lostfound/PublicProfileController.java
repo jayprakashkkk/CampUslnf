@@ -131,8 +131,36 @@ public class PublicProfileController {
         result.put("totalPosts", owned.size());
         result.put("itemsReceivedBack", receivedBack);
         result.put("itemsReturnedToOthers", returnedToOthers);
+        result.put("karmaPoints", account.getKarmaPoints());
+        result.put("karmaBadge", account.getKarmaBadge());
         result.put("posts", posts);
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/leaderboard")
+    public ResponseEntity<?> getLeaderboard() {
+        List<UserAccount> top = users.findAll().stream()
+                .sorted(Comparator.comparing(UserAccount::getKarmaPoints, Comparator.reverseOrder()))
+                .limit(10)
+                .toList();
+
+        List<Map<String, Object>> list = new ArrayList<>();
+        int rank = 1;
+        for (UserAccount u : top) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("rank", rank++);
+            m.put("username", u.getUsername());
+            m.put("displayName", u.getDisplayName());
+            m.put("college", u.getCollege());
+            m.put("course", u.getCourse());
+            m.put("avatarId", u.getAvatarId());
+            m.put("profileImageUrl", !AuthController.canUseCustomProfilePhoto(u) || u.getProfileImageData().isBlank() ? "" : "/api/users/" + org.springframework.web.util.UriUtils.encodePathSegment(u.getUsername(), java.nio.charset.StandardCharsets.UTF_8) + "/photo");
+            m.put("karmaPoints", u.getKarmaPoints());
+            m.put("karmaBadge", u.getKarmaBadge());
+            m.put("role", u.getRole());
+            list.add(m);
+        }
+        return ResponseEntity.ok(list);
     }
 
 

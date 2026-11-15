@@ -77,6 +77,12 @@ public class UserAccount {
     @Column(name = "auth_token", length = 128)
     private String authToken;
 
+    @Column(name = "karma_points")
+    private Integer karmaPoints = 0;
+
+    @Column(name = "karma_badge", length = 50)
+    private String karmaBadge = "Helpful Student";
+
     public UserAccount() {}
 
     public Long getId() { return id; }
@@ -116,4 +122,19 @@ public class UserAccount {
     public void setUsernameChangesUsed(Integer usernameChangesUsed) { this.usernameChangesUsed = usernameChangesUsed; }
     public String getAuthToken() { return authToken; }
     public void setAuthToken(String authToken) { this.authToken = authToken; }
+    public Integer getKarmaPoints() { return karmaPoints == null ? 0 : karmaPoints; }
+    public void setKarmaPoints(Integer karmaPoints) {
+        this.karmaPoints = karmaPoints;
+        this.karmaBadge = calculateKarmaBadge(karmaPoints);
+    }
+    public String getKarmaBadge() { return karmaBadge == null || karmaBadge.isBlank() ? "Helpful Student" : karmaBadge; }
+    public void setKarmaBadge(String karmaBadge) { this.karmaBadge = karmaBadge; }
+
+    public static String calculateKarmaBadge(Integer points) {
+        int p = points == null ? 0 : points;
+        if (p >= 300) return "Campus Hero 🏆";
+        if (p >= 150) return "Campus Guardian 🛡️";
+        if (p >= 50) return "Good Samaritan ⭐";
+        return "Helpful Student";
+    }
 }

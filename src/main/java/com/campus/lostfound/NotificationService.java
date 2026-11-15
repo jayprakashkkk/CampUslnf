@@ -49,6 +49,12 @@ public class NotificationService {
         if (!batch.isEmpty()) notifications.saveAll(batch);
     }
 
+    @Transactional
+    public void notifyGeneral(Long recipientId, String type, String title, String message, String actorUsername, Long reportId) {
+        if (recipientId == null) return;
+        notifications.save(new CampusNotification(recipientId, type, title, message, actorUsername, actorUsername, reportId));
+    }
+
     private String safe(String value, int max) {
         String clean = value == null ? "an item" : value.trim();
         if (clean.length() > max) return clean.substring(0, max - 1) + "…";

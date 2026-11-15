@@ -638,6 +638,8 @@ public class AuthController {
         body.put("profileImageData", canUseCustomProfilePhoto(account) ? account.getProfileImageData() : "");
         body.put("bannerImageData", canUseProfileBanner(account) ? account.getBannerImageData() : "");
         body.put("role", account.getRole());
+        body.put("karmaPoints", account.getKarmaPoints());
+        body.put("karmaBadge", account.getKarmaBadge());
         body.put("token", account.getAuthToken() == null ? "" : account.getAuthToken());
         addUsernamePolicyPayload(body, account);
         return body;

@@ -38,6 +38,9 @@ public class Report {
     private boolean deleted = false;
     private LocalDateTime deletedAt;
 
+    @Column(name = "secret_question", length = 300)
+    private String secretQuestion;
+
     @Transient private String ownerDisplayName;
     @Transient private String ownerCourse;
     @Transient private String ownerAvatarId;
@@ -48,6 +51,10 @@ public class Report {
     @Transient private Long commentCount = 0L;
     @Transient private Long likeCount = 0L;
     @Transient private Boolean likedByMe = false;
+    @Transient private Long claimCount = 0L;
+    @Transient private Integer matchScore = 0;
+    @Transient private Long matchedReportId;
+    @Transient private String matchedReportTitle;
 
     public Report() {}
 
@@ -111,4 +118,15 @@ public class Report {
     public void setLikeCount(Long likeCount) { this.likeCount = likeCount; }
     public Boolean getLikedByMe() { return likedByMe != null && likedByMe; }
     public void setLikedByMe(Boolean likedByMe) { this.likedByMe = likedByMe; }
+
+    public String getSecretQuestion() { return secretQuestion == null ? "" : secretQuestion; }
+    public void setSecretQuestion(String secretQuestion) { this.secretQuestion = secretQuestion; }
+    public Long getClaimCount() { return claimCount == null ? 0L : claimCount; }
+    public void setClaimCount(Long claimCount) { this.claimCount = claimCount; }
+    public Integer getMatchScore() { return matchScore == null ? 0 : matchScore; }
+    public void setMatchScore(Integer matchScore) { this.matchScore = matchScore; }
+    public Long getMatchedReportId() { return matchedReportId; }
+    public void setMatchedReportId(Long matchedReportId) { this.matchedReportId = matchedReportId; }
+    public String getMatchedReportTitle() { return matchedReportTitle == null ? "" : matchedReportTitle; }
+    public void setMatchedReportTitle(String matchedReportTitle) { this.matchedReportTitle = matchedReportTitle; }
 }

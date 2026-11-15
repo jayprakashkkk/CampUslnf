@@ -7077,3 +7077,840 @@ body.fullscreen-page-open {
     display: none;
   }
 }
+
+
+/* ==========================================================================
+   FEATURE 7: AMOLED BLACK DARK THEME SYSTEM (1-CLICK TOGGLE & AUTO-DETECT)
+   ========================================================================== */
+[data-theme="dark"],
+html[data-theme="dark"],
+body[data-theme="dark"] {
+  --insta-bg: #000000 !important;
+  --insta-card-bg: #121214 !important;
+  --insta-border: #222226 !important;
+  --insta-primary: #F29339 !important;
+  --insta-primary-hover: #E28125 !important;
+  --insta-primary-light: #261A10 !important;
+  --insta-lost: #FF6652 !important;
+  --insta-lost-bg: #2A1412 !important;
+  --insta-found: #32C876 !important;
+  --insta-found-bg: #0F281B !important;
+  --insta-text-main: #F4F4F6 !important;
+  --insta-text-muted: #9CA3AF !important;
+  --insta-input-bg: #18181C !important;
+  --insta-shadow: 0 4px 24px rgba(0, 0, 0, 0.6) !important;
+
+  --bg: #000000 !important;
+  --ink: #F4F4F6 !important;
+  --muted: #9CA3AF !important;
+  --line: #222226 !important;
+  background-color: #000000 !important;
+  color: #F4F4F6 !important;
+}
+
+[data-theme="dark"] .app-header,
+[data-theme="dark"] header.app-header {
+  background: #0D0D10 !important;
+  border-bottom: 1px solid #202025 !important;
+}
+
+[data-theme="dark"] .bottom-app-nav {
+  background: #0D0D10 !important;
+  border-top: 1px solid #202025 !important;
+}
+
+[data-theme="dark"] .nav-drawer-panel {
+  background: #111114 !important;
+  border-left: 1px solid #222226 !important;
+  color: #F4F4F6 !important;
+}
+
+[data-theme="dark"] .drawer-header {
+  border-bottom: 1px solid #222226 !important;
+}
+
+[data-theme="dark"] .drawer-menu-item {
+  color: #E5E7EB !important;
+}
+[data-theme="dark"] .drawer-menu-item:hover,
+[data-theme="dark"] .drawer-menu-item:active {
+  background: #1C1C22 !important;
+}
+
+[data-theme="dark"] .drawer-footer {
+  border-top: 1px solid #222226 !important;
+}
+
+[data-theme="dark"] .dialog,
+[data-theme="dark"] .menu-fullscreen-page,
+[data-theme="dark"] .menu-fullscreen-page .dialog {
+  background: #111114 !important;
+  color: #F4F4F6 !important;
+  border-color: #222226 !important;
+}
+
+[data-theme="dark"] .info-sheet-header {
+  background: #111114 !important;
+  border-bottom: 1px solid #222226 !important;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background: #18181C !important;
+  color: #F4F4F6 !important;
+  border: 1.5px solid #282830 !important;
+}
+[data-theme="dark"] input:focus,
+[data-theme="dark"] select:focus,
+[data-theme="dark"] textarea:focus {
+  border-color: #F29339 !important;
+  background: #1E1E24 !important;
+}
+
+[data-theme="dark"] .standalone-search-box {
+  background: #141418 !important;
+  border: 1.5px solid #25252B !important;
+}
+[data-theme="dark"] .standalone-search-box input {
+  background: transparent !important;
+  color: #F4F4F6 !important;
+  border: none !important;
+}
+
+[data-theme="dark"] .insta-card,
+[data-theme="dark"] .modern-feed-card,
+[data-theme="dark"] .card {
+  background: #121215 !important;
+  border: 1px solid #222228 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] .insta-status-tabs {
+  background: #141418 !important;
+  border: 1px solid #222228 !important;
+}
+[data-theme="dark"] .status-tab {
+  color: #9CA3AF !important;
+}
+[data-theme="dark"] .status-tab.active {
+  background: #202028 !important;
+  color: #F4F4F6 !important;
+}
+
+[data-theme="dark"] .category-chip,
+[data-theme="dark"] .explore-cat-chip,
+[data-theme="dark"] .market-cat-chip {
+  background: #15151A !important;
+  color: #D1D5DB !important;
+  border: 1px solid #26262E !important;
+}
+[data-theme="dark"] .category-chip.active,
+[data-theme="dark"] .explore-cat-chip.active,
+[data-theme="dark"] .market-cat-chip.active {
+  background: #F29339 !important;
+  color: #000000 !important;
+  border-color: #F29339 !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="dark"] .bottom-nav-item {
+  color: #9CA3AF !important;
+}
+[data-theme="dark"] .bottom-nav-item.active {
+  color: #F29339 !important;
+}
+
+[data-theme="dark"] .desk-nav-btn {
+  background: #15151A !important;
+  color: #D1D5DB !important;
+  border: 1px solid #25252C !important;
+}
+[data-theme="dark"] .desk-nav-btn.active {
+  background: #251D14 !important;
+  color: #F29339 !important;
+  border-color: #F29339 !important;
+}
+
+[data-theme="dark"] .explore-topbar {
+  background: #0D0D10 !important;
+  border-bottom: 1px solid #202025 !important;
+}
+
+[data-theme="dark"] .explore-search-input-wrap {
+  background: #18181D !important;
+  border: 1px solid #282830 !important;
+}
+[data-theme="dark"] .explore-search-input-wrap input {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid var(--insta-border);
+  background: var(--insta-card-bg);
+  color: var(--insta-text-main);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.theme-toggle-btn:hover {
+  transform: scale(1.08);
+  border-color: var(--insta-primary);
+}
+.drawer-theme-pill {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 12px;
+  background: var(--insta-primary-light);
+  color: var(--insta-primary);
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   CAMPUS FEED / MARKET SWITCHER TABS
+   ========================================================================== */
+.campus-section-switcher {
+  display: flex;
+  background: var(--insta-card-bg);
+  border: 1.5px solid var(--insta-border);
+  border-radius: 16px;
+  padding: 5px;
+  margin: 12px 0 16px;
+  gap: 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+}
+.section-switch-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  color: var(--insta-text-muted);
+  font-weight: 750;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.section-switch-btn.active {
+  background: var(--insta-primary);
+  color: #FFFFFF !important;
+  box-shadow: 0 4px 14px rgba(232, 148, 75, 0.35);
+}
+.market-new-badge {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  background: #FF3B30;
+  color: #FFFFFF;
+  padding: 2px 6px;
+  border-radius: 8px;
+  animation: pulseBadge 2s infinite ease-in-out;
+}
+@keyframes pulseBadge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+/* ==========================================================================
+   FEATURE 6: CAMPUS STUDENT MARKETPLACE (BUY & SELL)
+   ========================================================================== */
+.market-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+.market-hero-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%);
+  border: 1.5px solid #FED7AA;
+  border-radius: 20px;
+  padding: 20px 22px;
+  box-shadow: 0 4px 20px rgba(249, 115, 22, 0.08);
+}
+[data-theme="dark"] .market-hero-card {
+  background: linear-gradient(135deg, #1C150C 0%, #2A1E10 100%) !important;
+  border-color: #4A3319 !important;
+}
+.market-hero-badge {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #EA580C;
+  margin-bottom: 4px;
+}
+.market-hero-title {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 850;
+  color: var(--insta-text-main);
+  line-height: 1.15;
+}
+.market-hero-subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: var(--insta-text-muted);
+  line-height: 1.45;
+  max-width: 440px;
+}
+.market-sell-cta-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #EA580C;
+  color: #FFFFFF !important;
+  border: none;
+  border-radius: 14px;
+  padding: 12px 18px;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+.market-sell-cta-btn:hover {
+  background: #C2410C;
+  transform: translateY(-1px);
+}
+@media (max-width: 580px) {
+  .market-hero-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+  }
+  .market-sell-cta-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+.market-categories-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 2px 0 8px;
+}
+.market-categories-wrap::-webkit-scrollbar {
+  display: none;
+}
+.market-categories-list {
+  display: flex;
+  gap: 8px;
+  white-space: nowrap;
+}
+.market-cat-chip {
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--insta-border);
+  background: var(--insta-card-bg);
+  color: var(--insta-text-main);
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.market-cat-chip.active {
+  background: var(--insta-primary);
+  color: #FFFFFF;
+  border-color: var(--insta-primary);
+}
+
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+@media (max-width: 480px) {
+  .market-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.market-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--insta-card-bg);
+  border: 1.5px solid var(--insta-border);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--insta-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+}
+.market-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+.market-card-img-wrap {
+  width: 100%;
+  height: 180px;
+  background: #F3F4F6;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+[data-theme="dark"] .market-card-img-wrap {
+  background: #18181C !important;
+}
+.market-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.market-card-placeholder {
+  font-size: 48px;
+  opacity: 0.6;
+}
+.market-price-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(8px);
+  color: #FFFFFF;
+  font-size: 14px;
+  font-weight: 900;
+  padding: 4px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.market-price-badge.free {
+  background: #10B981 !important;
+  color: #FFFFFF !important;
+}
+.market-condition-pill {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  color: #1F2937;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+[data-theme="dark"] .market-condition-pill {
+  background: rgba(24, 24, 28, 0.9) !important;
+  color: #F4F4F6 !important;
+}
+.market-card-body {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.market-card-cat {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--insta-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.market-card-title {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--insta-text-main);
+  line-height: 1.3;
+}
+.market-card-desc {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--insta-text-muted);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.market-card-loc {
+  font-size: 11px;
+  color: var(--insta-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.market-card-footer {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--insta-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.market-seller-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.market-seller-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--insta-primary-light);
+  color: var(--insta-primary);
+  font-weight: 800;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.market-seller-name {
+  font-size: 12px;
+  font-weight: 750;
+  color: var(--insta-text-main);
+}
+.market-buy-btn {
+  background: #25D366;
+  color: #FFFFFF !important;
+  border: none;
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.market-buy-btn:hover {
+  background: #20BA5A;
+  transform: scale(1.03);
+}
+.market-sold-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(2px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #FFFFFF;
+  font-weight: 900;
+  font-size: 18px;
+  z-index: 2;
+}
+
+/* ==========================================================================
+   FEATURE 3: SECRET PROOF OF OWNERSHIP & ITEM CLAIM SYSTEM
+   ========================================================================== */
+.claim-action-btn {
+  background: #10B981;
+  color: #FFFFFF !important;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.claim-action-btn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+.view-claims-btn {
+  background: var(--insta-primary-light);
+  color: var(--insta-primary) !important;
+  border: 1px solid var(--insta-primary);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.view-claims-btn:hover {
+  background: var(--insta-primary);
+  color: #FFFFFF !important;
+}
+
+.claims-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.claim-card-item {
+  background: var(--insta-card-bg);
+  border: 1.5px solid var(--insta-border);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+.claim-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.claim-claimant-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.claim-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--insta-primary-light);
+  color: var(--insta-primary);
+  font-size: 14px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.claim-details-box {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px dashed var(--insta-border);
+}
+[data-theme="dark"] .claim-details-box {
+  background: rgba(255, 255, 255, 0.03);
+}
+.claim-answer-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--insta-primary);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.claim-answer-text {
+  font-size: 13.5px;
+  color: var(--insta-text-main);
+  line-height: 1.5;
+  margin: 0;
+  font-weight: 600;
+}
+.claim-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 6px;
+}
+.claim-approve-btn {
+  background: #10B981;
+  color: #FFFFFF !important;
+  border: none;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+}
+.claim-reject-btn {
+  background: transparent;
+  color: #EF4444 !important;
+  border: 1px solid #EF4444;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-weight: 750;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   FEATURE 1: AI SMART MATCHING BADGE & BANNER
+   ========================================================================== */
+.smart-match-alert-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+  border: 1.5px solid #6EE7B7;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin: 10px 0 14px;
+}
+[data-theme="dark"] .smart-match-alert-box {
+  background: linear-gradient(135deg, #064E3B 0%, #065F46 100%) !important;
+  border-color: #047857 !important;
+}
+.smart-match-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #065F46;
+  margin-bottom: 2px;
+}
+[data-theme="dark"] .smart-match-title {
+  color: #A7F3D0 !important;
+}
+.smart-match-desc {
+  font-size: 12px;
+  color: #047857;
+  margin: 0;
+}
+[data-theme="dark"] .smart-match-desc {
+  color: #D1FAE5 !important;
+}
+.smart-match-score-pill {
+  background: #059669;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 5px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   FEATURE 8: CAMPUS GOOD SAMARITAN KARMA & LEADERBOARD
+   ========================================================================== */
+.karma-hero-banner {
+  text-align: center;
+  background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+  border: 1.5px solid #FDE68A;
+  border-radius: 20px;
+  padding: 24px 20px;
+  margin-bottom: 20px;
+}
+[data-theme="dark"] .karma-hero-banner {
+  background: linear-gradient(135deg, #241D0D 0%, #372A14 100%) !important;
+  border-color: #614A1F !important;
+}
+.karma-hero-trophy {
+  font-size: 40px;
+  margin-bottom: 6px;
+}
+.karma-hero-banner h3 {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 850;
+  color: var(--insta-text-main);
+}
+.karma-hero-banner p {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--insta-text-muted);
+  line-height: 1.5;
+}
+.karma-rules-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.karma-rule-pill {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid #FCD34D;
+  color: #B45309;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+[data-theme="dark"] .karma-rule-pill {
+  background: rgba(0, 0, 0, 0.4) !important;
+  color: #FCD34D !important;
+}
+
+.leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.leaderboard-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--insta-card-bg);
+  border: 1.5px solid var(--insta-border);
+  border-radius: 16px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+.leaderboard-rank {
+  font-size: 16px;
+  font-weight: 900;
+  width: 28px;
+  text-align: center;
+}
+.leaderboard-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--insta-primary-light);
+  color: var(--insta-primary);
+  font-size: 15px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.leaderboard-user-details {
+  flex: 1;
+  min-width: 0;
+}
+.leaderboard-user-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--insta-text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.leaderboard-user-sub {
+  font-size: 12px;
+  color: var(--insta-text-muted);
+}
+.leaderboard-points-wrap {
+  text-align: right;
+  flex-shrink: 0;
+}
+.leaderboard-points {
+  font-size: 16px;
+  font-weight: 900;
+  color: #EA580C;
+}
+.leaderboard-badge-tag {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--insta-primary);
+}
