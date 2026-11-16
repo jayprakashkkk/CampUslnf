@@ -8399,6 +8399,9 @@ body[data-theme="dark"] {
   align-items: center !important;
   justify-content: center !important;
   cursor: pointer !important;
+  pointer-events: auto !important;
+  z-index: 100 !important;
+  touch-action: manipulation !important;
   transition: all 0.18s ease !important;
   padding: 0 !important;
   flex-shrink: 0 !important;
@@ -8797,6 +8800,16 @@ body[data-theme="dark"] {
   pointer-events: auto !important;
 }
 
+@media (max-width: 768px), (hover: none) {
+  .chat-hover-actions {
+    opacity: 0.85 !important;
+    pointer-events: auto !important;
+  }
+  .chat-row.actions-active .chat-hover-actions {
+    opacity: 1 !important;
+  }
+}
+
 /* Individual floating action buttons (☺ React, ↩ Reply, ⋮ More) */
 .chat-msg-action-btn {
   width: 28px !important;
@@ -8809,6 +8822,9 @@ body[data-theme="dark"] {
   align-items: center !important;
   justify-content: center !important;
   cursor: pointer !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 5 !important;
   font-size: 15px !important;
   line-height: 1 !important;
   padding: 0 !important;

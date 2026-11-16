@@ -172,8 +172,8 @@ function finishCampusUiLayer(layer,fromPopstate=false){
  const index=campusUiHistoryStack.lastIndexOf(layer);if(index>=0)campusUiHistoryStack.splice(index,1);
 }
 function closeCampusUiLayerFromBack(layer){
-  closeChatMoreMenu();
-  closeChatReactionPicker();
+  try{closeChatMoreMenu();}catch(e){}
+  try{closeChatReactionPicker();}catch(e){}
   if(layer==='reactionDetail')closeReactionDetailSheet(true);
   else if(layer==='adminDashboardModal')closeAdminDashboard(true);
   else if(layer==='navDrawer')closeNavDrawer(true);
@@ -2855,19 +2855,22 @@ function openCommunityChat(){
   setTimeout(()=>{$('communityChatInput').focus();syncChatViewport()},80);
 }
 function closeCommunityChat(fromPopstate=false){
-  if(!communityChatOpen)return;
+  const overlay=$('communityChatOverlay');
+  const wasOpen=communityChatOpen||(overlay&&!overlay.classList.contains('hide'));
+  if(!wasOpen)return;
   communityChatOpen=false;
-  clearInterval(chatPollTimer);
-  chatPollTimer=null;
-  closeChatReactionPicker();
-  closeChatMoreMenu();
-  closeReactionDetailSheet();
-  closeUnsendModal();
-  $('communityChatOverlay').classList.add('hide');
+  if(chatPollTimer){clearInterval(chatPollTimer);chatPollTimer=null;}
+  try{closeChatReactionPicker();}catch(e){}
+  try{closeChatMoreMenu();}catch(e){}
+  try{closeReactionDetailSheet(true);}catch(e){}
+  try{closeUnsendModal();}catch(e){}
+  if(overlay){
+    overlay.classList.add('hide');
+    overlay.style.removeProperty('--chat-vv-height');
+    overlay.style.removeProperty('--chat-vv-top');
+  }
   document.body.classList.remove('chat-fullscreen-open');
-  $('communityChatOverlay').style.removeProperty('--chat-vv-height');
-  $('communityChatOverlay').style.removeProperty('--chat-vv-top');
-  $('communityChatInput').blur();
+  try{$('communityChatInput')?.blur();}catch(e){}
   finishCampusUiLayer('communityChat',fromPopstate);
 }
 $('communityChatOverlay').addEventListener('click',e=>{if(e.target===$('communityChatOverlay'))closeCommunityChat()});
@@ -3109,6 +3112,66 @@ function viewUserProfileFromReaction(username, displayName){
   }
 }
 
+function toggleChatReactionPicker(event, messageId){
+  if(event){
+    try{event.preventDefault();event.stopPropagation();event.stopImmediatePropagation?.();}catch(e){}
+  }
+  closeChatMoreMenu();
+  const popover = $('chatReactionPopover');
+  if(!popover) return;
+  const numId = Number(messageId);
+  if(activeReactionMessageId === numId && !popover.classList.contains('hide')){
+    closeChatReactionPicker();
+    return;
+  }
+  activeReactionMessageId = numId;
+  const btn = (event && event.currentTarget && event.currentTarget.closest) 
+    ? event.currentTarget.closest('.chat-react-btn') 
+    : (event && event.target ? (event.target.closest('.chat-react-btn') || event.target) : null);
+  
+  if(!btn) return;
+  const rect = btn.getBoundingClientRect();
+  
+  // Mount to body so no parent container clips it
+  if(popover.parentElement !== document.body){
+    document.body.appendChild(popover);
+  }
+  
+  popover.classList.remove('hide');
+  popover.style.setProperty('display', 'flex', 'important');
+  popover.style.setProperty('visibility', 'visible', 'important');
+  popover.style.setProperty('pointer-events', 'auto', 'important');
+  popover.style.setProperty('opacity', '1', 'important');
+  popover.style.zIndex = '100000';
+  
+  const popWidth = popover.offsetWidth || 282;
+  const popHeight = popover.offsetHeight || 46;
+  
+  let top = rect.top - popHeight - 8;
+  if(top < 12) top = rect.bottom + 8;
+  
+  let left = rect.left + (rect.width / 2) - (popWidth / 2);
+  const minLeft = 10;
+  const maxLeft = window.innerWidth - popWidth - 10;
+  if(left > maxLeft) left = maxLeft;
+  if(left < minLeft) left = minLeft;
+  
+  popover.style.top = `${Math.round(top)}px`;
+  popover.style.left = `${Math.round(left)}px`;
+}
+
+function closeChatReactionPicker(){
+  activeReactionMessageId = null;
+  const popover = $('chatReactionPopover');
+  if(popover){
+    popover.classList.add('hide');
+    popover.style.setProperty('display', 'none', 'important');
+    popover.style.setProperty('visibility', 'hidden', 'important');
+    popover.style.setProperty('pointer-events', 'none', 'important');
+    popover.style.setProperty('opacity', '0', 'important');
+  }
+}
+
 function setChatMessageReaction(messageId, emoji){
   closeChatReactionPicker();
   const idStr = String(messageId);
@@ -3162,7 +3225,7 @@ function setChatMessageReaction(messageId, emoji){
 
 function openChatMoreMenu(event, messageId){
   if(event){
-    try{event.preventDefault();event.stopPropagation();}catch{}
+    try{event.preventDefault();event.stopPropagation();event.stopImmediatePropagation?.();}catch(e){}
   }
   closeChatReactionPicker();
   const popover=$('chatMoreMenu');
@@ -3242,6 +3305,7 @@ async function copyChatMessage(text){
 // Global popover dismiss on any touch, pointer, click outside
 function dismissChatPopovers(e){
   const target = e.target;
+  if(!target) return;
   const moreMenu = $('chatMoreMenu');
   if(moreMenu && !moreMenu.classList.contains('hide')){
     if(!target.closest('#chatMoreMenu') && !target.closest('.chat-more-btn')){
@@ -3266,6 +3330,10 @@ document.addEventListener('click', dismissChatPopovers, true);
 document.addEventListener('pointerdown', dismissChatPopovers, true);
 document.addEventListener('touchstart', dismissChatPopovers, { passive: true, capture: true });
 window.addEventListener('scroll', ()=>{
+  closeChatMoreMenu();
+  closeChatReactionPicker();
+}, { passive: true });
+$('chatMessages')?.addEventListener('scroll', ()=>{
   closeChatMoreMenu();
   closeChatReactionPicker();
 }, { passive: true });
