@@ -4892,17 +4892,31 @@ header.app-header {
   transform: translateY(-4.1px) rotate(-45deg);
 }
 
+body.nav-drawer-open .header-left,
+body.nav-drawer-open .logo,
+body.nav-drawer-open .logo-text,
+body.nav-drawer-open .logo-title-row,
+body.nav-drawer-open .logo-title-brand,
+body.nav-drawer-open .logo-subtitle,
+body.nav-drawer-open .brand-mark,
+body.nav-drawer-open .college-badge,
+body.nav-drawer-open #campusCollegeBadge,
+body.nav-drawer-open .header-search-wrap,
 body.nav-drawer-open .header-brand-wrap,
 body.nav-drawer-open .board-search,
 body.nav-drawer-open .desktop-nav,
 body.nav-drawer-open #headerThemeBtn,
 body.nav-drawer-open .desk-user-menu-wrap {
   display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 body.nav-drawer-open header.app-header {
   background: transparent !important;
   border-bottom-color: transparent !important;
+  box-shadow: none !important;
   pointer-events: none !important;
   z-index: 10005 !important;
 }
@@ -8771,12 +8785,16 @@ body[data-theme="dark"] {
   display: flex !important;
   align-items: center !important;
   gap: 4px !important;
-  padding: 5px 8px !important;
+  padding: 6px 10px !important;
   background: #FFFFFF !important;
-  border: 1px solid rgba(220, 205, 190, 0.8) !important;
+  border: 1px solid rgba(220, 205, 190, 0.85) !important;
   border-radius: 999px !important;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16) !important;
-  z-index: 1000 !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.24) !important;
+  z-index: 100000 !important;
+  white-space: nowrap !important;
+  max-width: calc(100vw - 20px) !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
   animation: popBadge 0.16s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
 }
 
@@ -8787,15 +8805,15 @@ body[data-theme="dark"] {
 [data-theme="dark"] .chat-react-popover {
   background: #23201C !important;
   border-color: #403830 !important;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.55) !important;
 }
 
 .chat-emoji-item {
   background: transparent !important;
   border: 0 !important;
-  font-size: 18px !important;
-  width: 32px !important;
-  height: 32px !important;
+  font-size: 19px !important;
+  width: 34px !important;
+  height: 34px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -8804,11 +8822,17 @@ body[data-theme="dark"] {
   transition: transform 0.12s ease !important;
   padding: 0 !important;
   touch-action: manipulation !important;
+  flex-shrink: 0 !important;
+  flex-grow: 0 !important;
 }
 
 .chat-emoji-item:hover {
-  transform: scale(1.3) !important;
+  transform: scale(1.25) !important;
   background: rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="dark"] .chat-emoji-item:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
 }
 
 [data-theme="dark"] .chat-emoji-item:hover {
@@ -8880,6 +8904,139 @@ body[data-theme="dark"] {
 [data-theme="dark"] .chat-more-item.chat-more-delete:hover {
   background: #381B1B !important;
   color: #F87171 !important;
+}
+
+/* --------------------------------------------------------------------------
+   INSTAGRAM-STYLE UNSEND MESSAGE CONFIRMATION MODAL
+   -------------------------------------------------------------------------- */
+.unsend-modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(0, 0, 0, 0.65) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  z-index: 20000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+  animation: fadeInModal 0.15s ease-out !important;
+}
+
+.unsend-modal-overlay.hide {
+  display: none !important;
+}
+
+.unsend-modal-card {
+  background: #FFFFFF !important;
+  border-radius: 16px !important;
+  width: min(340px, 92vw) !important;
+  overflow: hidden !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28) !important;
+  animation: popBadge 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.2) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  text-align: center !important;
+}
+
+[data-theme="dark"] .unsend-modal-card {
+  background: #262626 !important;
+  color: #F5F5F5 !important;
+}
+
+.unsend-modal-body {
+  padding: 24px 22px 18px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+.unsend-title {
+  margin: 0 !important;
+  font-size: 18px !important;
+  font-weight: 750 !important;
+  color: #262626 !important;
+  letter-spacing: -0.2px !important;
+}
+
+[data-theme="dark"] .unsend-title {
+  color: #F5F5F5 !important;
+}
+
+.unsend-desc {
+  margin: 0 !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  color: #737373 !important;
+  font-weight: 450 !important;
+}
+
+[data-theme="dark"] .unsend-desc {
+  color: #A8A8A8 !important;
+}
+
+.unsend-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  border-top: 1px solid rgba(220, 210, 200, 0.6) !important;
+}
+
+[data-theme="dark"] .unsend-actions {
+  border-top-color: #363636 !important;
+}
+
+.unsend-btn-danger {
+  width: 100% !important;
+  padding: 13px !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(220, 210, 200, 0.6) !important;
+  color: #ED4956 !important;
+  font-size: 14px !important;
+  font-weight: 750 !important;
+  cursor: pointer !important;
+  transition: background 0.12s ease !important;
+  font-family: inherit !important;
+  touch-action: manipulation !important;
+}
+
+[data-theme="dark"] .unsend-btn-danger {
+  border-bottom-color: #363636 !important;
+  color: #FF5A60 !important;
+}
+
+.unsend-btn-danger:hover {
+  background: #FFF1F2 !important;
+}
+
+[data-theme="dark"] .unsend-btn-danger:hover {
+  background: rgba(237, 73, 86, 0.15) !important;
+}
+
+.unsend-btn-cancel {
+  width: 100% !important;
+  padding: 13px !important;
+  background: transparent !important;
+  border: 0 !important;
+  color: #262626 !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: background 0.12s ease !important;
+  font-family: inherit !important;
+  touch-action: manipulation !important;
+}
+
+[data-theme="dark"] .unsend-btn-cancel {
+  color: #F5F5F5 !important;
+}
+
+.unsend-btn-cancel:hover {
+  background: #F7F5F2 !important;
+}
+
+[data-theme="dark"] .unsend-btn-cancel:hover {
+  background: #333333 !important;
 }
 
 /* --- Instagram-style 2-Line Bottom Reply Bar --- */

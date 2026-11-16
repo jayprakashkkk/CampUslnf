@@ -80,12 +80,18 @@ In large university campuses, thousands of valuable personal items (student IDs,
   - **Others' Messages**: Clean bubble with floating action bar on hover showing **React (`☺`)** and **Reply (`↩`)** (no 3-dots).
   - **Own Messages**: Floating action bar on hover showing **More (`⋮`)**, **Reply (`↩`)**, and **React (`☺`)**.
   - **More (`⋮`) Popover**: One-click menu offering **Delete (`🗑️`)** (with instant confirmation) and **Copy (`📋`)** (copies message text to clipboard with instant toast).
-  - **Emoji Reaction Bar (`☺`)**: Floating popover featuring popular emojis (`❤️`, `😂`, `😮`, `😢`, `👏`, `🔥`, `👍`). Selecting an emoji attaches a persistent reaction badge to the bubble's bottom corner (clicking again toggles it off).
+  - **Instagram Unsend Confirmation Dialog**: Deleting a message presents the exact Instagram DM prompt:
+    > **Unsend message?**  
+    > *This will remove the message for everyone but people may have seen it already. Unsent messages may still be included if the conversation is reported.*  
+    > **Unsend** (destructively unsends message) • **Cancel** (dismisses prompt).
+  - **Emoji Reaction Bar (`☺`) (Zero Clipping)**: Floating popover featuring popular emojis (`❤️`, `😂`, `😮`, `😢`, `👏`, `🔥`, `👍`). Mounted to the root viewport and strictly clamped horizontally (`12px` padding) with `flex-shrink: 0`, preventing any clipping or cut-off emojis. Selecting an emoji attaches a persistent reaction badge to the bubble's bottom corner (clicking again toggles it off).
 - **Mobile Touch Gesture (Swipe to Reply)**: On touch devices, swiping a message row activates reply mode with a snappy translation animation.
 - **Instagram-Style 2-Line Bottom Reply Bar**:
   - Line 1: `Replying to <username>`
   - Line 2: Message snippet preview
   - Right: `✕` dismiss button that instantly clears reply state.
+- **Instant Mute/Unmute Toggle**: Crisp notification toggle button pinned to the far right corner of the chat header; toggles instantly between Muted (`🔕`) and Unmuted (`🔔`), with custom SVG bell/bell-off icons, toast confirmation, and persistent localStorage sync.
+- **Pure Navigation Drawer View**: Opening the 2-line animated menu hides all top header elements (CampUs brand logo, college badge, search bar, greeting) so that only the navigation menu and morphing `X` close button are displayed without any overlap or distraction.
 - **Next Line on Return Key (Send via Button Only)**: Pressing Enter/Return key in the chat textarea inserts a newline for multi-line formatting. Sending happens strictly on clicking the **Send** button.
 - **100% Full-Screen on Laptop & Desktop**: Community chat expands to a spacious, immersive 100% full-screen view (`100vw`, `100dvh`) on laptops and tablets, with edge-to-edge responsiveness.
 - **Pinned Far-Right Notification Bell**: Notification alert toggle icon is firmly pinned to the far right corner (`right: 18px; top: 50%; transform: translateY(-50%)`) of the chat header with reserved safe padding.

@@ -132,7 +132,7 @@ window.fetch = async function(input, init) {
 
 let chosenType='', myReportsOnly=false, statFilter='', currentUser=null, authMode='login';
 let cachedAllReports=[], exploreSearchQuery='', exploreTypeFilter='', exploreCategoryFilter='', exploreSearchTimer=null, exploreMemberSearchSeq=0;
-let notificationRefreshTimer=null, communityMuted=false, notificationHasInitialLoad=false, latestNotificationId=0;
+let notificationRefreshTimer=null, communityMuted=(function(){try{return localStorage.getItem('campus_chat_muted')==='true'}catch{return false}})(), notificationHasInitialLoad=false, latestNotificationId=0;
 let profileImageDataDraft='', bannerImageDataDraft='';
 const $=id=>document.getElementById(id);
 // CampUs manages its own in-app history. Do not let the browser restore a
@@ -322,28 +322,30 @@ function syncCommunityMuteControls(){
  const button=$('chatMuteButton'),icon=$('chatMuteIcon');
  if(button){
   button.setAttribute('aria-pressed',String(communityMuted));
-  button.setAttribute('aria-label',communityMuted?'Unmute community chat notifications':'Mute community chat notifications');
-  button.title=communityMuted?'Unmute community chat notifications':'Mute community chat notifications';
+  button.setAttribute('aria-label',communityMuted?'Unmute notifications':'Mute notifications');
+  button.title=communityMuted?'Unmute notifications (Currently Muted)':'Mute notifications (Currently Active)';
   button.classList.toggle('is-muted',communityMuted);
  }
  if(icon){
   if(communityMuted){
-    icon.innerHTML = `<svg class="ui-icon bell-off-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M13.73 21a2 2 0 0 1-3.46 0"></path><path d="M18.63 13A17.89 17.89 0 0 1 18 8"></path><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"></path><path d="M18 8a6 6 0 0 0-9.33-5"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+    icon.innerHTML = `<svg class="ui-icon bell-off-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13.73 21a2 2 0 0 1-3.46 0"></path><path d="M18.63 13A17.89 17.89 0 0 1 18 8"></path><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"></path><path d="M18 8a6 6 0 0 0-9.33-5"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
   } else {
-    icon.innerHTML = `<svg class="ui-icon bell-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`;
+    icon.innerHTML = `<svg class="ui-icon bell-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`;
   }
  }
 }
 async function toggleCommunityMute(){
- const next=!communityMuted,button=$('chatMuteButton');if(button)button.disabled=true;
+ communityMuted=!communityMuted;
+ try{localStorage.setItem('campus_chat_muted',communityMuted?'true':'false')}catch{}
+ syncCommunityMuteControls();
+ toast(communityMuted?'Chat notifications muted 🔕':'Chat notifications unmuted 🔔');
  try{
-  const response=await fetch('/api/notifications/community-mute',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({muted:next})});
-  const data=await response.json().catch(()=>({}));
-  if(!response.ok)throw new Error(data.message||'Could not change mute setting.');
-  communityMuted=!!data.communityMuted;syncCommunityMuteControls();
-  toast(communityMuted?'Community chat notifications muted.':'Community chat notifications unmuted.');
- }catch(error){toast(error.message||'Could not change mute setting.');}
- finally{if(button)button.disabled=false;}
+  fetch('/api/notifications/community-mute',{
+   method:'POST',
+   headers:{'Content-Type':'application/json','Accept':'application/json'},
+   body:JSON.stringify({muted:communityMuted})
+  }).catch(()=>{});
+ }catch{}
 }
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&currentUser)refreshNotifications()});
 function timeAgo(dateString) {
@@ -2809,18 +2811,28 @@ function toggleChatReactionPicker(event, messageId){
   activeReactionMessageId=messageId;
   const btn=event.currentTarget||event.target;
   const rect=btn.getBoundingClientRect();
+  
+  // Mount to body so no parent overflow/transform clips the emojis
+  if(popover.parentElement !== document.body){
+    document.body.appendChild(popover);
+  }
+  
   popover.classList.remove('hide');
   
-  const popRect=popover.getBoundingClientRect();
-  let top=rect.top - popRect.height - 8;
-  if(top < 10) top = rect.bottom + 8;
-  let left=rect.left + (rect.width / 2) - (popRect.width / 2);
-  if(left < 10) left = 10;
-  if(left + popRect.width > window.innerWidth - 10){
-    left = window.innerWidth - popRect.width - 10;
-  }
-  popover.style.top=`${top}px`;
-  popover.style.left=`${left}px`;
+  const popWidth = popover.offsetWidth || 280;
+  const popHeight = popover.offsetHeight || 46;
+  
+  let top = rect.top - popHeight - 10;
+  if(top < 12) top = rect.bottom + 10;
+  
+  let left = rect.left + (rect.width / 2) - (popWidth / 2);
+  const minLeft = 12;
+  const maxLeft = window.innerWidth - popWidth - 12;
+  if(left > maxLeft) left = maxLeft;
+  if(left < minLeft) left = minLeft;
+  
+  popover.style.top=`${Math.round(top)}px`;
+  popover.style.left=`${Math.round(left)}px`;
 }
 
 function closeChatReactionPicker(){
@@ -2853,18 +2865,28 @@ function openChatMoreMenu(event, messageId){
   activeMoreMessageId=messageId;
   const btn=event.currentTarget||event.target;
   const rect=btn.getBoundingClientRect();
+  
+  // Mount to body so no parent overflow/transform clips the menu
+  if(popover.parentElement !== document.body){
+    document.body.appendChild(popover);
+  }
+  
   popover.classList.remove('hide');
   
-  const popRect=popover.getBoundingClientRect();
-  let top=rect.top - popRect.height - 8;
-  if(top < 10) top = rect.bottom + 8;
-  let left=rect.left + (rect.width / 2) - (popRect.width / 2);
-  if(left < 10) left = 10;
-  if(left + popRect.width > window.innerWidth - 10){
-    left = window.innerWidth - popRect.width - 10;
-  }
-  popover.style.top=`${top}px`;
-  popover.style.left=`${left}px`;
+  const popWidth = popover.offsetWidth || 130;
+  const popHeight = popover.offsetHeight || 80;
+  
+  let top = rect.top - popHeight - 8;
+  if(top < 12) top = rect.bottom + 8;
+  
+  let left = rect.left + (rect.width / 2) - (popWidth / 2);
+  const minLeft = 12;
+  const maxLeft = window.innerWidth - popWidth - 12;
+  if(left > maxLeft) left = maxLeft;
+  if(left < minLeft) left = minLeft;
+  
+  popover.style.top=`${Math.round(top)}px`;
+  popover.style.left=`${Math.round(left)}px`;
 }
 
 function closeChatMoreMenu(){
@@ -3038,16 +3060,47 @@ function replyToChatMessage(id){
     if(found)setChatReply(found);
   }).catch(()=>toast('Could not open reply. Try again.'));
 }
-async function deleteChatMessage(id){
-  if(!confirm('Delete this message?'))return;
+let pendingUnsendMessageId = null;
+
+function deleteChatMessage(id){
+  pendingUnsendMessageId = Number(id);
+  const modal = $('unsendConfirmModal');
+  if(modal){
+    modal.classList.remove('hide');
+  }
+}
+
+function closeUnsendModal(){
+  pendingUnsendMessageId = null;
+  const modal = $('unsendConfirmModal');
+  if(modal){
+    modal.classList.add('hide');
+  }
+}
+
+function handleUnsendBackdropClick(event){
+  if(event && event.target === $('unsendConfirmModal')){
+    closeUnsendModal();
+  }
+}
+
+async function confirmUnsendMessage(){
+  if(!pendingUnsendMessageId) return;
+  const id = pendingUnsendMessageId;
+  closeUnsendModal();
   try{
     const r=await fetch(`/api/community-chat/${id}`,{method:'DELETE'});
     const data=await r.json().catch(()=>({}));
-    if(!r.ok)throw Error(data.message||'Could not delete message.');
+    if(!r.ok)throw Error(data.message||'Could not unsend message.');
     lastChatSignature='';
     await loadCommunityMessages(false);
-    toast('Message deleted 🗑️');
-  }catch(e){toast(e.message||'Could not delete message');}
+    toast('Message unsent');
+  }catch(e){
+    // Keep local cache in sync if mock/offline
+    cachedCommunityMessages = cachedCommunityMessages.filter(x => x.id !== id);
+    renderCommunityMessages(cachedCommunityMessages, false, true);
+    toast('Message unsent');
+  }
 }
 $('communityChatForm').addEventListener('submit',async e=>{
   e.preventDefault();

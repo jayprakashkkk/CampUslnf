@@ -723,6 +723,20 @@
   </section>
 </div>
 
+<!-- Instagram-Style Unsend Message Confirmation Dialog -->
+<div id="unsendConfirmModal" class="unsend-modal-overlay hide" role="dialog" aria-modal="true" aria-labelledby="unsendModalTitle" onclick="handleUnsendBackdropClick(event)">
+  <div class="unsend-modal-card">
+    <div class="unsend-modal-body">
+      <h3 id="unsendModalTitle" class="unsend-title">Unsend message?</h3>
+      <p class="unsend-desc">This will remove the message for everyone but people may have seen it already. Unsent messages may still be included if the conversation is reported.</p>
+    </div>
+    <div class="unsend-actions">
+      <button type="button" id="confirmUnsendBtn" class="unsend-btn-danger" onclick="confirmUnsendMessage()">Unsend</button>
+      <button type="button" id="cancelUnsendBtn" class="unsend-btn-cancel" onclick="closeUnsendModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- Public User Profile Modal -->
 <section id="communityProfilePage" class="community-profile-page hide" role="dialog" aria-modal="true" aria-labelledby="communityProfilePageTitle">
   <header class="community-profile-topbar">
