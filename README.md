@@ -76,11 +76,21 @@ In large university campuses, thousands of valuable personal items (student IDs,
 - **Contact Action**: One-tap direct call or WhatsApp connection with sellers.
 
 ### 4. Real-time Campus Community Chat
-- **Instagram-Style Clean Chat Experience**: Redesigned chat interface featuring ample message breathing room, distinct message groups, clean bubbles (`border-radius: 20px`), and high-legibility layout with no visual clutter.
+- **Instagram Web DM Floating Message Actions**:
+  - **Others' Messages**: Clean bubble with floating action bar on hover showing **React (`☺`)** and **Reply (`↩`)** (no 3-dots).
+  - **Own Messages**: Floating action bar on hover showing **More (`⋮`)**, **Reply (`↩`)**, and **React (`☺`)**.
+  - **More (`⋮`) Popover**: One-click menu offering **Delete (`🗑️`)** (with instant confirmation) and **Copy (`📋`)** (copies message text to clipboard with instant toast).
+  - **Emoji Reaction Bar (`☺`)**: Floating popover featuring popular emojis (`❤️`, `😂`, `😮`, `😢`, `👏`, `🔥`, `👍`). Selecting an emoji attaches a persistent reaction badge to the bubble's bottom corner (clicking again toggles it off).
+- **Mobile Touch Gesture (Swipe to Reply)**: On touch devices, swiping a message row activates reply mode with a snappy translation animation.
+- **Instagram-Style 2-Line Bottom Reply Bar**:
+  - Line 1: `Replying to <username>`
+  - Line 2: Message snippet preview
+  - Right: `✕` dismiss button that instantly clears reply state.
+- **Next Line on Return Key (Send via Button Only)**: Pressing Enter/Return key in the chat textarea inserts a newline for multi-line formatting. Sending happens strictly on clicking the **Send** button.
 - **100% Full-Screen on Laptop & Desktop**: Community chat expands to a spacious, immersive 100% full-screen view (`100vw`, `100dvh`) on laptops and tablets, with edge-to-edge responsiveness.
-- **Seamless Compose Pill (No Underlines/Lines)**: Clean, borderless rounded input pill (`border-radius: 24px`) styled like modern Instagram DMs. Default browser focus outlines, harsh box-shadows, and input underline bars are completely eliminated.
-- **Right-Pinned Notification Bell**: Cleanly aligned edge-to-edge header with the notification mute bell securely pinned to the far right edge of the topbar, alongside the circular back arrow, verified CampUs brand avatar, university affiliation subtitle, and live `LIVE` green pill.
-- **Author Message Deletion**: Senders have full control to delete their own messages from the community chat at any time via inline trash action icons.
+- **Pinned Far-Right Notification Bell**: Notification alert toggle icon is firmly pinned to the far right corner (`right: 18px; top: 50%; transform: translateY(-50%)`) of the chat header with reserved safe padding.
+- **Snappy, Lag-Free Button Response**: Zero mobile 300ms delay with `touch-action: manipulation`, `-webkit-tap-highlight-color: transparent`, and instant 0.04s tactile `:active` state across all app buttons.
+- **Author Message Deletion**: Senders have full authority to delete their own messages anytime without time limits; administrators and owners can moderate all chat messages.
 - **Instant Reply Preview Dismissal**: Dismissing a reply quote with the interactive `X` cancel button immediately clears the quoted message preview.
 - **Sub-Second Polling & Cold-Start Protection**: Responsive, lightweight chat with auto-retry and message synchronization that survives transient backend wakes.
 - **Swipe-to-Reply & Tap-to-Reply**: Touch and trackpad gesture support to quote messages directly with inline SVG reply indicators and dismissible floating preview.

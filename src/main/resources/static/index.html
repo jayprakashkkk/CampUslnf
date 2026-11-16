@@ -678,22 +678,48 @@
       <div class="empty">Loading campus messages…</div>
     </div>
 
-    <!-- Reply Preview -->
-    <div id="chatReplyPreview" class="chat-reply-preview hide">
-      <span class="chat-reply-label"><b>Replying to:</b> <span id="chatReplyText"></span></span>
-      <button type="button" onclick="clearChatReply(event)" aria-label="Cancel reply" class="chat-reply-cancel">
-        <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    <!-- Reply Preview (Instagram Style 2-Line Banner) -->
+    <div id="chatReplyPreview" class="chat-reply-bar hide">
+      <div class="chat-reply-content">
+        <span class="chat-reply-to">Replying to <b id="chatReplyName">User</b></span>
+        <span class="chat-reply-snippet" id="chatReplyText"></span>
+      </div>
+      <button type="button" id="chatReplyDismissBtn" onclick="clearChatReply(event)" aria-label="Cancel reply" class="chat-reply-dismiss-btn" title="Cancel reply">
+        <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
     </div>
 
-    <!-- Chat Input Form -->
+    <!-- Chat Input Form (Enter creates new line; Send button sends) -->
     <form id="communityChatForm" class="chat-compose">
-      <textarea id="communityChatInput" rows="1" maxlength="2000" placeholder="Message your campus community… (Enter to send)" required></textarea>
+      <textarea id="communityChatInput" rows="1" maxlength="2000" placeholder="Message your campus community…" required></textarea>
       <button type="submit" aria-label="Send message" class="chat-send-btn">
         <svg class="ui-icon send-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
         <span>Send</span>
       </button>
     </form>
+
+    <!-- Instagram-style Floating Reaction Popover -->
+    <div id="chatReactionPopover" class="chat-react-popover hide" role="toolbar" aria-label="Emoji reactions">
+      <button type="button" class="chat-emoji-item" data-emoji="❤️" aria-label="Love">❤️</button>
+      <button type="button" class="chat-emoji-item" data-emoji="😂" aria-label="Laugh">😂</button>
+      <button type="button" class="chat-emoji-item" data-emoji="😮" aria-label="Surprised">😮</button>
+      <button type="button" class="chat-emoji-item" data-emoji="😢" aria-label="Sad">😢</button>
+      <button type="button" class="chat-emoji-item" data-emoji="👏" aria-label="Clap">👏</button>
+      <button type="button" class="chat-emoji-item" data-emoji="🔥" aria-label="Fire">🔥</button>
+      <button type="button" class="chat-emoji-item" data-emoji="👍" aria-label="Thumbs up">👍</button>
+    </div>
+
+    <!-- Instagram-style Floating More Options Popover -->
+    <div id="chatMoreMenu" class="chat-more-popover hide" role="menu">
+      <button type="button" class="chat-more-item chat-more-delete" id="chatMoreDeleteBtn" role="menuitem">
+        <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        <span>Delete</span>
+      </button>
+      <button type="button" class="chat-more-item chat-more-copy" id="chatMoreCopyBtn" role="menuitem">
+        <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
   </section>
 </div>
 

@@ -2757,13 +2757,19 @@ function clearChatReply(event){
     p.classList.add('hide');
     p.style.setProperty('display','none','important');
   }
+  const name=$('chatReplyName');
+  if(name)name.textContent='';
   const t=$('chatReplyText');
   if(t)t.textContent='';
 }
+
 function setChatReply(msg){
+  if(!msg)return;
   chatReplyTarget=msg;
+  const name=$('chatReplyName');
+  if(name)name.textContent=String(msg.displayName||msg.username||'User').trim();
   const t=$('chatReplyText');
-  if(t)t.textContent=`${msg.displayName||msg.username}: ${msg.message}`;
+  if(t)t.textContent=String(msg.message||'').trim();
   const p=$('chatReplyPreview');
   if(p){
     p.classList.remove('hide');
@@ -2772,7 +2778,158 @@ function setChatReply(msg){
   const input=$('communityChatInput');
   if(input)input.focus();
 }
+
 let cachedCommunityMessages=[];
+let activeReactionMessageId=null;
+let activeMoreMessageId=null;
+
+function getStoredReactions(){
+  try{
+    return JSON.parse(localStorage.getItem('campus_chat_reactions') || '{}');
+  }catch{
+    return {};
+  }
+}
+
+function saveStoredReactions(reactions){
+  try{
+    localStorage.setItem('campus_chat_reactions', JSON.stringify(reactions));
+  }catch{}
+}
+
+function toggleChatReactionPicker(event, messageId){
+  if(event){event.preventDefault();event.stopPropagation();}
+  closeChatMoreMenu();
+  const popover=$('chatReactionPopover');
+  if(!popover)return;
+  if(activeReactionMessageId===messageId && !popover.classList.contains('hide')){
+    closeChatReactionPicker();
+    return;
+  }
+  activeReactionMessageId=messageId;
+  const btn=event.currentTarget||event.target;
+  const rect=btn.getBoundingClientRect();
+  popover.classList.remove('hide');
+  
+  const popRect=popover.getBoundingClientRect();
+  let top=rect.top - popRect.height - 8;
+  if(top < 10) top = rect.bottom + 8;
+  let left=rect.left + (rect.width / 2) - (popRect.width / 2);
+  if(left < 10) left = 10;
+  if(left + popRect.width > window.innerWidth - 10){
+    left = window.innerWidth - popRect.width - 10;
+  }
+  popover.style.top=`${top}px`;
+  popover.style.left=`${left}px`;
+}
+
+function closeChatReactionPicker(){
+  activeReactionMessageId=null;
+  const popover=$('chatReactionPopover');
+  if(popover)popover.classList.add('hide');
+}
+
+function setChatMessageReaction(messageId, emoji){
+  closeChatReactionPicker();
+  const reactions=getStoredReactions();
+  if(reactions[messageId]===emoji){
+    delete reactions[messageId];
+  }else{
+    reactions[messageId]=emoji;
+  }
+  saveStoredReactions(reactions);
+  renderCommunityMessages(cachedCommunityMessages, false, true);
+}
+
+function openChatMoreMenu(event, messageId){
+  if(event){event.preventDefault();event.stopPropagation();}
+  closeChatReactionPicker();
+  const popover=$('chatMoreMenu');
+  if(!popover)return;
+  if(activeMoreMessageId===messageId && !popover.classList.contains('hide')){
+    closeChatMoreMenu();
+    return;
+  }
+  activeMoreMessageId=messageId;
+  const btn=event.currentTarget||event.target;
+  const rect=btn.getBoundingClientRect();
+  popover.classList.remove('hide');
+  
+  const popRect=popover.getBoundingClientRect();
+  let top=rect.top - popRect.height - 8;
+  if(top < 10) top = rect.bottom + 8;
+  let left=rect.left + (rect.width / 2) - (popRect.width / 2);
+  if(left < 10) left = 10;
+  if(left + popRect.width > window.innerWidth - 10){
+    left = window.innerWidth - popRect.width - 10;
+  }
+  popover.style.top=`${top}px`;
+  popover.style.left=`${left}px`;
+}
+
+function closeChatMoreMenu(){
+  activeMoreMessageId=null;
+  const popover=$('chatMoreMenu');
+  if(popover)popover.classList.add('hide');
+}
+
+async function copyChatMessage(text){
+  closeChatMoreMenu();
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      await navigator.clipboard.writeText(text);
+    }else{
+      const ta=document.createElement('textarea');
+      ta.value=text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    toast('Message copied to clipboard! 📋');
+  }catch{
+    toast('Could not copy message');
+  }
+}
+
+// Global popover dismiss
+document.addEventListener('click', e=>{
+  if(!e.target.closest('#chatReactionPopover') && !e.target.closest('.chat-react-btn')){
+    closeChatReactionPicker();
+  }
+  if(!e.target.closest('#chatMoreMenu') && !e.target.closest('.chat-more-btn')){
+    closeChatMoreMenu();
+  }
+});
+
+$('chatReactionPopover')?.addEventListener('click', e=>{
+  const item=e.target.closest('.chat-emoji-item');
+  if(item && activeReactionMessageId){
+    const emoji=item.dataset.emoji;
+    setChatMessageReaction(activeReactionMessageId, emoji);
+  }
+});
+
+$('chatMoreDeleteBtn')?.addEventListener('click', ()=>{
+  if(activeMoreMessageId){
+    const id=activeMoreMessageId;
+    closeChatMoreMenu();
+    deleteChatMessage(id);
+  }
+});
+
+$('chatMoreCopyBtn')?.addEventListener('click', ()=>{
+  if(activeMoreMessageId){
+    const msg=cachedCommunityMessages.find(x=>x.id===activeMoreMessageId);
+    closeChatMoreMenu();
+    if(msg){
+      copyChatMessage(msg.message);
+    }
+  }
+});
+
+$('chatReplyDismissBtn')?.addEventListener('click', clearChatReply);
+
 function chatTime(value){
   try{
     if(!value)return '';
@@ -2782,11 +2939,14 @@ function chatTime(value){
     return new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit'}).format(d);
   }catch{return ''}
 }
-function renderCommunityMessages(items,forceBottom){
+
+function renderCommunityMessages(items,forceBottom,ignoreSigCheck=false){
  const box=$('chatMessages'),nearBottom=box.scrollHeight-box.scrollTop-box.clientHeight<90;
  if(!items.length){box.innerHTML='<div class="empty">No messages yet. Say hello to your campus community! 👋</div>';lastChatSignature='';return}
- const signature=items.map(m=>`${m.id}:${m.username}:${m.displayName}:${m.role}:${m.message}:${m.replyText||''}`).join('|');
- if(signature===lastChatSignature)return;
+ const storedReactions=getStoredReactions();
+ const reactionsKey=Object.entries(storedReactions).map(([k,v])=>`${k}:${v}`).join(',');
+ const signature=items.map(m=>`${m.id}:${m.username}:${m.displayName}:${m.role}:${m.message}:${m.replyText||''}`).join('|')+'|'+reactionsKey;
+ if(!ignoreSigCheck && signature===lastChatSignature)return;
  lastChatSignature=signature;
  box.innerHTML=items.map(m=>{
    const mine=!!m.mine;
@@ -2795,28 +2955,63 @@ function renderCommunityMessages(items,forceBottom){
    const username=String(m.username||'');
    const avatar=`<button type="button" class="chat-avatar chat-avatar-button" aria-label="View ${esc(fullName)}'s profile" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${avatarInner(m.avatarId,fullName,m.profileImageUrl)}</button>`;
    const authorLine=!mine?`<button type="button" class="chat-author-role" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${esc(fullName)}</button>`:'';
-   return `<div class="chat-row ${mine?'mine':'theirs'}" data-message-id="${m.id}">${mine?'':avatar}<div class="chat-message-stack">${authorLine}<div class="chat-bubble" role="group" aria-label="Chat message">${m.replyText?`<div class="chat-quoted"><b>${esc(m.replyName||'Reply')}</b><br>${esc(m.replyText)}</div>`:''}<div class="chat-text">${esc(m.message)}</div><div class="chat-time">${chatTime(m.createdAt)}</div><div class="chat-actions"><button type="button" class="chat-reply-btn" onclick="replyToChatMessage(${m.id})"><svg class="ui-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg> Reply</button>${canDelete?`<button type="button" class="chat-delete-btn" onclick="deleteChatMessage(${m.id})" title="Delete your message"><svg class="ui-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Delete</button>`:''}</div></div></div></div>`
+   const reaction=storedReactions[m.id] || (m.reaction || '');
+   const reactionBadge=reaction?`<span class="chat-bubble-reaction" onclick="toggleChatReactionPicker(event, ${m.id})" title="Reaction: ${reaction}">${reaction}</span>`:'';
+
+   // Instagram Action Buttons:
+   // Others (theirs): React (☺), Reply (↩)
+   // Mine: More (⋮), Reply (↩), React (☺)
+   const replyBtn=`<button type="button" class="chat-msg-action-btn chat-reply-btn" title="Reply" aria-label="Reply to message" onclick="replyToChatMessage(${m.id})"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg></button>`;
+   const reactBtn=`<button type="button" class="chat-msg-action-btn chat-react-btn" title="React" aria-label="React with emoji" onclick="toggleChatReactionPicker(event, ${m.id})">☺</button>`;
+   const moreBtn=canDelete?`<button type="button" class="chat-msg-action-btn chat-more-btn" title="More" aria-label="More options" onclick="openChatMoreMenu(event, ${m.id})"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><circle cx="12" cy="5" r="2.2"></circle><circle cx="12" cy="12" r="2.2"></circle><circle cx="12" cy="19" r="2.2"></circle></svg></button>`:'';
+
+   const actionsHtml=mine
+     ? `<div class="chat-hover-actions">${moreBtn}${replyBtn}${reactBtn}</div>`
+     : `<div class="chat-hover-actions">${reactBtn}${replyBtn}</div>`;
+
+   return `<div class="chat-row ${mine?'mine':'theirs'}" data-message-id="${m.id}" data-message-text="${esc(m.message)}" data-sender-name="${esc(fullName)}">
+     ${mine?'':avatar}
+     <div class="chat-message-stack">
+       ${authorLine}
+       <div class="chat-bubble-container">
+         <div class="chat-bubble" role="group" aria-label="Chat message">
+           ${m.replyText?`<div class="chat-quoted"><b>${esc(m.replyName||'Reply')}</b><br>${esc(m.replyText)}</div>`:''}
+           <div class="chat-text">${esc(m.message)}</div>
+           <div class="chat-time">${chatTime(m.createdAt)}</div>
+           ${reactionBadge}
+         </div>
+         ${actionsHtml}
+       </div>
+     </div>
+   </div>`;
  }).join('');
+
  box.querySelectorAll('.chat-row').forEach(row=>{
    const bubble=row.querySelector('.chat-bubble');
    bubble.addEventListener('click',e=>{
-     if(e.target.closest('button'))return;
-     row.classList.toggle('actions-open');
-   });
-   bubble.addEventListener('contextmenu',e=>{
-     e.preventDefault();
-     row.classList.toggle('actions-open');
+     if(e.target.closest('button') || e.target.closest('.chat-bubble-reaction'))return;
+     row.classList.toggle('actions-active');
    });
    let sx=0,sy=0;
-   row.addEventListener('touchstart',e=>{sx=e.changedTouches[0].clientX;sy=e.changedTouches[0].clientY},{passive:true});
+   row.addEventListener('touchstart',e=>{
+     sx=e.changedTouches[0].clientX;
+     sy=e.changedTouches[0].clientY;
+   },{passive:true});
    row.addEventListener('touchend',e=>{
-     const dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;
-     if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.3){
-       const id=Number(row.dataset.messageId),msg=items.find(x=>x.id===id);
-       if(msg){row.classList.remove('actions-open');setChatReply(msg)}
+     const dx=e.changedTouches[0].clientX-sx;
+     const dy=e.changedTouches[0].clientY-sy;
+     if(Math.abs(dx)>40 && Math.abs(dx)>Math.abs(dy)*1.2){
+       const id=Number(row.dataset.messageId);
+       const msg=items.find(x=>x.id===id);
+       if(msg){
+         row.classList.add('swipe-hint');
+         setTimeout(()=>row.classList.remove('swipe-hint'),200);
+         setChatReply(msg);
+       }
      }
    },{passive:true});
  });
+
  if(forceBottom||nearBottom)box.scrollTop=box.scrollHeight;
 }
 async function loadCommunityMessages(forceBottom){
@@ -2998,18 +3193,7 @@ document.addEventListener('click',event=>{
  openChatUserProfile(target.dataset.profileName||target.dataset.chatProfileName||'',target.dataset.profileUsername||target.dataset.chatProfileUsername||target.dataset.userSearchUsername||'');
 });
 
-// Return/Enter sends the message; Shift+Enter inserts a line break.
-$('communityChatInput')?.addEventListener('keydown',e=>{
-  if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){
-    e.preventDefault();
-    const form=$('communityChatForm');
-    if(typeof form.requestSubmit==='function'){
-      form.requestSubmit();
-    }else{
-      form.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));
-    }
-  }
-});
+// Enter/Return inserts a newline (soft keyboard next line); sending happens strictly on Send button click!
 $('communityChatInput')?.addEventListener('input',function(){
   this.style.height='auto';
   this.style.height=Math.min(this.scrollHeight,120)+'px';
