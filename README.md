@@ -91,7 +91,8 @@ In large university campuses, thousands of valuable personal items (student IDs,
   - Line 2: Message snippet preview
   - Right: `✕` dismiss button that instantly clears reply state.
 - **Instant Mute/Unmute Toggle**: Crisp notification toggle button pinned to the far right corner of the chat header; toggles instantly between Muted (`🔕`) and Unmuted (`🔔`), with custom SVG bell/bell-off icons, toast confirmation, and persistent localStorage sync.
-- **Pure Navigation Drawer View**: Opening the 2-line animated menu hides all top header elements (CampUs brand logo, college badge, search bar, greeting) so that only the navigation menu and morphing `X` close button are displayed without any overlap or distraction.
+- **Pure Navigation Drawer View & Morphing 2-Line/X Button**: Opening the 2-line animated menu locks the button at the top-right corner where it smoothly morphs into an `✕` in place; clicking it again (or tapping the backdrop) morphs it back into 2 lines. All top header elements (CampUs brand logo, college badge, search bar, greeting) are cleanly hidden when open, with zero backdrop blur (`backdrop-filter: none`).
+- **Decluttered Home Header**: Removed the redundant dark/light mode toggle button from the home topbar (theme switching remains conveniently accessible inside the drawer menu).
 - **Next Line on Return Key (Send via Button Only)**: Pressing Enter/Return key in the chat textarea inserts a newline for multi-line formatting. Sending happens strictly on clicking the **Send** button.
 - **100% Full-Screen on Laptop & Desktop**: Community chat expands to a spacious, immersive 100% full-screen view (`100vw`, `100dvh`) on laptops and tablets, with edge-to-edge responsiveness.
 - **Pinned Far-Right Notification Bell**: Notification alert toggle icon is firmly pinned to the far right corner (`right: 18px; top: 50%; transform: translateY(-50%)`) of the chat header with reserved safe padding.

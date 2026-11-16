@@ -742,17 +742,68 @@ body.back-controls-close .profile-editor-back{position:absolute;left:auto;right:
 /* Username changes are limited by the server-side annual account policy. */
 .username-change-hint{display:block;margin-top:2px;color:var(--muted);font-size:11px;font-weight:550;line-height:1.45}
 
-/* Community chat mute control: available on desktop/tablet, beside the responsive Back/Close control. */
-.chat-mute-toggle{position:absolute;top:50%;right:52px;transform:translateY(-50%);z-index:3;width:40px;height:40px;border:1px solid #feedde;border-radius:13px;background:#fff7f0;color:var(--p);display:grid;place-items:center;font-size:19px;line-height:1;cursor:pointer;touch-action:manipulation;transition:background .15s,border-color .15s,transform .15s}
-.chat-mute-toggle:hover{background:#ffefe1;border-color:#ffe2c9}
-.chat-mute-toggle.is-muted{background:#e8944b;color:#fff;border-color:#e8944b}
-.chat-mute-toggle:disabled{opacity:.6;cursor:wait}
-body.back-controls-arrow:not(.device-phone) .chat-topbar .chat-mute-toggle{left:50px;right:auto}
-body.back-controls-close .chat-topbar .chat-mute-toggle{left:auto;right:52px}
-body.back-controls-arrow:not(.device-phone) .chat-topbar{padding-left:98px;padding-right:46px}
-body.back-controls-close .chat-topbar{padding-left:46px;padding-right:98px}
-body.device-phone .chat-topbar{padding-left:45px;padding-right:45px}
-body.device-phone .chat-topbar .chat-mute-toggle{left:auto;right:0;width:34px;height:34px;border-radius:50%;font-size:17px}
+/* Community chat mute control: pinned to the far right corner of the topbar */
+.chat-topbar-right {
+  position: absolute !important;
+  top: 50% !important;
+  right: 20px !important;
+  transform: translateY(-50%) !important;
+  z-index: 100 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  pointer-events: auto !important;
+}
+
+.chat-mute-toggle,
+.chat-topbar .chat-mute-toggle,
+body.back-controls-arrow .chat-topbar .chat-mute-toggle,
+body.back-controls-close .chat-topbar .chat-mute-toggle,
+body:not(.device-phone) .chat-topbar .chat-mute-toggle {
+  position: static !important;
+  top: auto !important;
+  bottom: auto !important;
+  left: auto !important;
+  right: auto !important;
+  transform: none !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  max-width: 40px !important;
+  border-radius: 50% !important;
+  background: #FFF7EE !important;
+  border: 1px solid rgba(230, 218, 207, 0.9) !important;
+  color: #C25E17 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+  touch-action: manipulation !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 101 !important;
+  padding: 0 !important;
+  transition: all 0.15s ease !important;
+}
+
+.chat-mute-toggle:hover {
+  background: #FEE8D5 !important;
+  color: #A3480B !important;
+  transform: scale(1.06) !important;
+}
+
+.chat-mute-toggle.is-muted {
+  background: #FEE2E2 !important;
+  border-color: #FCA5A5 !important;
+  color: #DC2626 !important;
+}
+
+.chat-mute-toggle:disabled {
+  opacity: 0.6 !important;
+  cursor: wait !important;
+}
 
 /* Owner/Leader identity, custom profile pictures and profile banners. */
 .role-badge{display:inline-flex;align-items:center;gap:3px;margin-left:5px;padding:3px 7px;border-radius:999px;background:#fff3e8;color:#c67c3b;font-size:10px;font-weight:900;white-space:nowrap;vertical-align:middle}
@@ -4919,15 +4970,26 @@ body.nav-drawer-open header.app-header {
   box-shadow: none !important;
   pointer-events: none !important;
   z-index: 10005 !important;
+  justify-content: flex-end !important;
+}
+
+.header-right-actions {
+  margin-left: auto !important;
 }
 
 body.nav-drawer-open .header-right-actions {
-  pointer-events: none !important;
+  margin-left: auto !important;
+  pointer-events: auto !important;
+  z-index: 10006 !important;
 }
 
 body.nav-drawer-open #menuToggleBtn {
   pointer-events: auto !important;
   z-index: 10006 !important;
+}
+
+#headerThemeBtn {
+  display: none !important;
 }
 
 .drawer-header .drawer-close-btn {
@@ -5006,14 +5068,14 @@ body.nav-drawer-open #menuToggleBtn {
 }
 
 /* --------------------------------------------------------------------------
-   FULL ANIMATED SLIDE-DOWN MENU DRAWER (ZERO DUPLICATION)
+   FULL ANIMATED SLIDE-DOWN MENU DRAWER (ZERO DUPLICATION - NO BLUR)
    -------------------------------------------------------------------------- */
 .nav-drawer-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   z-index: 9990;
   opacity: 1;
   transition: opacity 0.24s ease, visibility 0.24s ease;
@@ -6285,9 +6347,9 @@ body.fullscreen-page-open {
   .nav-drawer-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.38);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.42);
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     z-index: 9990;
     opacity: 1;
     visibility: visible;
@@ -6408,9 +6470,9 @@ body.fullscreen-page-open {
   .nav-drawer-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.38);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.42);
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     z-index: 9990;
     opacity: 1;
     visibility: visible;
@@ -8465,23 +8527,26 @@ body[data-theme="dark"] {
 /* Topbar Right - Notification Bell / Mute Toggle (Pinned to the right edge) */
 .chat-topbar-right {
   position: absolute !important;
-  right: 18px !important;
+  right: 20px !important;
   top: 50% !important;
   transform: translateY(-50%) !important;
-  z-index: 25 !important;
+  z-index: 100 !important;
   display: flex !important;
   align-items: center !important;
+  justify-content: center !important;
   gap: 8px !important;
   margin: 0 !important;
+  pointer-events: auto !important;
 }
 
 .chat-mute-toggle {
   width: 40px !important;
   height: 40px !important;
   min-width: 40px !important;
+  max-width: 40px !important;
   border-radius: 50% !important;
   background: #FFF7EE !important;
-  border: 1px solid rgba(230, 218, 207, 0.8) !important;
+  border: 1px solid rgba(230, 218, 207, 0.9) !important;
   color: #C25E17 !important;
   display: flex !important;
   align-items: center !important;
@@ -8489,6 +8554,10 @@ body[data-theme="dark"] {
   cursor: pointer !important;
   transition: all 0.18s ease !important;
   padding: 0 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
+  touch-action: manipulation !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .chat-mute-toggle:hover {
