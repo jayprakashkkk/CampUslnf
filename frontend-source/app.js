@@ -174,7 +174,8 @@ function finishCampusUiLayer(layer,fromPopstate=false){
 function closeCampusUiLayerFromBack(layer){
   closeChatMoreMenu();
   closeChatReactionPicker();
-  if(layer==='adminDashboardModal')closeAdminDashboard(true);
+  if(layer==='reactionDetail')closeReactionDetailSheet(true);
+  else if(layer==='adminDashboardModal')closeAdminDashboard(true);
   else if(layer==='navDrawer')closeNavDrawer(true);
   else if(layer==='myReports'){
     myReportsOnly=false;chosenType='';statFilter='';load();
@@ -201,6 +202,7 @@ function closeCampusUiLayerFromBack(layer){
   else if(layer==='profileDropdown')closeProfileDropdown(true);
 }
 function closeTopUntrackedUiLayer(){
+  if($('reactionDetailModal')&&!$('reactionDetailModal').classList.contains('hide')){closeReactionDetailSheet(true);return true;}
   if($('chatMoreMenu')&&!$('chatMoreMenu').classList.contains('hide')){closeChatMoreMenu();return true;}
   if($('chatReactionPopover')&&!$('chatReactionPopover').classList.contains('hide')){closeChatReactionPicker();return true;}
   if($('imageLightbox')&&!$('imageLightbox').classList.contains('hide')){closeLightbox();return true;}
@@ -230,6 +232,7 @@ function closeTopUntrackedUiLayer(){
 }
 window.addEventListener('popstate',()=>{
  if(ignoreCampusUiPopstate){ignoreCampusUiPopstate=false;return;}
+ if($('reactionDetailModal')&&!$('reactionDetailModal').classList.contains('hide')){closeReactionDetailSheet(true);}
  if($('chatMoreMenu')&&!$('chatMoreMenu').classList.contains('hide')){closeChatMoreMenu();}
  if($('chatReactionPopover')&&!$('chatReactionPopover').classList.contains('hide')){closeChatReactionPicker();}
  const layer=campusUiHistoryStack.pop();
@@ -2209,6 +2212,7 @@ function confirmNavPopup(){
 $('navPopup').addEventListener('click',e=>{if(e.target===$('navPopup'))closeNavPopup()});
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape')return;
+  if($('reactionDetailModal')&&!$('reactionDetailModal').classList.contains('hide')){closeReactionDetailSheet();return;}
   if($('chatMoreMenu')&&!$('chatMoreMenu').classList.contains('hide')){closeChatMoreMenu();return;}
   if($('chatReactionPopover')&&!$('chatReactionPopover').classList.contains('hide')){closeChatReactionPicker();return;}
   if($('adminDashboardModal')&&!$('adminDashboardModal').classList.contains('hide')){closeAdminDashboard();return;}
@@ -2857,6 +2861,7 @@ function closeCommunityChat(fromPopstate=false){
   chatPollTimer=null;
   closeChatReactionPicker();
   closeChatMoreMenu();
+  closeReactionDetailSheet();
   closeUnsendModal();
   $('communityChatOverlay').classList.add('hide');
   document.body.classList.remove('chat-fullscreen-open');
@@ -2916,73 +2921,242 @@ function saveStoredReactions(reactions){
   }catch{}
 }
 
-function toggleChatReactionPicker(event, messageId){
+function getStoredReactionsV2(){
+  try{
+    return JSON.parse(localStorage.getItem('campus_chat_reactions_v2') || '{}');
+  }catch{
+    return {};
+  }
+}
+
+function saveStoredReactionsV2(reactions){
+  try{
+    localStorage.setItem('campus_chat_reactions_v2', JSON.stringify(reactions));
+  }catch{}
+}
+
+function getDemoReactionsForMessage(messageId){
+  const num = Number(messageId);
+  if(num === 1 || num === 2){
+    return [
+      { username: 'kartik', displayName: 'Kartik Gupta', college: 'CGC University', avatarId: 'avatar-1', profileImageUrl: '', emoji: '❤️', time: Date.now() - 3600000 },
+      { username: 'abeer', displayName: 'Abeer Sen', college: 'CGC University', avatarId: 'avatar-2', profileImageUrl: '', emoji: '❤️', time: Date.now() - 3000000 },
+      { username: 'pushkar', displayName: 'Pushkar Arora', college: 'CGC Landran', avatarId: 'avatar-3', profileImageUrl: '', emoji: '❤️', time: Date.now() - 2400000 },
+      { username: 'krish', displayName: 'Krish Sharma', college: 'Chandigarh University', avatarId: 'avatar-4', profileImageUrl: '', emoji: '❤️', time: Date.now() - 1800000 },
+      { username: 'sourabh', displayName: 'Sourabh Bishnoi', college: 'CGC University', avatarId: 'avatar-5', profileImageUrl: '', emoji: '🔥', time: Date.now() - 1200000 },
+      { username: 'simran', displayName: 'Simran Kaur', college: 'CGC University', avatarId: 'avatar-6', profileImageUrl: '', emoji: '👍', time: Date.now() - 900000 },
+      { username: 'mayank', displayName: 'Mayank Patel', college: 'CGC University', avatarId: 'avatar-7', profileImageUrl: '', emoji: '❤️', time: Date.now() - 600000 },
+      { username: 'rajan', displayName: 'Rajan Sinha', college: 'CGC University', avatarId: 'avatar-8', profileImageUrl: '', emoji: '😂', time: Date.now() - 300000 }
+    ];
+  }
+  return [];
+}
+
+function getMessageReactions(messageId){
+  const store = getStoredReactionsV2();
+  const idStr = String(messageId);
+  if (store[idStr] && Array.isArray(store[idStr])) {
+    return store[idStr];
+  }
+  const legacyStore = getStoredReactions();
+  if (legacyStore[idStr]) {
+    const legacyEmoji = legacyStore[idStr];
+    const uName = currentUser ? currentUser.username : 'you';
+    const dName = currentUser ? (currentUser.displayName || currentUser.username) : 'You';
+    return [{
+      username: uName,
+      displayName: dName,
+      college: currentUser?.collegeName || 'CGC University',
+      avatarId: currentUser?.avatarId || '',
+      profileImageUrl: currentUser?.profileImageUrl || '',
+      emoji: legacyEmoji,
+      time: Date.now()
+    }];
+  }
+  return getDemoReactionsForMessage(messageId);
+}
+
+let activeReactionDetailMessageId = null;
+let activeReactionFilter = 'ALL';
+
+function openReactionDetailSheet(event, messageId){
   if(event){
     try{event.preventDefault();event.stopPropagation();}catch{}
   }
   closeChatMoreMenu();
-  const popover=$('chatReactionPopover');
-  if(!popover)return;
-  if(activeReactionMessageId===messageId && !popover.classList.contains('hide')){
-    closeChatReactionPicker();
-    return;
+  closeChatReactionPicker();
+  activeReactionDetailMessageId = messageId;
+  activeReactionFilter = 'ALL';
+  renderReactionDetailContent();
+  
+  const modal = $('reactionDetailModal');
+  if(modal){
+    pushCampusUiLayer('reactionDetail');
+    modal.classList.remove('hide');
+    modal.style.setProperty('display', 'flex', 'important');
+    document.body.classList.add('reaction-sheet-open');
   }
-  activeReactionMessageId=messageId;
-  const btn = (event && event.currentTarget && event.currentTarget.closest)
-    ? event.currentTarget.closest('.chat-react-btn')
-    : (event && event.target ? (event.target.closest('.chat-react-btn') || event.target) : null);
-  if(!btn) return;
-  const rect=btn.getBoundingClientRect();
-  
-  // Mount to body so no parent overflow/transform clips the emojis
-  if(popover.parentElement !== document.body){
-    document.body.appendChild(popover);
-  }
-  
-  popover.classList.remove('hide');
-  popover.style.setProperty('display', 'flex', 'important');
-  popover.style.setProperty('visibility', 'visible', 'important');
-  popover.style.setProperty('pointer-events', 'auto', 'important');
-  popover.style.setProperty('opacity', '1', 'important');
-  popover.style.zIndex = '100000';
-  
-  const popWidth = popover.offsetWidth || 280;
-  const popHeight = popover.offsetHeight || 46;
-  
-  let top = rect.top - popHeight - 10;
-  if(top < 12) top = rect.bottom + 10;
-  
-  let left = rect.left + (rect.width / 2) - (popWidth / 2);
-  const minLeft = 12;
-  const maxLeft = window.innerWidth - popWidth - 12;
-  if(left > maxLeft) left = maxLeft;
-  if(left < minLeft) left = minLeft;
-  
-  popover.style.top=`${Math.round(top)}px`;
-  popover.style.left=`${Math.round(left)}px`;
 }
 
-function closeChatReactionPicker(){
-  activeReactionMessageId=null;
-  const popover=$('chatReactionPopover');
-  if(popover){
-    popover.classList.add('hide');
-    popover.style.setProperty('display', 'none', 'important');
-    popover.style.setProperty('visibility', 'hidden', 'important');
-    popover.style.setProperty('pointer-events', 'none', 'important');
-    popover.style.setProperty('opacity', '0', 'important');
+function closeReactionDetailSheet(fromPopstate = false){
+  const modal = $('reactionDetailModal');
+  if(!modal || modal.classList.contains('hide')) return;
+  modal.classList.add('hide');
+  modal.style.setProperty('display', 'none', 'important');
+  document.body.classList.remove('reaction-sheet-open');
+  activeReactionDetailMessageId = null;
+  finishCampusUiLayer('reactionDetail', fromPopstate);
+}
+
+function handleReactionDetailBackdrop(event){
+  if(event.target === $('reactionDetailModal')){
+    closeReactionDetailSheet();
+  }
+}
+
+function renderReactionDetailContent(){
+  if(!activeReactionDetailMessageId) return;
+  const reactions = getMessageReactions(activeReactionDetailMessageId);
+  const titleEl = $('reactionDetailTitle');
+  const tabsEl = $('reactionFilterTabs');
+  const listEl = $('reactionUserList');
+  if(!tabsEl || !listEl) return;
+  
+  const totalCount = reactions.length;
+  if(titleEl){
+    titleEl.textContent = `${totalCount} reaction${totalCount === 1 ? '' : 's'}`;
+  }
+  
+  const counts = {};
+  reactions.forEach(r => {
+    counts[r.emoji] = (counts[r.emoji] || 0) + 1;
+  });
+  const emojiList = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+  
+  let tabsHtml = `
+    <button type="button" class="reaction-filter-tab ${activeReactionFilter === 'ALL' ? 'active' : ''}" onclick="setReactionDetailFilter('ALL')">
+      <span>All</span> <span class="tab-count">${totalCount}</span>
+    </button>
+  `;
+  emojiList.forEach(emoji => {
+    const isAct = activeReactionFilter === emoji;
+    tabsHtml += `
+      <button type="button" class="reaction-filter-tab ${isAct ? 'active' : ''}" onclick="setReactionDetailFilter('${emoji}')">
+        <span>${emoji}</span> <span class="tab-count">${counts[emoji]}</span>
+      </button>
+    `;
+  });
+  tabsEl.innerHTML = tabsHtml;
+  
+  const filtered = activeReactionFilter === 'ALL'
+    ? reactions
+    : reactions.filter(r => r.emoji === activeReactionFilter);
+    
+  if(!filtered.length){
+    listEl.innerHTML = '<div class="empty">No reactions found for this filter.</div>';
+    return;
+  }
+  
+  const currentUname = currentUser ? String(currentUser.username).toLowerCase() : '';
+  
+  listEl.innerHTML = filtered.map(r => {
+    const isMe = Boolean(currentUname && String(r.username).toLowerCase() === currentUname);
+    const name = r.displayName || r.username || 'CampUs User';
+    const college = r.college ? formatCollegeFullName(r.college) : 'Verified Campus';
+    const sub = isMe ? 'Tap to remove reaction' : `@${r.username || 'user'} · ${college}`;
+    const initial = (name.trim().charAt(0) || 'U').toUpperCase();
+    const avatarContent = r.profileImageUrl
+      ? `<img src="${esc(r.profileImageUrl)}" alt="${esc(name)}">`
+      : `<span>${initial}</span>`;
+      
+    return `
+      <div class="reaction-user-item ${isMe ? 'is-mine' : ''}" onclick="${isMe ? `removeMyReactionFromSheet(${activeReactionDetailMessageId})` : `viewUserProfileFromReaction('${esc(r.username)}', '${esc(name)}')`}">
+        <div class="reaction-user-left">
+          <div class="reaction-user-avatar">
+            ${avatarContent}
+          </div>
+          <div class="reaction-user-meta">
+            <span class="reaction-user-name">${esc(name)}${isMe ? ' <small class="you-tag">(You)</small>' : ''}</span>
+            <span class="reaction-user-sub">${esc(sub)}</span>
+          </div>
+        </div>
+        <div class="reaction-user-right">
+          <span class="reaction-user-emoji">${r.emoji}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function setReactionDetailFilter(filter){
+  activeReactionFilter = filter;
+  renderReactionDetailContent();
+}
+
+function removeMyReactionFromSheet(messageId){
+  setChatMessageReaction(messageId, null);
+  renderReactionDetailContent();
+  const remaining = getMessageReactions(messageId);
+  if(!remaining.length){
+    closeReactionDetailSheet();
+  }
+}
+
+function viewUserProfileFromReaction(username, displayName){
+  closeReactionDetailSheet();
+  if(username){
+    openChatUserProfile(displayName, username);
   }
 }
 
 function setChatMessageReaction(messageId, emoji){
   closeChatReactionPicker();
-  const reactions=getStoredReactions();
-  if(reactions[messageId]===emoji){
-    delete reactions[messageId];
-  }else{
-    reactions[messageId]=emoji;
+  const idStr = String(messageId);
+  const store = getStoredReactionsV2();
+  let list = store[idStr] ? [...store[idStr]] : [];
+  
+  if(!list.length){
+    list = [...getMessageReactions(messageId)];
   }
-  saveStoredReactions(reactions);
+  
+  const currentUname = currentUser ? String(currentUser.username).toLowerCase() : 'you';
+  const existingIdx = list.findIndex(r => String(r.username).toLowerCase() === currentUname);
+  
+  if(!emoji){
+    if(existingIdx >= 0) list.splice(existingIdx, 1);
+  }else if(existingIdx >= 0){
+    if(list[existingIdx].emoji === emoji){
+      list.splice(existingIdx, 1);
+    }else{
+      list[existingIdx].emoji = emoji;
+      list[existingIdx].time = Date.now();
+    }
+  }else{
+    const uName = currentUser ? currentUser.username : 'you';
+    const dName = currentUser ? (currentUser.displayName || currentUser.username) : 'You';
+    list.push({
+      username: uName,
+      displayName: dName,
+      college: currentUser?.collegeName || 'CGC University',
+      avatarId: currentUser?.avatarId || '',
+      profileImageUrl: currentUser?.profileImageUrl || '',
+      emoji: emoji,
+      time: Date.now()
+    });
+  }
+  
+  store[idStr] = list;
+  saveStoredReactionsV2(store);
+  
+  const legacy = getStoredReactions();
+  const myReaction = list.find(r => String(r.username).toLowerCase() === currentUname);
+  if(myReaction){
+    legacy[idStr] = myReaction.emoji;
+  }else{
+    delete legacy[idStr];
+  }
+  saveStoredReactions(legacy);
+  
   renderCommunityMessages(cachedCommunityMessages, false, true);
 }
 
@@ -3080,6 +3254,12 @@ function dismissChatPopovers(e){
       closeChatReactionPicker();
     }
   }
+  const detailModal = $('reactionDetailModal');
+  if(detailModal && !detailModal.classList.contains('hide')){
+    if(!target.closest('.reaction-detail-sheet') && !target.closest('.chat-bubble-reaction')){
+      closeReactionDetailSheet();
+    }
+  }
 }
 
 document.addEventListener('click', dismissChatPopovers, true);
@@ -3136,8 +3316,8 @@ function chatTime(value){
 function renderCommunityMessages(items,forceBottom,ignoreSigCheck=false){
  const box=$('chatMessages'),nearBottom=box.scrollHeight-box.scrollTop-box.clientHeight<90;
  if(!items.length){box.innerHTML='<div class="empty">No messages yet. Say hello to your campus community! 👋</div>';lastChatSignature='';return}
- const storedReactions=getStoredReactions();
- const reactionsKey=Object.entries(storedReactions).map(([k,v])=>`${k}:${v}`).join(',');
+ const storedV2=getStoredReactionsV2();
+ const reactionsKey=Object.entries(storedV2).map(([k,v])=>`${k}:${(v||[]).map(x=>x.username+x.emoji).join(',')}`).join('|');
  const signature=items.map(m=>`${m.id}:${m.username}:${m.displayName}:${m.role}:${m.message}:${m.replyText||''}`).join('|')+'|'+reactionsKey;
  if(!ignoreSigCheck && signature===lastChatSignature)return;
  lastChatSignature=signature;
@@ -3149,8 +3329,20 @@ function renderCommunityMessages(items,forceBottom,ignoreSigCheck=false){
    const username=String(m.username||'');
    const avatar=`<button type="button" class="chat-avatar chat-avatar-button" aria-label="View ${esc(fullName)}'s profile" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${avatarInner(m.avatarId,fullName,m.profileImageUrl)}</button>`;
    const authorLine=!mine?`<button type="button" class="chat-author-role" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${esc(fullName)}</button>`:'';
-   const reaction=storedReactions[m.id] || (m.reaction || '');
-   const reactionBadge=reaction?`<span class="chat-bubble-reaction" onclick="toggleChatReactionPicker(event, ${m.id})" title="Reaction: ${reaction}">${reaction}</span>`:'';
+   
+   const msgReactions = getMessageReactions(m.id);
+   let reactionBadge = '';
+   if (msgReactions && msgReactions.length > 0) {
+     const emojiCounts = {};
+     msgReactions.forEach(r => {
+       emojiCounts[r.emoji] = (emojiCounts[r.emoji] || 0) + 1;
+     });
+     const sortedEmojis = Object.keys(emojiCounts).sort((a, b) => emojiCounts[b] - emojiCounts[a]);
+     const displayEmojis = sortedEmojis.slice(0, 3).join('');
+     const totalCount = msgReactions.length;
+     const countText = totalCount > 1 ? `<span class="chat-reaction-count">${totalCount}</span>` : '';
+     reactionBadge = `<button type="button" class="chat-bubble-reaction" onclick="openReactionDetailSheet(event, ${m.id})" aria-label="${totalCount} reactions. Tap to view who reacted."><span class="chat-reaction-emojis">${displayEmojis}</span>${countText}</button>`;
+   }
 
    // Instagram Action Buttons:
    // Others (theirs): React (☺), Reply (↩)
