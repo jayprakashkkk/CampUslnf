@@ -519,7 +519,7 @@ function renderPostCardMarkup(r, all) {
   let claimActionHtml = '';
   if (typeIsFound && String(r.status || '').toUpperCase() !== 'RETURNED') {
     if (canEdit) {
-      claimActionHtml = `<button type="button" class="view-claims-btn" onclick="openClaimsViewer(${r.id})" title="Review submitted ownership claims"><span>👀 View Claims (${r.claimCount || 0})</span></button>`;
+      claimActionHtml = `<button type="button" class="view-claims-btn" onclick="openClaimsViewer(${r.id})" title="Review submitted ownership claims"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg><span>View Claims (${r.claimCount || 0})</span></button>`;
     } else {
       claimActionHtml = `<button type="button" class="claim-action-btn" onclick="openClaimModal(${r.id},'${esc(r.title)}','${esc(r.secretQuestion||'')}')"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg><span>Claim Item</span></button>`;
     }
@@ -656,7 +656,9 @@ async function togglePostLike(id, btnEl) {
     if (!res.ok) throw 0;
     const data = await res.json();
     document.querySelectorAll(`.like-count-${id}`).forEach(el => el.textContent = data.count || 0);
-    document.querySelectorAll(`.heart-icon-${id}`).forEach(el => el.textContent = data.liked ? '❤️' : '🤍');
+    document.querySelectorAll(`.heart-icon-${id}`).forEach(el => {
+      el.innerHTML = `<svg class="ui-icon heart-svg ${data.liked ? 'is-liked' : ''}" viewBox="0 0 24 24" width="19" height="19" fill="${data.liked ? '#E11D48' : 'none'}" stroke="${data.liked ? '#E11D48' : 'currentColor'}" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+    });
     document.querySelectorAll(`.like-btn-${id}`).forEach(el => el.classList.toggle('active', data.liked));
     const cached = (cachedAllReports || []).find(x => x.id === id);
     if (cached) {
@@ -837,7 +839,7 @@ async function switchActivityTab(tab) {
       if (!list.length) {
         container.innerHTML = `
           <div class="empty">
-            <span class="activity-empty-icon" style="font-size:32px;display:block;margin-bottom:8px;">📁</span>
+            <span class="activity-empty-icon" style="display:flex;justify-content:center;margin-bottom:10px;"><svg class="ui-icon" viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="#E86500" stroke-width="1.8"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg></span>
             <b>No Archived Posts</b>
             <p>Posts you archive will appear here. Only you can see them.</p>
           </div>`;
@@ -845,7 +847,7 @@ async function switchActivityTab(tab) {
       }
       container.innerHTML = `
         <div class="activity-info-banner">
-          <span>📁</span>
+          <svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#C25E17" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
           <p><b>Archive:</b> These reports are hidden from the public feed. You can unarchive them anytime to show them back on the feed.</p>
         </div>
         <div class="activity-cards-list">
@@ -858,12 +860,12 @@ async function switchActivityTab(tab) {
               <h3 class="activity-card-title">${esc(r.title)}</h3>
               <p class="activity-card-desc">${esc(r.description || 'No description provided')}</p>
               <div class="activity-card-tags">
-                <span>${categoryEmoji(r.category)} ${esc(r.category)}</span>
-                <span>📍 ${esc(r.location)}</span>
+                <span class="insta-meta-tag">${categoryEmoji(r.category)} ${esc(r.category)}</span>
+                <span class="insta-meta-tag"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ${esc(r.location)}</span>
               </div>
               <div class="activity-card-actions">
-                <button type="button" class="act-btn-restore" onclick="unarchiveReport(${r.id})">↺ Unarchive (Show on Feed)</button>
-                <button type="button" class="act-btn-delete" onclick="deleteReport(${r.id}, true)">🗑 Move to Trash</button>
+                <button type="button" class="act-btn-restore" onclick="unarchiveReport(${r.id})"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg> Unarchive</button>
+                <button type="button" class="act-btn-delete" onclick="deleteReport(${r.id}, true)"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Move to Trash</button>
               </div>
             </article>
           `).join('')}
@@ -876,7 +878,7 @@ async function switchActivityTab(tab) {
       if (!list.length) {
         container.innerHTML = `
           <div class="empty">
-            <span class="activity-empty-icon" style="font-size:32px;display:block;margin-bottom:8px;">🗑️</span>
+            <span class="activity-empty-icon" style="display:flex;justify-content:center;margin-bottom:10px;"><svg class="ui-icon" viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="#DC2626" stroke-width="1.8"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></span>
             <b>Recently Deleted is Empty</b>
             <p>Deleted posts stay here for 30 days before permanent removal.</p>
           </div>`;
@@ -884,7 +886,7 @@ async function switchActivityTab(tab) {
       }
       container.innerHTML = `
         <div class="activity-info-banner warning">
-          <span>⏳</span>
+          <svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#DC2626" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           <p><b>Recently Deleted:</b> Items remain here for 30 days. You can restore them to the feed anytime. After 30 days, they are permanently deleted.</p>
         </div>
         <div class="activity-cards-list">
@@ -892,17 +894,17 @@ async function switchActivityTab(tab) {
             <article class="activity-post-card deleted" id="act-post-${r.id}">
               <div class="activity-card-meta">
                 <span class="pill ${r.type === 'FOUND' ? 'found' : ''}">● ${r.type}</span>
-                <span class="activity-countdown-badge">⏳ ${r.daysRemaining != null ? r.daysRemaining : 30} days left</span>
+                <span class="activity-countdown-badge"><svg class="ui-icon" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> ${r.daysRemaining != null ? r.daysRemaining : 30} days left</span>
               </div>
               <h3 class="activity-card-title">${esc(r.title)}</h3>
               <p class="activity-card-desc">${esc(r.description || 'No description provided')}</p>
               <div class="activity-card-tags">
-                <span>${categoryEmoji(r.category)} ${esc(r.category)}</span>
-                <span>📍 ${esc(r.location)}</span>
+                <span class="insta-meta-tag">${categoryEmoji(r.category)} ${esc(r.category)}</span>
+                <span class="insta-meta-tag"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ${esc(r.location)}</span>
               </div>
               <div class="activity-card-actions">
-                <button type="button" class="act-btn-restore" onclick="restoreReport(${r.id})">↺ Restore to Feed</button>
-                <button type="button" class="act-btn-permanent" onclick="permanentlyDeleteReport(${r.id})">✕ Delete Forever</button>
+                <button type="button" class="act-btn-restore" onclick="restoreReport(${r.id})"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg> Restore to Feed</button>
+                <button type="button" class="act-btn-permanent" onclick="permanentlyDeleteReport(${r.id})"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Delete Forever</button>
               </div>
             </article>
           `).join('')}
@@ -915,7 +917,7 @@ async function switchActivityTab(tab) {
       if (!list.length) {
         container.innerHTML = `
           <div class="empty">
-            <span class="activity-empty-icon" style="font-size:32px;display:block;margin-bottom:8px;">❤️</span>
+            <span class="activity-empty-icon" style="display:flex;justify-content:center;margin-bottom:10px;"><svg class="ui-icon" viewBox="0 0 24 24" width="38" height="38" fill="none" stroke="#E11D48" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg></span>
             <b>No Liked Posts Yet</b>
             <p>Tap the heart icon on any post in the feed to save it to your likes.</p>
           </div>`;
@@ -923,7 +925,7 @@ async function switchActivityTab(tab) {
       }
       container.innerHTML = `
         <div class="activity-info-banner">
-          <span>❤️</span>
+          <svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="#E11D48" stroke="#E11D48" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
           <p><b>Posts You Liked:</b> A collection of campus reports you showed support for.</p>
         </div>
         <div class="activity-cards-list">
@@ -936,12 +938,12 @@ async function switchActivityTab(tab) {
               <h3 class="activity-card-title">${esc(r.title)}</h3>
               <p class="activity-card-desc">${esc(r.description || 'No description provided')}</p>
               <div class="activity-card-tags">
-                <span>${categoryEmoji(r.category)} ${esc(r.category)}</span>
-                <span>📍 ${esc(r.location)}</span>
+                <span class="insta-meta-tag">${categoryEmoji(r.category)} ${esc(r.category)}</span>
+                <span class="insta-meta-tag"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ${esc(r.location)}</span>
               </div>
               <div class="activity-card-actions">
-                <button type="button" class="act-btn-view" onclick="viewPostFromActivity(${r.id})">👀 View Post</button>
-                <button type="button" class="act-btn-share" onclick="sharePost(${r.id}, '${esc(r.title)}')">🔗 Share</button>
+                <button type="button" class="act-btn-view" onclick="viewPostFromActivity(${r.id})"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg> View Post</button>
+                <button type="button" class="act-btn-share" onclick="sharePost(${r.id}, '${esc(r.title)}')"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg> Share</button>
               </div>
             </article>
           `).join('')}
@@ -1180,7 +1182,11 @@ function renderExploreGrid() {
     const isFound = String(r.type || '').toUpperCase() === 'FOUND';
     const isReturned = String(r.status || '').toUpperCase() === 'RETURNED';
     const badgeClass = isReturned ? 'returned' : (isFound ? 'found' : 'lost');
-    const badgeText = isReturned ? '✨ RETURNED' : (isFound ? '🟢 FOUND' : '🔴 LOST');
+    const badgeMarkup = isReturned
+      ? `<span class="explore-tile-badge returned"><svg class="ui-icon" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="20 6 9 17 4 12"></polyline></svg> RETURNED</span>`
+      : (isFound
+      ? `<span class="explore-tile-badge found"><span class="status-dot"></span> FOUND</span>`
+      : `<span class="explore-tile-badge lost"><span class="status-dot"></span> LOST</span>`);
     const likes = r.likeCount || 0;
     const comments = r.commentCount || 0;
     const hasImage = Boolean(r.imageData);
@@ -1194,11 +1200,11 @@ function renderExploreGrid() {
 
     return `<button type="button" class="explore-tile" onclick="openPostDetail(${r.id})" aria-label="View ${esc(r.title)}">
       ${mediaMarkup}
-      <span class="explore-tile-badge ${badgeClass}">${badgeText}</span>
+      ${badgeMarkup}
       <div class="explore-tile-overlay">
         <div class="explore-tile-overlay-stats">
-          <span>❤️ ${likes}</span>
-          <span>💬 ${comments}</span>
+          <span><svg class="ui-icon" viewBox="0 0 24 24" width="12" height="12" fill="#FFF" stroke="#FFF" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg> ${likes}</span>
+          <span><svg class="ui-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#FFF" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> ${comments}</span>
         </div>
         <div class="explore-tile-overlay-title">${esc(r.title)}</div>
       </div>
@@ -2698,9 +2704,26 @@ function syncChatViewport(){
   else{overlay.style.setProperty('--chat-vv-height',`${window.innerHeight}px`);overlay.style.setProperty('--chat-vv-top','0px');}
 }
 function openCommunityChat(){
-  // Always open the chat screen on tap; the API response will explain if a session/backend is unavailable.
   if(!communityChatOpen)pushCampusUiLayer('communityChat');
-  communityChatOpen=true;chatReplyTarget=null;document.body.classList.add('chat-fullscreen-open');$('communityChatOverlay').classList.remove('hide');syncChatViewport();syncCommunityMuteControls();refreshNotifications();clearChatReply();loadCommunityMessages(true);clearInterval(chatPollTimer);chatPollTimer=setInterval(()=>{if(communityChatOpen)loadCommunityMessages(false)},4000);setTimeout(()=>{$('communityChatInput').focus();syncChatViewport()},80);
+  communityChatOpen=true;
+  chatReplyTarget=null;
+  document.body.classList.add('chat-fullscreen-open');
+  $('communityChatOverlay').classList.remove('hide');
+
+  const chatSubtitle = $('chatCampusSubtitle');
+  if (chatSubtitle) {
+    const clg = (currentUser && (collegeDisplayName(currentUser.college) || currentUser.college)) || 'Verified Campus Network';
+    chatSubtitle.textContent = clg;
+  }
+
+  syncChatViewport();
+  syncCommunityMuteControls();
+  refreshNotifications();
+  clearChatReply();
+  loadCommunityMessages(true);
+  clearInterval(chatPollTimer);
+  chatPollTimer=setInterval(()=>{if(communityChatOpen)loadCommunityMessages(false)},4000);
+  setTimeout(()=>{$('communityChatInput').focus();syncChatViewport()},80);
 }
 function closeCommunityChat(fromPopstate=false){if(!communityChatOpen)return;communityChatOpen=false;clearInterval(chatPollTimer);chatPollTimer=null;$('communityChatOverlay').classList.add('hide');document.body.classList.remove('chat-fullscreen-open');$('communityChatOverlay').style.removeProperty('--chat-vv-height');$('communityChatOverlay').style.removeProperty('--chat-vv-top');$('communityChatInput').blur();finishCampusUiLayer('communityChat',fromPopstate);}
 $('communityChatOverlay').addEventListener('click',e=>{if(e.target===$('communityChatOverlay'))closeCommunityChat()});
@@ -4721,7 +4744,7 @@ function renderMarketCard(m) {
         <span class="market-card-cat">${marketCategoryEmoji(m.category)} ${esc(m.category)}</span>
         <h3 class="market-card-title">${esc(m.title)}</h3>
         ${m.description ? `<p class="market-card-desc">${esc(m.description)}</p>` : ''}
-        <div class="market-card-loc">📍 ${esc(m.location || 'Campus')}</div>
+        <div class="market-card-loc"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ${esc(m.location || 'Campus')}</div>
         
         <div class="market-card-footer">
           <div class="market-seller-info">
@@ -4732,12 +4755,13 @@ function renderMarketCard(m) {
           ${canManage ? `
             <div style="display:flex; gap:6px;">
               ${!isSoldItem ? `<button type="button" class="auth-primary" style="padding:6px 10px; font-size:11px; border-radius:8px;" onclick="markMarketSold(${m.id})">Mark Sold</button>` : ''}
-              <button type="button" class="action-btn-del" style="padding:6px 10px; font-size:11px;" onclick="deleteMarketListing(${m.id})">🗑</button>
+              <button type="button" class="action-btn-del" style="padding:6px 10px; font-size:11px;" onclick="deleteMarketListing(${m.id})" title="Delete listing"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
             </div>
           ` : `
             ${!isSoldItem && waUrl ? `
               <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="market-buy-btn">
-                <span>💬 Buy / Chat</span>
+                <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+                <span>WhatsApp</span>
               </a>
             ` : ''}
           `}
@@ -4747,15 +4771,29 @@ function renderMarketCard(m) {
 }
 
 function marketCategoryEmoji(cat) {
-  if (!cat) return '🛍️';
-  if (cat.includes('Book') || cat.includes('Note')) return '📚';
-  if (cat.includes('Draft') || cat.includes('Lab')) return '📐';
-  if (cat.includes('Cycle') || cat.includes('Mobility')) return '🚲';
-  if (cat.includes('Hostel')) return '🛏️';
-  if (cat.includes('Elect')) return '🎧';
-  if (cat.includes('Fash') || cat.includes('Cloth')) return '👕';
-  if (cat.includes('Free')) return '🎁';
-  return '📦';
+  const c = String(cat || '').toLowerCase();
+  if (c.includes('book') || c.includes('note')) {
+    return `<svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`;
+  }
+  if (c.includes('draft') || c.includes('lab')) {
+    return `<svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 22 22 22"></polygon><line x1="12" y1="6" x2="12" y2="18"></line></svg>`;
+  }
+  if (c.includes('cycle') || c.includes('mobility')) {
+    return `<svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5.5" cy="17.5" r="3.5"></circle><circle cx="18.5" cy="17.5" r="3.5"></circle><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5L9 6H6m6 11.5l3.5-7h3.5"></path></svg>`;
+  }
+  if (c.includes('hostel')) {
+    return `<svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"></path></svg>`;
+  }
+  if (c.includes('elect')) {
+    return `<svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>`;
+  }
+  if (c.includes('fash') || c.includes('cloth')) {
+    return `<svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></svg>`;
+  }
+  if (c.includes('free') || c.includes('giveaway')) {
+    return `<svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>`;
+  }
+  return `<svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>`;
 }
 
 function openMarketModal() {
@@ -5123,7 +5161,7 @@ async function loadSmartMatchesForDetail(report, containerEl) {
     box.className = 'smart-match-alert-box';
     box.innerHTML = `
       <div>
-        <div class="smart-match-title">🤖 AI Smart Match Alert</div>
+        <div class="smart-match-title"><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg> AI Smart Match Alert</div>
         <p class="smart-match-desc">Found similar ${top.type.toLowerCase()} item: <b>${esc(top.title)}</b> at ${esc(top.location)}</p>
       </div>
       <div style="display:flex; align-items:center; gap:8px;">
@@ -5171,17 +5209,23 @@ async function fetchLeaderboard() {
     }
 
     listEl.innerHTML = users.map((u, i) => {
-      const rankEmoji = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`;
+      const rankBadge = i === 0
+        ? `<span class="rank-medal rank-gold" title="1st Place"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#D97706" stroke-width="2.2"><circle cx="12" cy="8" r="6"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg></span>`
+        : i === 1
+        ? `<span class="rank-medal rank-silver" title="2nd Place"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#64748B" stroke-width="2.2"><circle cx="12" cy="8" r="6"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg></span>`
+        : i === 2
+        ? `<span class="rank-medal rank-bronze" title="3rd Place"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#B45309" stroke-width="2.2"><circle cx="12" cy="8" r="6"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg></span>`
+        : `<span class="rank-number">#${i + 1}</span>`;
       return `
         <div class="leaderboard-row">
-          <div class="leaderboard-rank">${rankEmoji}</div>
+          <div class="leaderboard-rank">${rankBadge}</div>
           <div class="leaderboard-avatar">${avatarInner(u.avatarId, u.displayName, u.profileImageUrl)}</div>
           <div class="leaderboard-user-details">
             <div class="leaderboard-user-name">${esc(u.displayName)}</div>
             <div class="leaderboard-user-sub">@${esc(u.username)} · ${esc(u.college || 'Campus')}</div>
           </div>
           <div class="leaderboard-points-wrap">
-            <span class="leaderboard-points">⭐ ${u.karmaPoints || 0}</span>
+            <span class="leaderboard-points"><svg class="ui-icon star-icon" viewBox="0 0 24 24" width="13" height="13" fill="#F59E0B" stroke="#D97706" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> ${u.karmaPoints || 0} pts</span>
             <span class="leaderboard-badge-tag">${esc(u.karmaBadge || 'Campus Friend')}</span>
           </div>
         </div>`;

@@ -404,14 +404,38 @@
     <!-- Market Category Filter Slider -->
     <div class="market-categories-wrap">
       <div class="market-categories-list">
-        <button type="button" class="market-cat-chip active" data-mcat="" onclick="filterMarketCategory('')">✨ All Items</button>
-        <button type="button" class="market-cat-chip" data-mcat="Books & Notes" onclick="filterMarketCategory('Books & Notes')">📚 Books &amp; Notes</button>
-        <button type="button" class="market-cat-chip" data-mcat="Drafter & Lab" onclick="filterMarketCategory('Drafter & Lab')">📐 Drafter &amp; Lab</button>
-        <button type="button" class="market-cat-chip" data-mcat="Cycles & Mobility" onclick="filterMarketCategory('Cycles & Mobility')">🚲 Cycles</button>
-        <button type="button" class="market-cat-chip" data-mcat="Hostel Essentials" onclick="filterMarketCategory('Hostel Essentials')">🛏️ Hostel</button>
-        <button type="button" class="market-cat-chip" data-mcat="Electronics" onclick="filterMarketCategory('Electronics')">🎧 Electronics</button>
-        <button type="button" class="market-cat-chip" data-mcat="Fashion & Merch" onclick="filterMarketCategory('Fashion & Merch')">👕 Clothing</button>
-        <button type="button" class="market-cat-chip" data-mcat="Free / Giveaways" onclick="filterMarketCategory('Free / Giveaways')">🎁 Free Giveaways</button>
+        <button type="button" class="market-cat-chip active" data-mcat="" onclick="filterMarketCategory('')">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          <span>All Items</span>
+        </button>
+        <button type="button" class="market-cat-chip" data-mcat="Books & Notes" onclick="filterMarketCategory('Books & Notes')">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          <span>Books &amp; Notes</span>
+        </button>
+        <button type="button" class="market-cat-chip" data-mcat="Drafter & Lab" onclick="filterMarketCategory('Drafter & Lab')">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 22 22 22"></polygon><line x1="12" y1="6" x2="12" y2="18"></line></svg>
+          <span>Drafter &amp; Lab</span>
+        </button>
+        <button type="button" class="market-cat-chip" data-mcat="Cycles & Mobility" onclick="filterMarketCategory('Cycles & Mobility')">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5.5" cy="17.5" r="3.5"></circle><circle cx="18.5" cy="17.5" r="3.5"></circle><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5L9 6H6m6 11.5l3.5-7h3.5"></path></svg>
+          <span>Cycles</span>
+        </button>
+        <button type="button" class="market-cat-chip" data-mcat="Hostel Essentials" onclick="filterMarketCategory('Hostel Essentials')">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"></path></svg>
+          <span>Hostel</span>
+        </button>
+        <button type="button" class="market-cat-chip" data-mcat="Electronics" onclick="filterMarketCategory('Electronics')">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
+          <span>Electronics</span>
+        </button>
+        <button type="button" class="market-cat-chip" data-mcat="Fashion & Merch" onclick="filterMarketCategory('Fashion & Merch')">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></svg>
+          <span>Clothing</span>
+        </button>
+        <button type="button" class="market-cat-chip" data-mcat="Free / Giveaways" onclick="filterMarketCategory('Free / Giveaways')">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
+          <span>Free Giveaways</span>
+        </button>
       </div>
     </div>
 
@@ -444,31 +468,47 @@
     <div class="explore-search-row">
       <button type="button" class="explore-back-btn universal-back-circle-btn" onclick="closeExplorePage()" aria-label="Back to feed"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
       <div class="explore-search-input-wrap">
-        <span class="explore-search-icon">🔍</span>
+        <span class="explore-search-icon">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </span>
         <input id="exploreSearchInput" type="search" placeholder="Search items, categories, or members..." aria-label="Search" autocomplete="off" oninput="handleExploreSearch(this.value)">
-        <button type="button" id="exploreSearchClear" class="explore-search-clear hide" onclick="clearExploreSearch()" aria-label="Clear search">✕</button>
+        <button type="button" id="exploreSearchClear" class="explore-search-clear hide" onclick="clearExploreSearch()" aria-label="Clear search">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
     </div>
 
     <!-- Type Filters (All, Lost, Found, Returned) -->
     <div class="explore-type-pills">
-      <button type="button" class="explore-type-pill active" data-exp-type="" onclick="filterExploreType('')">All (<span id="exploreCountTotal">0</span>)</button>
-      <button type="button" class="explore-type-pill" data-exp-type="LOST" onclick="filterExploreType('LOST')">🔴 Lost</button>
-      <button type="button" class="explore-type-pill" data-exp-type="FOUND" onclick="filterExploreType('FOUND')">🟢 Found</button>
-      <button type="button" class="explore-type-pill" data-exp-type="RETURNED" onclick="filterExploreType('RETURNED')">✨ Returned</button>
+      <button type="button" class="explore-type-pill active" data-exp-type="" onclick="filterExploreType('')">
+        <svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        <span>All (<span id="exploreCountTotal">0</span>)</span>
+      </button>
+      <button type="button" class="explore-type-pill" data-exp-type="LOST" onclick="filterExploreType('LOST')">
+        <span class="status-tab-dot dot-lost"></span>
+        <span>Lost</span>
+      </button>
+      <button type="button" class="explore-type-pill" data-exp-type="FOUND" onclick="filterExploreType('FOUND')">
+        <span class="status-tab-dot dot-found"></span>
+        <span>Found</span>
+      </button>
+      <button type="button" class="explore-type-pill" data-exp-type="RETURNED" onclick="filterExploreType('RETURNED')">
+        <svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span>Returned</span>
+      </button>
     </div>
 
     <!-- Category Filter Chips Slider -->
     <div class="explore-category-chips">
-      <button type="button" class="explore-cat-chip active" data-exp-cat="" onclick="filterExploreCategory('')">✨ All</button>
-      <button type="button" class="explore-cat-chip" data-exp-cat="Electronics" onclick="filterExploreCategory('Electronics')">📱 Electronics</button>
-      <button type="button" class="explore-cat-chip" data-exp-cat="ID card" onclick="filterExploreCategory('ID card')">🪪 ID Cards</button>
-      <button type="button" class="explore-cat-chip" data-exp-cat="Keys" onclick="filterExploreCategory('Keys')">🔑 Keys</button>
-      <button type="button" class="explore-cat-chip" data-exp-cat="Wallet / purse" onclick="filterExploreCategory('Wallet / purse')">👛 Wallets</button>
-      <button type="button" class="explore-cat-chip" data-exp-cat="Books / stationery" onclick="filterExploreCategory('Books / stationery')">📚 Books</button>
-      <button type="button" class="explore-cat-chip" data-exp-cat="Clothing" onclick="filterExploreCategory('Clothing')">👕 Clothing</button>
-      <button type="button" class="explore-cat-chip" data-exp-cat="Water bottle" onclick="filterExploreCategory('Water bottle')">🧴 Bottles</button>
-      <button type="button" class="explore-cat-chip" data-exp-cat="Other" onclick="filterExploreCategory('Other')">📦 Other</button>
+      <button type="button" class="explore-cat-chip active" data-exp-cat="" onclick="filterExploreCategory('')"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> All</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Electronics" onclick="filterExploreCategory('Electronics')"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg> Electronics</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="ID card" onclick="filterExploreCategory('ID card')"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg> ID Cards</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Keys" onclick="filterExploreCategory('Keys')"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="4.5"></circle><path d="M10.5 12.5L20 3l3 3-2 2-2-2-2 2-2-2-2.5 2.5"></path></svg> Keys</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Wallet / purse" onclick="filterExploreCategory('Wallet / purse')"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path><path d="M16 3H4a2 2 0 0 0-2 2v2"></path><circle cx="16" cy="14" r="1"></circle></svg> Wallets</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Books / stationery" onclick="filterExploreCategory('Books / stationery')"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Books</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Clothing" onclick="filterExploreCategory('Clothing')"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></svg> Clothing</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Water bottle" onclick="filterExploreCategory('Water bottle')"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg> Bottles</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Other" onclick="filterExploreCategory('Other')"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg> Other</button>
     </div>
   </header>
 
@@ -616,6 +656,7 @@
         <div class="chat-page-heading">
           <div class="chat-title-line">
             <h2 id="communityChatTitle">Community Chat</h2>
+            <span class="chat-online-pill">LIVE</span>
           </div>
           <div class="chat-college-line">
             <svg class="ui-icon chat-campus-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10h18M5 10v11M19 10v11M9 10v11M15 10v11M12 2L2 7h20L12 2z"></path></svg>
@@ -1282,7 +1323,7 @@
             <option value="Hostel Essentials">Hostel Essentials (Kettle, Mattress, etc.)</option>
             <option value="Electronics">Electronics &amp; Accessories</option>
             <option value="Fashion & Merch">Fashion &amp; Campus Merch</option>
-            <option value="Free / Giveaways">Free Giveaways 🎁</option>
+            <option value="Free / Giveaways">Free Giveaways (₹0)</option>
             <option value="Other">Other Items</option>
           </select>
         </label>
@@ -1300,7 +1341,7 @@
           <div class="price-input-row" style="display:flex; align-items:center; gap:10px;">
             <input id="marketPrice" type="number" min="0" step="1" placeholder="e.g. 250" required style="flex:1;">
             <label class="free-item-checkbox" style="display:flex; align-items:center; gap:6px; font-weight:600; cursor:pointer; font-size:13px;">
-              <input type="checkbox" id="marketIsFree" onchange="toggleMarketFree(this)"> Free 🎁
+              <input type="checkbox" id="marketIsFree" onchange="toggleMarketFree(this)"> Free (₹0)
             </label>
           </div>
         </label>
@@ -1417,12 +1458,14 @@
     <div class="info-sheet-body" style="max-width: 680px; margin: 0 auto; padding-top: 16px;">
       <!-- Hero Karma Banner -->
       <div class="karma-hero-banner">
-        <div class="karma-hero-trophy">🏆</div>
+        <div class="karma-hero-trophy">
+          <svg class="ui-icon trophy-svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.45 1-1 1H7"></path><path d="M14 14.66V17c0 .55.45 1 1 1h2"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path></svg>
+        </div>
         <h3>Campus Karma Points &amp; Badges</h3>
         <p>Earn Karma points every time you report found items, verify ownership, and safely reunite lost belongings with campus students.</p>
         <div class="karma-rules-row">
-          <span class="karma-rule-pill">🟢 Return an Item: +50 Karma</span>
-          <span class="karma-rule-pill">✨ Successful Claim: +20 Karma</span>
+          <span class="karma-rule-pill"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#16A34A" stroke-width="2.3"><polyline points="20 6 9 17 4 12"></polyline></svg> Return an Item: +50 Karma</span>
+          <span class="karma-rule-pill"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#E06D10" stroke-width="2.3"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> Verified Claim: +20 Karma</span>
         </div>
       </div>
 

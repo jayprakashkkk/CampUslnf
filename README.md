@@ -76,16 +76,17 @@ In large university campuses, thousands of valuable personal items (student IDs,
 - **Contact Action**: One-tap direct call or WhatsApp connection with sellers.
 
 ### 4. Real-time Campus Community Chat
-- **Redesigned Modern Header**: Clean, polished topbar featuring a tactile circular back button, official CampUs brand badge with a live pulse indicator, verified college affiliation tag, and an instant notification alert toggle.
-- **Sub-Second Polling**: Responsive, lightweight chat with auto-retry and message synchronization.
-- **Swipe-to-Reply & Tap-to-Reply**: Touch and trackpad gesture support to quote messages directly with inline SVG reply indicators.
-- **10-Minute Deletion Window**: Users can delete their sent messages within a 10-minute grace period.
+- **Redesigned Modern Header**: Clean, polished edge-to-edge topbar featuring a tactile circular back button, official CampUs brand badge with a glowing live green pulse indicator, dynamic verified college affiliation tag, active `LIVE` indicator, and an instant notification alert toggle.
+- **Flawless Spacing & Architecture**: Removed conflicting outer modal padding so the chat header, scrollable message stream, and bottom compose bar stretch seamlessly across screen edges with zero awkward letterboxing.
+- **Sub-Second Polling & Cold-Start Protection**: Responsive, lightweight chat with auto-retry and message synchronization that survives transient backend wakes.
+- **Swipe-to-Reply & Tap-to-Reply**: Touch and trackpad gesture support to quote messages directly with inline SVG reply indicators and dismissible floating preview.
+- **10-Minute Deletion Window**: Users can delete their sent messages within a 10-minute grace period with SVG trash actions.
 - **Role Badges**: Highlights verified community roles: `Owner`, `Admin`, `Leader`, `Moderator`, and `Member`.
 - **Custom Avatar Suite**: Pick from 30+ custom high-resolution illustrations.
 
 ### 5. Karma Leaderboard & Gamification
-- **Karma Points**: Students earn reputation points by returning found items, successfully resolving claims, and assisting peers.
-- **Campus Ranks**: Dynamic leaderboard showing Top Community Contributors with custom rank badges.
+- **Karma Points**: Students earn reputation points by returning found items, successfully resolving claims, and assisting peers (+50 for returns, +20 for verified claims).
+- **Bespoke Vector Medals & Trophies**: Replaced raw emoji icons with custom SVG Gold, Silver, and Bronze medals, vector trophy hero graphics, and golden star point badges.
 - **Public Profiles**: Showcase badges, solved returns, active listings, and community tenure.
 
 ### 6. Authentication, Security & OTP Recovery
@@ -93,7 +94,7 @@ In large university campuses, thousands of valuable personal items (student IDs,
 - **Flexible Login**: Sign in via **Username** OR **Email**.
 - **Cryptographic Password Security**: Hashed with PBKDF2 using unique per-user salts.
 - **Email OTP Recovery**: 6-digit password reset OTP sent via Brevo HTTPS API with automated SMTP fallback.
-- **Session Protection**: Cross-origin HTTPS-ready session cookies (`SameSite=None`, `Secure`, `HttpOnly`).
+- **Session Protection**: Cross-origin HTTPS-ready session cookies (`SameSite=None`, `Secure`, `HttpOnly`) and token exchange filter.
 
 ### 7. Admin Moderation Suite
 - **Role Management**: Promote or demote users across roles (`MEMBER`, `MODERATOR`, `LEADER`, `ADMIN`, `OWNER`).
@@ -102,9 +103,15 @@ In large university campuses, thousands of valuable personal items (student IDs,
 - **Campus-Wide Announcements**: Broadcast pinned urgent alerts and notices across all screens.
 
 ### 8. Native SVG Iconography & Mobile-First UI/UX
-- **Custom Vector SVG Icon System**: Completely replaced raw system emojis with a crisp, accessible, hand-crafted SVG iconography system across desktop and mobile navigation, status chips, drawer options, feed interaction bars, and dialogs.
-- **Adaptive Light & Dark Mode**: Dynamic SVG icons adapt instantly when switching between Warm Cream-Orange (`#FFF8EF`) and AMOLED Dark Mode (`#1C1917`).
-- **Signature Aesthetics**: Warm Cream-Orange aesthetic (`#FFF8EF`, `#FF6B00`) with smooth glassmorphism.
+- **Custom Vector SVG Icon System**: Completely replaced raw system emojis with a crisp, accessible, hand-crafted SVG iconography system across:
+  - Header & desktop navigation (Home, Chat, Plus Report Item, Sun/Moon theme toggle).
+  - Mobile bottom navigation (Feed, Chat, Plus Create CTA, Search, Profile).
+  - Campus main switcher (Lost & Found 3D Box, Campus Market Shopping Bag).
+  - Marketplace category slider chips (Books, Drafters, Cycles, Hostel, Electronics, Clothing, Free Giveaways).
+  - Instagram-style Explore Search bar, Clear Cross, and Category filters.
+  - Activity Center actions (Unarchive, Move to Trash, Delete Forever, View Post, Share).
+  - Karma Leaderboard medals (Gold 1st, Silver 2nd, Bronze 3rd) and star badges.
+- **Adaptive Light & Dark Mode**: Dynamic SVG icons adapt instantly when switching between Warm Cream-Orange (`#FFF8EF`) and AMOLED Dark Mode (`#12100E`).
 - **Mobile Gestures**: Left-to-right swipe-to-go-back, pull-to-refresh, in-app history layer for mobile back-button handling.
 - **Zero-Dependency Frontend**: Pure Vanilla JavaScript and CSS — no heavy frameworks or external font icon dependencies, blazing fast 60fps performance.
 - **PWA Ready**: Offline-capable web manifest, mobile splash icons, and full-screen mobile app shell.
