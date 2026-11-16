@@ -8869,7 +8869,6 @@ body[data-theme="dark"] {
 /* Instagram-style Emoji Reaction Popover (Pill toolbar) */
 .chat-react-popover {
   position: fixed !important;
-  display: flex !important;
   align-items: center !important;
   gap: 4px !important;
   padding: 6px 10px !important;
@@ -8885,8 +8884,17 @@ body[data-theme="dark"] {
   animation: popBadge 0.16s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
 }
 
+#chatReactionPopover.hide,
 .chat-react-popover.hide {
   display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+#chatReactionPopover:not(.hide),
+.chat-react-popover:not(.hide) {
+  display: flex !important;
 }
 
 [data-theme="dark"] .chat-react-popover {
@@ -8922,15 +8930,9 @@ body[data-theme="dark"] {
   background: rgba(255, 255, 255, 0.12) !important;
 }
 
-[data-theme="dark"] .chat-emoji-item:hover {
-  background: rgba(255, 255, 255, 0.12) !important;
-}
-
 /* Instagram-style More Options Popover (Delete, Copy) */
-.chat-more-popover,
-#chatMoreMenu {
+.chat-more-popover {
   position: fixed !important;
-  display: flex !important;
   flex-direction: column !important;
   background: #FFFFFF !important;
   border: 1px solid rgba(220, 205, 190, 0.85) !important;
@@ -8942,8 +8944,17 @@ body[data-theme="dark"] {
   animation: popBadge 0.15s ease-out !important;
 }
 
+#chatMoreMenu.hide,
 .chat-more-popover.hide {
   display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+#chatMoreMenu:not(.hide),
+.chat-more-popover:not(.hide) {
+  display: flex !important;
 }
 
 [data-theme="dark"] .chat-more-popover {

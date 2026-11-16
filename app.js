@@ -172,8 +172,14 @@ function finishCampusUiLayer(layer,fromPopstate=false){
  const index=campusUiHistoryStack.lastIndexOf(layer);if(index>=0)campusUiHistoryStack.splice(index,1);
 }
 function closeCampusUiLayerFromBack(layer){
+  closeChatMoreMenu();
+  closeChatReactionPicker();
   if(layer==='adminDashboardModal')closeAdminDashboard(true);
   else if(layer==='navDrawer')closeNavDrawer(true);
+  else if(layer==='myReports'){
+    myReportsOnly=false;chosenType='';statFilter='';load();
+    returnToNavDrawerIfNeeded();
+  }
   else if(layer==='postDetailViewer')closePostDetailViewer(true);
   else if(layer==='explorePage')closeExplorePage(true);
   else if(layer==='activityCenterModal')closeActivityCenter(true);
@@ -195,6 +201,8 @@ function closeCampusUiLayerFromBack(layer){
   else if(layer==='profileDropdown')closeProfileDropdown(true);
 }
 function closeTopUntrackedUiLayer(){
+  if($('chatMoreMenu')&&!$('chatMoreMenu').classList.contains('hide')){closeChatMoreMenu();return true;}
+  if($('chatReactionPopover')&&!$('chatReactionPopover').classList.contains('hide')){closeChatReactionPicker();return true;}
   if($('imageLightbox')&&!$('imageLightbox').classList.contains('hide')){closeLightbox();return true;}
   if($('adminDashboardModal')&&!$('adminDashboardModal').classList.contains('hide')){closeAdminDashboard(true);return true;}
   if(navDrawerOpen){closeNavDrawer(true);return true;}
@@ -222,6 +230,8 @@ function closeTopUntrackedUiLayer(){
 }
 window.addEventListener('popstate',()=>{
  if(ignoreCampusUiPopstate){ignoreCampusUiPopstate=false;return;}
+ if($('chatMoreMenu')&&!$('chatMoreMenu').classList.contains('hide')){closeChatMoreMenu();}
+ if($('chatReactionPopover')&&!$('chatReactionPopover').classList.contains('hide')){closeChatReactionPicker();}
  const layer=campusUiHistoryStack.pop();
  if(layer){
    closeCampusUiLayerFromBack(layer);
@@ -505,7 +515,21 @@ function normWords(s){return String(s||'').toLowerCase().replace(/[^a-z0-9\s]/g,
 function matchScore(a,b){const aw=new Set(normWords((a.title||'')+' '+(a.description||''))),bw=new Set(normWords((b.title||'')+' '+(b.description||'')));const common=[...aw].filter(w=>bw.has(w)).length;const sameTitle=String(a.title||'').trim().toLowerCase()===String(b.title||'').trim().toLowerCase();const sameCat=String(a.category||'').toLowerCase()===String(b.category||'').toLowerCase();if(sameTitle)return 10+(sameCat?2:0);if(common===0)return 0;return common+(sameCat?1:0)}
 function bestMatch(r,all){return all.filter(x=>x.type!==r.type&&x.status!=='RETURNED').map(x=>({item:x,score:matchScore(r,x)})).filter(x=>x.score>=2).sort((a,b)=>b.score-a.score)[0]?.item||null}
 function updatePoster(all){const returned=all.filter(x=>String(x.status||'').toUpperCase()==='RETURNED').sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));if(!returned.length){if($('matchIcon'))$('matchIcon').textContent='⌕';if($('matchName'))$('matchName').textContent='No items returned yet';if($('matchMeta'))$('matchMeta').textContent='Successfully returned items will appear here';if($('matchBadge')){$('matchBadge').textContent='WAITING FOR RETURN';$('matchBadge').classList.remove('match-yes');}return}const item=returned[0];if($('matchIcon'))$('matchIcon').textContent=String(item.category||'').toLowerCase().includes('id')?'🪪':String(item.category||'').toLowerCase().includes('electronic')?'🎧':'✓';if($('matchName'))$('matchName').textContent=item.title||'Returned item';if($('matchMeta'))$('matchMeta').textContent=`Returned · ${item.location||'Location not specified'}${item.itemDate?' · '+item.itemDate:''}`;if($('matchBadge')){$('matchBadge').textContent='SUCCESSFULLY RETURNED';$('matchBadge').classList.add('match-yes');}}
-function clearFilters(){['q','filterCategory','filterLocation','dateFrom','dateTo'].forEach(id=>{const field=$(id);if(field)field.value=''});if($('boardSearch'))$('boardSearch').value='';if($('mobileBoardSearch'))$('mobileBoardSearch').value='';chosenType='';statFilter='';myReportsOnly=false;document.querySelectorAll('.status-tab').forEach(x=>x.classList.toggle('active',x.dataset.tabStatus==='ALL'));document.querySelectorAll('.category-chip').forEach(c=>c.classList.toggle('active',c.textContent.includes('All')));if($('myReports'))$('myReports').textContent='My reports';load()}
+function clearFilters(){
+  ['q','filterCategory','filterLocation','dateFrom','dateTo'].forEach(id=>{const field=$(id);if(field)field.value=''});
+  if($('boardSearch'))$('boardSearch').value='';
+  if($('mobileBoardSearch'))$('mobileBoardSearch').value='';
+  chosenType='';
+  statFilter='';
+  if (myReportsOnly) {
+    myReportsOnly = false;
+    finishCampusUiLayer('myReports', true);
+  }
+  document.querySelectorAll('.status-tab').forEach(x=>x.classList.toggle('active',x.dataset.tabStatus==='ALL'));
+  document.querySelectorAll('.category-chip').forEach(c=>c.classList.toggle('active',c.textContent.includes('All')));
+  if($('myReports'))$('myReports').textContent='My reports';
+  load();
+}
 function filterStats(which){statFilter=which;chosenType='';myReportsOnly=false;document.querySelectorAll('.status-tab').forEach(x=>x.classList.toggle('active',x.dataset.tabStatus===which));load();const board=$('board');if(board)board.scrollIntoView({behavior:'smooth',block:'start'});}
 function toggleMyReports(){statFilter='';myReportsOnly=!myReportsOnly;if($('myReports'))$('myReports').textContent=myReportsOnly?'Show all reports':'My reports';load()}
 function showMyReports(e){if(e)e.preventDefault();showNavPopup('myReports')}
@@ -815,7 +839,7 @@ async function permanentlyDeleteReport(id) {
 let currentActivityTab = 'archive';
 
 function openActivityCenter(defaultTab = 'archive') {
-  closeNavDrawer();
+  closeNavDrawerVisualOnly();
   const modal = $('activityCenterModal');
   if (!modal) return;
   pushCampusUiLayer('activityCenterModal');
@@ -830,6 +854,7 @@ function closeActivityCenter(fromPopstate = false) {
     modal.classList.add('hide');
     document.body.classList.remove('fullscreen-page-open');
     finishCampusUiLayer('activityCenterModal', fromPopstate);
+    returnToNavDrawerIfNeeded();
   }
 }
 
@@ -1543,15 +1568,29 @@ let timer;['q','filterCategory','filterLocation','dateFrom','dateTo'].forEach(id
 let menuOpen=false, profileMenuOpen=false, activeNavPopup='', selectedProfileAvatarId='';
 let mobileNavHomeParent=null, mobileNavHomeNextSibling=null;
 let navDrawerOpen = false;
+let navDrawerOrigin = false;
+
+function returnToNavDrawerIfNeeded() {
+  if (navDrawerOrigin) {
+    navDrawerOrigin = false;
+    setTimeout(() => {
+      openNavDrawer(true);
+    }, 40);
+    return true;
+  }
+  return false;
+}
 
 function toggleNavDrawer() {
   if (navDrawerOpen) closeNavDrawer();
   else openNavDrawer();
 }
 
-function openNavDrawer() {
+function openNavDrawer(visualOnly = false) {
   navDrawerOpen = true;
-  pushCampusUiLayer('navDrawer');
+  if (!visualOnly) {
+    pushCampusUiLayer('navDrawer');
+  }
   document.body.classList.add('nav-drawer-open');
   const overlay = $('navDrawerOverlay');
   const btn = $('menuToggleBtn');
@@ -1565,6 +1604,7 @@ function openNavDrawer() {
 }
 
 function closeNavDrawer(fromPopstate = false) {
+  navDrawerOrigin = false;
   if (!navDrawerOpen) return;
   navDrawerOpen = false;
   document.body.classList.remove('nav-drawer-open');
@@ -1581,6 +1621,20 @@ function closeNavDrawer(fromPopstate = false) {
   }
 }
 
+function closeNavDrawerVisualOnly() {
+  if (!navDrawerOpen) return;
+  navDrawerOpen = false;
+  document.body.classList.remove('nav-drawer-open');
+  const overlay = $('navDrawerOverlay');
+  const btn = $('menuToggleBtn');
+  if (overlay) overlay.classList.add('hide');
+  if (btn) {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-label', 'Open navigation menu');
+  }
+}
+
 function handleDrawerBackdropClick(event) {
   if (event.target === $('navDrawerOverlay')) {
     closeNavDrawer();
@@ -1588,7 +1642,21 @@ function handleDrawerBackdropClick(event) {
 }
 
 function handleDrawerNav(action) {
-  closeNavDrawer();
+  if (action === 'campusInfo') {
+    const college = currentUser ? currentUser.collegeName : 'University Network';
+    toast(`Verified Campus: ${college} 🏛️`);
+    return;
+  }
+  if (action === 'logout') {
+    navDrawerOrigin = false;
+    closeNavDrawer();
+    logout();
+    return;
+  }
+  
+  navDrawerOrigin = true;
+  closeNavDrawerVisualOnly();
+  
   if (action === 'adminDashboard') {
     openAdminDashboard();
   } else if (action === 'myReports') {
@@ -1599,9 +1667,6 @@ function handleDrawerNav(action) {
     openPrivacySettingsModal();
   } else if (action === 'termsConditions') {
     openTermsModal();
-  } else if (action === 'campusInfo') {
-    const college = currentUser ? currentUser.collegeName : 'University Network';
-    toast(`Verified Campus: ${college} 🏛️`);
   } else if (action === 'helpSupport') {
     openHelpSupportModal();
   } else if (action === 'leaderboard') {
@@ -1612,6 +1677,7 @@ function handleDrawerNav(action) {
 }
 
 function logoutFromDrawer() {
+  navDrawerOrigin = false;
   closeNavDrawer();
   logout();
 }
@@ -1677,12 +1743,15 @@ function toggleSoundPreference(enabled) {
 }
 
 function openActivityFromPrivacy(tab) {
+  const keepDrawerOrigin = navDrawerOrigin;
+  navDrawerOrigin = false;
   closePrivacySettingsModal();
+  navDrawerOrigin = keepDrawerOrigin;
   openActivityCenter(tab);
 }
 
 function openPrivacySettingsModal() {
-  closeNavDrawer();
+  closeNavDrawerVisualOnly();
   loadPrivacyPreferences();
   const modal = $('privacySettingsModal');
   if (modal) {
@@ -1698,6 +1767,7 @@ function closePrivacySettingsModal(fromPopstate = false) {
     modal.classList.add('hide');
     document.body.classList.remove('fullscreen-page-open');
     finishCampusUiLayer('privacySettingsModal', fromPopstate);
+    returnToNavDrawerIfNeeded();
   }
 }
 
@@ -1705,7 +1775,7 @@ function closePrivacySettingsModal(fromPopstate = false) {
    TERMS & CONDITIONS MODAL
    -------------------------------------------------------------------------- */
 function openTermsModal() {
-  closeNavDrawer();
+  closeNavDrawerVisualOnly();
   const modal = $('termsModal');
   if (modal) {
     pushCampusUiLayer('termsModal');
@@ -1720,6 +1790,7 @@ function closeTermsModal(fromPopstate = false) {
     modal.classList.add('hide');
     document.body.classList.remove('fullscreen-page-open');
     finishCampusUiLayer('termsModal', fromPopstate);
+    returnToNavDrawerIfNeeded();
   }
 }
 
@@ -1732,7 +1803,7 @@ function acceptCampusTerms() {
    HELP & SUPPORT MODAL
    -------------------------------------------------------------------------- */
 function openHelpSupportModal() {
-  closeNavDrawer();
+  closeNavDrawerVisualOnly();
   const modal = $('helpSupportModal');
   if (modal) {
     pushCampusUiLayer('helpSupportModal');
@@ -1747,6 +1818,7 @@ function closeHelpSupportModal(fromPopstate = false) {
     modal.classList.add('hide');
     document.body.classList.remove('fullscreen-page-open');
     finishCampusUiLayer('helpSupportModal', fromPopstate);
+    returnToNavDrawerIfNeeded();
   }
 }
 
@@ -1754,7 +1826,7 @@ function closeHelpSupportModal(fromPopstate = false) {
    ABOUT CAMPUS MODAL
    -------------------------------------------------------------------------- */
 function openAboutCampusModal() {
-  closeNavDrawer();
+  closeNavDrawerVisualOnly();
   const modal = $('aboutCampusModal');
   if (modal) {
     pushCampusUiLayer('aboutCampusModal');
@@ -1769,14 +1841,16 @@ function closeAboutCampusModal(fromPopstate = false) {
     modal.classList.add('hide');
     document.body.classList.remove('fullscreen-page-open');
     finishCampusUiLayer('aboutCampusModal', fromPopstate);
+    returnToNavDrawerIfNeeded();
   }
 }
 
 function openMyReportsView() {
-  closeNavDrawer();
+  closeNavDrawerVisualOnly();
   myReportsOnly = true;
   chosenType = '';
   statFilter = '';
+  pushCampusUiLayer('myReports');
   load();
   window.scrollTo({ top: 0, behavior: 'smooth' });
   toast('Showing reports submitted by you 📋');
@@ -2133,7 +2207,28 @@ function confirmNavPopup(){
 }
 
 $('navPopup').addEventListener('click',e=>{if(e.target===$('navPopup'))closeNavPopup()});
-document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if($('adminDashboardModal')&&!$('adminDashboardModal').classList.contains('hide')){closeAdminDashboard();return;}if($('postDetailViewer')&&!$('postDetailViewer').classList.contains('hide')){closePostDetailViewer();return;}if($('explorePage')&&!$('explorePage').classList.contains('hide')){closeExplorePage();return;}if(navDrawerOpen){closeNavDrawer();return;}if($('privacySettingsModal')&&!$('privacySettingsModal').classList.contains('hide')){closePrivacySettingsModal();return;}if($('termsModal')&&!$('termsModal').classList.contains('hide')){closeTermsModal();return;}if($('helpSupportModal')&&!$('helpSupportModal').classList.contains('hide')){closeHelpSupportModal();return;}if($('aboutCampusModal')&&!$('aboutCampusModal').classList.contains('hide')){closeAboutCampusModal();return;}if($('commentsModal')&&!$('commentsModal').classList.contains('hide')){closeCommentsModal();return;}if($('activityCenterModal')&&!$('activityCenterModal').classList.contains('hide')){closeActivityCenter();return;}if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage();return;}if(!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile();return;}if(communityChatOpen){closeCommunityChat();return;}if(!$('navPopup').classList.contains('hide')){closeNavPopup();return;}if(!$('modal').classList.contains('hide')){closeForm();return;}closeMenu();closeProfileDropdown();});
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  if($('chatMoreMenu')&&!$('chatMoreMenu').classList.contains('hide')){closeChatMoreMenu();return;}
+  if($('chatReactionPopover')&&!$('chatReactionPopover').classList.contains('hide')){closeChatReactionPicker();return;}
+  if($('adminDashboardModal')&&!$('adminDashboardModal').classList.contains('hide')){closeAdminDashboard();return;}
+  if($('postDetailViewer')&&!$('postDetailViewer').classList.contains('hide')){closePostDetailViewer();return;}
+  if($('explorePage')&&!$('explorePage').classList.contains('hide')){closeExplorePage();return;}
+  if(navDrawerOpen){closeNavDrawer();return;}
+  if($('privacySettingsModal')&&!$('privacySettingsModal').classList.contains('hide')){closePrivacySettingsModal();return;}
+  if($('termsModal')&&!$('termsModal').classList.contains('hide')){closeTermsModal();return;}
+  if($('helpSupportModal')&&!$('helpSupportModal').classList.contains('hide')){closeHelpSupportModal();return;}
+  if($('aboutCampusModal')&&!$('aboutCampusModal').classList.contains('hide')){closeAboutCampusModal();return;}
+  if($('commentsModal')&&!$('commentsModal').classList.contains('hide')){closeCommentsModal();return;}
+  if($('activityCenterModal')&&!$('activityCenterModal').classList.contains('hide')){closeActivityCenter();return;}
+  if($('profileEditorPage')&&!$('profileEditorPage').classList.contains('hide')){closeProfileEditorPage();return;}
+  if(!$('communityProfilePage').classList.contains('hide')){closeChatUserProfile();return;}
+  if(communityChatOpen){closeCommunityChat();return;}
+  if(!$('navPopup').classList.contains('hide')){closeNavPopup();return;}
+  if(!$('modal').classList.contains('hide')){closeForm();return;}
+  closeMenu();
+  closeProfileDropdown();
+});
 window.addEventListener('click',e=>{if(profileMenuOpen&&!e.target.closest('#profileDropdown')&&!e.target.closest('#profileButton'))closeProfileDropdown()});
 window.addEventListener('resize',()=>{if(window.innerWidth>850)closeMenu();else closeProfileDropdown()});
 
@@ -2822,7 +2917,9 @@ function saveStoredReactions(reactions){
 }
 
 function toggleChatReactionPicker(event, messageId){
-  if(event){event.preventDefault();event.stopPropagation();}
+  if(event){
+    try{event.preventDefault();event.stopPropagation();}catch{}
+  }
   closeChatMoreMenu();
   const popover=$('chatReactionPopover');
   if(!popover)return;
@@ -2831,7 +2928,10 @@ function toggleChatReactionPicker(event, messageId){
     return;
   }
   activeReactionMessageId=messageId;
-  const btn=event.currentTarget||event.target;
+  const btn = (event && event.currentTarget && event.currentTarget.closest)
+    ? event.currentTarget.closest('.chat-react-btn')
+    : (event && event.target ? (event.target.closest('.chat-react-btn') || event.target) : null);
+  if(!btn) return;
   const rect=btn.getBoundingClientRect();
   
   // Mount to body so no parent overflow/transform clips the emojis
@@ -2840,6 +2940,11 @@ function toggleChatReactionPicker(event, messageId){
   }
   
   popover.classList.remove('hide');
+  popover.style.setProperty('display', 'flex', 'important');
+  popover.style.setProperty('visibility', 'visible', 'important');
+  popover.style.setProperty('pointer-events', 'auto', 'important');
+  popover.style.setProperty('opacity', '1', 'important');
+  popover.style.zIndex = '100000';
   
   const popWidth = popover.offsetWidth || 280;
   const popHeight = popover.offsetHeight || 46;
@@ -2860,7 +2965,13 @@ function toggleChatReactionPicker(event, messageId){
 function closeChatReactionPicker(){
   activeReactionMessageId=null;
   const popover=$('chatReactionPopover');
-  if(popover)popover.classList.add('hide');
+  if(popover){
+    popover.classList.add('hide');
+    popover.style.setProperty('display', 'none', 'important');
+    popover.style.setProperty('visibility', 'hidden', 'important');
+    popover.style.setProperty('pointer-events', 'none', 'important');
+    popover.style.setProperty('opacity', '0', 'important');
+  }
 }
 
 function setChatMessageReaction(messageId, emoji){
@@ -2901,7 +3012,10 @@ function openChatMoreMenu(event, messageId){
   }
   
   popover.classList.remove('hide');
-  popover.style.display = 'flex';
+  popover.style.setProperty('display', 'flex', 'important');
+  popover.style.setProperty('visibility', 'visible', 'important');
+  popover.style.setProperty('pointer-events', 'auto', 'important');
+  popover.style.setProperty('opacity', '1', 'important');
   popover.style.zIndex = '100000';
   
   const popWidth = popover.offsetWidth || 130;
@@ -2925,7 +3039,10 @@ function closeChatMoreMenu(){
   const popover=$('chatMoreMenu');
   if(popover){
     popover.classList.add('hide');
-    popover.style.display = 'none';
+    popover.style.setProperty('display', 'none', 'important');
+    popover.style.setProperty('visibility', 'hidden', 'important');
+    popover.style.setProperty('pointer-events', 'none', 'important');
+    popover.style.setProperty('opacity', '0', 'important');
   }
 }
 
@@ -2948,15 +3065,30 @@ async function copyChatMessage(text){
   }
 }
 
-// Global popover dismiss
-document.addEventListener('click', e=>{
-  if(!e.target.closest('#chatReactionPopover') && !e.target.closest('.chat-react-btn')){
-    closeChatReactionPicker();
+// Global popover dismiss on any touch, pointer, click outside
+function dismissChatPopovers(e){
+  const target = e.target;
+  const moreMenu = $('chatMoreMenu');
+  if(moreMenu && !moreMenu.classList.contains('hide')){
+    if(!target.closest('#chatMoreMenu') && !target.closest('.chat-more-btn')){
+      closeChatMoreMenu();
+    }
   }
-  if(!e.target.closest('#chatMoreMenu') && !e.target.closest('.chat-more-btn')){
-    closeChatMoreMenu();
+  const reactPop = $('chatReactionPopover');
+  if(reactPop && !reactPop.classList.contains('hide')){
+    if(!target.closest('#chatReactionPopover') && !target.closest('.chat-react-btn')){
+      closeChatReactionPicker();
+    }
   }
-});
+}
+
+document.addEventListener('click', dismissChatPopovers, true);
+document.addEventListener('pointerdown', dismissChatPopovers, true);
+document.addEventListener('touchstart', dismissChatPopovers, { passive: true, capture: true });
+window.addEventListener('scroll', ()=>{
+  closeChatMoreMenu();
+  closeChatReactionPicker();
+}, { passive: true });
 
 $('chatReactionPopover')?.addEventListener('click', e=>{
   const item=e.target.closest('.chat-emoji-item');
@@ -3621,6 +3753,7 @@ function closeAdminDashboard(fromPopstate = false) {
     document.body.classList.remove('fullscreen-page-open');
   }
   finishCampusUiLayer('adminDashboardModal', fromPopstate);
+  returnToNavDrawerIfNeeded();
 }
 
 function refreshAdminData() {
@@ -5535,6 +5668,7 @@ function closeLeaderboardModal(fromPopstate = false) {
   modal.classList.add('hide');
   document.body.classList.remove('fullscreen-page-open');
   finishCampusUiLayer('leaderboardModal', fromPopstate);
+  returnToNavDrawerIfNeeded();
 }
 
 async function fetchLeaderboard() {
