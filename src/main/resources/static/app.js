@@ -273,7 +273,18 @@ function roleCanUploadBanner(role){return true}
 function roleCanManageMembers(role){return ['OWNER','ADMIN'].includes(String(role||'MEMBER').toUpperCase())}
 function roleBadgeMarkup(role){return ''}
 
-function toast(s){$('toast').textContent=s;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',3200)}
+let toastTimer = null;
+function toast(s) {
+  const el = $('toast');
+  if (!el) return;
+  el.textContent = s;
+  el.style.setProperty('display', 'block', 'important');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    el.style.display = 'none';
+    toastTimer = null;
+  }, 3200);
+}
 function startNotificationPolling(){
  stopNotificationPolling();
  if(!currentUser)return;
@@ -584,7 +595,6 @@ function renderPostCardMarkup(r, all) {
             Status: ${statusControl}
           </label>
           ${claimActionHtml}
-          <button type="button" class="action-btn-del" onclick="deleteReport(${r.id})" title="Move to Recently Deleted (restorable for 30 days)"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Delete</button>
         </div>
       ` : `
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;">
@@ -2128,6 +2138,12 @@ function setAuthGateVisibility(visible) {
   gate.hidden = !visible;
   gate.classList.toggle('hide', !visible);
   gate.style.setProperty('display', visible ? 'grid' : 'none', 'important');
+  document.body.classList.toggle('auth-locked', visible);
+  document.body.classList.toggle('auth-gate-active', visible);
+  const bottomNav = document.querySelector('.bottom-app-nav');
+  if (bottomNav) {
+    bottomNav.style.setProperty('display', visible ? 'none' : '', visible ? 'important' : '');
+  }
 }
 
 function showAuthGate() {

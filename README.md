@@ -76,8 +76,9 @@ In large university campuses, thousands of valuable personal items (student IDs,
 - **Contact Action**: One-tap direct call or WhatsApp connection with sellers.
 
 ### 4. Real-time Campus Community Chat
-- **Redesigned Modern Header**: Clean, polished edge-to-edge topbar featuring a tactile circular back button, official CampUs brand badge with a glowing live green pulse indicator, dynamic verified college affiliation tag, active `LIVE` indicator, and an instant notification alert toggle.
-- **Flawless Spacing & Architecture**: Removed conflicting outer modal padding so the chat header, scrollable message stream, and bottom compose bar stretch seamlessly across screen edges with zero awkward letterboxing.
+- **Instagram-Style Clean Chat Experience**: Redesigned chat interface featuring ample message breathing room, distinct message groups, clean bubbles (`border-radius: 20px`), and high-legibility layout with no visual clutter.
+- **Seamless Compose Pill (No Underlines/Lines)**: Clean, borderless rounded input pill (`border-radius: 24px`) styled like modern Instagram DMs. Default browser focus outlines, harsh box-shadows, and input underline bars are completely eliminated.
+- **Balanced Topbar Spacing**: Cleanly aligned edge-to-edge header with generous spacing between the circular back arrow, verified CampUs brand avatar, university affiliation subtitle, live `LIVE` green pill, and mute notification toggle.
 - **Sub-Second Polling & Cold-Start Protection**: Responsive, lightweight chat with auto-retry and message synchronization that survives transient backend wakes.
 - **Swipe-to-Reply & Tap-to-Reply**: Touch and trackpad gesture support to quote messages directly with inline SVG reply indicators and dismissible floating preview.
 - **10-Minute Deletion Window**: Users can delete their sent messages within a 10-minute grace period with SVG trash actions.
@@ -104,13 +105,19 @@ In large university campuses, thousands of valuable personal items (student IDs,
 
 ### 8. Native SVG Iconography & Mobile-First UI/UX
 - **Custom Vector SVG Icon System**: Completely replaced raw system emojis with a crisp, accessible, hand-crafted SVG iconography system across:
-  - Header & desktop navigation (Home, Chat, Plus Report Item, Sun/Moon theme toggle).
+  - Header & desktop navigation (Home, Community Chat, Plus Report Item, Sun/Moon theme toggle).
   - Mobile bottom navigation (Feed, Chat, Plus Create CTA, Search, Profile).
   - Campus main switcher (Lost & Found 3D Box, Campus Market Shopping Bag).
   - Marketplace category slider chips (Books, Drafters, Cycles, Hostel, Electronics, Clothing, Free Giveaways).
   - Instagram-style Explore Search bar, Clear Cross, and Category filters.
   - Activity Center actions (Unarchive, Move to Trash, Delete Forever, View Post, Share).
   - Karma Leaderboard medals (Gold 1st, Silver 2nd, Bronze 3rd) and star badges.
+- **2-Line Animated Navigation Drawer**:
+  - *Mobile Devices*: Opens full-screen sliding smoothly from right to left (`transform: translateX(100%)` to `0`), matching Instagram's settings drawer with native gesture feel.
+  - *Laptops & Desktops*: Opens as a sleek, non-intrusive 380px right-side flyout drawer panel with backdrop blur and fluid animation.
+- **Dedicated Auth Viewport**: On login and create account screens, the bottom mobile app navigation bar is completely hidden to provide a focused, distraction-free authentication experience.
+- **Protected Post Deletion Permissions**: To maintain public feed integrity and prevent accidental deletions, feed post cards no longer display a delete button. Creators can securely delete their posts exclusively from their own Profile or Activity Center.
+- **Universal Uncut Toast Notifications**: Floating snackbars and toast notifications (such as *"Light mode enabled ☀️"*) are centered with dynamic viewport bounds, word-wrap protection, safe-area offsets, and elevated z-index, ensuring notifications are never cut off by screen boundaries or bottom navigation bars.
 - **Adaptive Light & Dark Mode**: Dynamic SVG icons adapt instantly when switching between Warm Cream-Orange (`#FFF8EF`) and AMOLED Dark Mode (`#12100E`).
 - **Mobile Gestures**: Left-to-right swipe-to-go-back, pull-to-refresh, in-app history layer for mobile back-button handling.
 - **Zero-Dependency Frontend**: Pure Vanilla JavaScript and CSS — no heavy frameworks or external font icon dependencies, blazing fast 60fps performance.
