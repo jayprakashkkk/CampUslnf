@@ -2722,8 +2722,16 @@ let communityChatOpen=false, chatReplyTarget=null, chatPollTimer=null, lastChatS
 function syncChatViewport(){
   if(!communityChatOpen)return;
   const overlay=$('communityChatOverlay'),vv=window.visualViewport;
-  if(vv){overlay.style.setProperty('--chat-vv-height',`${Math.max(180,vv.height)}px`);overlay.style.setProperty('--chat-vv-top',`${Math.max(0,vv.offsetTop)}px`);}
-  else{overlay.style.setProperty('--chat-vv-height',`${window.innerHeight}px`);overlay.style.setProperty('--chat-vv-top','0px');}
+  if(vv){
+    overlay.style.setProperty('--chat-vv-height',`${Math.round(vv.height)}px`);
+    overlay.style.setProperty('--chat-vv-top','0px');
+  } else {
+    overlay.style.setProperty('--chat-vv-height',`${window.innerHeight}px`);
+    overlay.style.setProperty('--chat-vv-top','0px');
+  }
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
 }
 function openCommunityChat(){
   if(!communityChatOpen)pushCampusUiLayer('communityChat');
@@ -2747,7 +2755,21 @@ function openCommunityChat(){
   chatPollTimer=setInterval(()=>{if(communityChatOpen)loadCommunityMessages(false)},4000);
   setTimeout(()=>{$('communityChatInput').focus();syncChatViewport()},80);
 }
-function closeCommunityChat(fromPopstate=false){if(!communityChatOpen)return;communityChatOpen=false;clearInterval(chatPollTimer);chatPollTimer=null;$('communityChatOverlay').classList.add('hide');document.body.classList.remove('chat-fullscreen-open');$('communityChatOverlay').style.removeProperty('--chat-vv-height');$('communityChatOverlay').style.removeProperty('--chat-vv-top');$('communityChatInput').blur();finishCampusUiLayer('communityChat',fromPopstate);}
+function closeCommunityChat(fromPopstate=false){
+  if(!communityChatOpen)return;
+  communityChatOpen=false;
+  clearInterval(chatPollTimer);
+  chatPollTimer=null;
+  closeChatReactionPicker();
+  closeChatMoreMenu();
+  closeUnsendModal();
+  $('communityChatOverlay').classList.add('hide');
+  document.body.classList.remove('chat-fullscreen-open');
+  $('communityChatOverlay').style.removeProperty('--chat-vv-height');
+  $('communityChatOverlay').style.removeProperty('--chat-vv-top');
+  $('communityChatInput').blur();
+  finishCampusUiLayer('communityChat',fromPopstate);
+}
 $('communityChatOverlay').addEventListener('click',e=>{if(e.target===$('communityChatOverlay'))closeCommunityChat()});
 function clearChatReply(event){
   if(event){
@@ -2854,16 +2876,23 @@ function setChatMessageReaction(messageId, emoji){
 }
 
 function openChatMoreMenu(event, messageId){
-  if(event){event.preventDefault();event.stopPropagation();}
+  if(event){
+    try{event.preventDefault();event.stopPropagation();}catch{}
+  }
   closeChatReactionPicker();
   const popover=$('chatMoreMenu');
   if(!popover)return;
-  if(activeMoreMessageId===messageId && !popover.classList.contains('hide')){
+  const numId = Number(messageId);
+  if(activeMoreMessageId===numId && !popover.classList.contains('hide')){
     closeChatMoreMenu();
     return;
   }
-  activeMoreMessageId=messageId;
-  const btn=event.currentTarget||event.target;
+  activeMoreMessageId=numId;
+  const btn = (event && event.currentTarget && event.currentTarget.closest) 
+    ? event.currentTarget.closest('.chat-more-btn') 
+    : (event && event.target ? (event.target.closest('.chat-more-btn') || event.target) : null);
+  
+  if(!btn) return;
   const rect=btn.getBoundingClientRect();
   
   // Mount to body so no parent overflow/transform clips the menu
@@ -2872,6 +2901,8 @@ function openChatMoreMenu(event, messageId){
   }
   
   popover.classList.remove('hide');
+  popover.style.display = 'flex';
+  popover.style.zIndex = '100000';
   
   const popWidth = popover.offsetWidth || 130;
   const popHeight = popover.offsetHeight || 80;
@@ -2892,7 +2923,10 @@ function openChatMoreMenu(event, messageId){
 function closeChatMoreMenu(){
   activeMoreMessageId=null;
   const popover=$('chatMoreMenu');
-  if(popover)popover.classList.add('hide');
+  if(popover){
+    popover.classList.add('hide');
+    popover.style.display = 'none';
+  }
 }
 
 async function copyChatMessage(text){
@@ -2932,7 +2966,9 @@ $('chatReactionPopover')?.addEventListener('click', e=>{
   }
 });
 
-$('chatMoreDeleteBtn')?.addEventListener('click', ()=>{
+$('chatMoreDeleteBtn')?.addEventListener('click', (e)=>{
+  e.preventDefault();
+  e.stopPropagation();
   if(activeMoreMessageId){
     const id=activeMoreMessageId;
     closeChatMoreMenu();
@@ -2940,9 +2976,12 @@ $('chatMoreDeleteBtn')?.addEventListener('click', ()=>{
   }
 });
 
-$('chatMoreCopyBtn')?.addEventListener('click', ()=>{
+$('chatMoreCopyBtn')?.addEventListener('click', (e)=>{
+  e.preventDefault();
+  e.stopPropagation();
   if(activeMoreMessageId){
-    const msg=cachedCommunityMessages.find(x=>x.id===activeMoreMessageId);
+    const id=activeMoreMessageId;
+    const msg=cachedCommunityMessages.find(x=>x.id===id);
     closeChatMoreMenu();
     if(msg){
       copyChatMessage(msg.message);
@@ -2971,8 +3010,9 @@ function renderCommunityMessages(items,forceBottom,ignoreSigCheck=false){
  if(!ignoreSigCheck && signature===lastChatSignature)return;
  lastChatSignature=signature;
  box.innerHTML=items.map(m=>{
-   const mine=!!m.mine;
-   const canDelete=mine || !!m.canDelete;
+   const isAuthor = Boolean(currentUser && m.username && String(m.username).toLowerCase() === String(currentUser.username).toLowerCase());
+   const mine = Boolean(m.mine || isAuthor);
+   const canDelete = mine || Boolean(m.canDelete);
    const fullName=String(m.displayName||m.username||'CampUs user').trim();
    const username=String(m.username||'');
    const avatar=`<button type="button" class="chat-avatar chat-avatar-button" aria-label="View ${esc(fullName)}'s profile" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${avatarInner(m.avatarId,fullName,m.profileImageUrl)}</button>`;
@@ -3066,7 +3106,11 @@ function deleteChatMessage(id){
   pendingUnsendMessageId = Number(id);
   const modal = $('unsendConfirmModal');
   if(modal){
+    if(modal.parentElement !== document.body){
+      document.body.appendChild(modal);
+    }
     modal.classList.remove('hide');
+    modal.style.zIndex = '200000';
   }
 }
 
@@ -3102,27 +3146,58 @@ async function confirmUnsendMessage(){
     toast('Message unsent');
   }
 }
-$('communityChatForm').addEventListener('submit',async e=>{
+$('communityChatForm').addEventListener('submit', async e => {
   e.preventDefault();
-  const input=$('communityChatInput'),message=input.value.trim();
-  if(!message)return;
-  const sendButton=$('communityChatForm').querySelector('button[type="submit"]');
-  sendButton.disabled=true;
-  try{
-    const r=await fetch('/api/community-chat',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Accept':'application/json'},
-      body:JSON.stringify({message,replyText:chatReplyTarget?.message||null,replyName:chatReplyTarget?.displayName||null})
+  const input = $('communityChatInput');
+  const message = input.value.trim();
+  if (!message) return;
+
+  // 1. Instantly clear input and dismiss reply preview (0ms latency!)
+  input.value = '';
+  input.style.height = 'auto';
+  const replyTarget = chatReplyTarget;
+  const replyText = replyTarget?.message || null;
+  const replyName = replyTarget?.displayName || null;
+  clearChatReply();
+
+  // 2. Optimistic UI insertion - renders immediately in the message box!
+  const tempId = Date.now();
+  const optimisticMsg = {
+    id: tempId,
+    username: currentUser?.username || 'me',
+    displayName: currentUser?.displayName || currentUser?.username || 'You',
+    avatarId: currentUser?.avatarId || 1,
+    role: currentUser?.role || 'MEMBER',
+    profileImageUrl: currentUser?.profileImageUrl || '',
+    message: message,
+    replyText: replyText,
+    replyName: replyName,
+    createdAt: new Date().toISOString(),
+    mine: true
+  };
+  cachedCommunityMessages.push(optimisticMsg);
+  renderCommunityMessages(cachedCommunityMessages, true, true);
+  const box = $('chatMessages');
+  if (box) box.scrollTop = box.scrollHeight;
+  try { input.focus(); } catch {}
+
+  // 3. Dispatch to API in the background without blocking the UI
+  try {
+    const r = await fetch('/api/community-chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+      body: JSON.stringify({message, replyText, replyName})
     });
-    const data=await r.json().catch(()=>({}));
-    if(!r.ok)throw Error(data.message||'Could not send message.');
-    input.value='';
-    input.style.height='auto';
-    clearChatReply();
-    lastChatSignature='';
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw Error(data.message || 'Could not send message.');
+    lastChatSignature = '';
     await loadCommunityMessages(true);
-  }catch(err){toast(err.message||'Could not send message');}
-  finally{sendButton.disabled=false;input.focus();}
+  } catch (err) {
+    cachedCommunityMessages = cachedCommunityMessages.filter(x => x.id !== tempId);
+    renderCommunityMessages(cachedCommunityMessages, false, true);
+    input.value = message;
+    toast(err.message || 'Could not send message');
+  }
 });
 
 // Full-screen public profile, opened from a chat avatar or a report author.
@@ -3251,9 +3326,26 @@ $('communityChatInput')?.addEventListener('input',function(){
   this.style.height='auto';
   this.style.height=Math.min(this.scrollHeight,120)+'px';
 });
+// Prevent mobile keyboard from scrolling window and hiding header
+$('communityChatInput')?.addEventListener('focus', function(){
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+  setTimeout(() => {
+    window.scrollTo(0, 0);
+    const box = $('chatMessages');
+    if (box) box.scrollTop = box.scrollHeight;
+  }, 100);
+});
+$('communityChatInput')?.addEventListener('click', function(){
+  window.scrollTo(0, 0);
+});
 // Keep the full-screen chat fitted to the visible viewport when the phone keyboard opens.
 window.addEventListener('resize',syncChatViewport,{passive:true});
-if(window.visualViewport){window.visualViewport.addEventListener('resize',syncChatViewport,{passive:true});window.visualViewport.addEventListener('scroll',syncChatViewport,{passive:true});}
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize',syncChatViewport,{passive:true});
+  window.visualViewport.addEventListener('scroll',syncChatViewport,{passive:true});
+}
 
 // Use the same circular ‹ back control on phone, tablet, and desktop.
 // Back actions remain in-app; only their visual treatment is unified.
