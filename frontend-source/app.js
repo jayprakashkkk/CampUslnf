@@ -315,7 +315,13 @@ function syncCommunityMuteControls(){
   button.title=communityMuted?'Unmute community chat notifications':'Mute community chat notifications';
   button.classList.toggle('is-muted',communityMuted);
  }
- if(icon)icon.textContent=communityMuted?'🔕':'🔔';
+ if(icon){
+  if(communityMuted){
+    icon.innerHTML = `<svg class="ui-icon bell-off-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M13.73 21a2 2 0 0 1-3.46 0"></path><path d="M18.63 13A17.89 17.89 0 0 1 18 8"></path><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"></path><path d="M18 8a6 6 0 0 0-9.33-5"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+  } else {
+    icon.innerHTML = `<svg class="ui-icon bell-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`;
+  }
+ }
 }
 async function toggleCommunityMute(){
  const next=!communityMuted,button=$('chatMuteButton');if(button)button.disabled=true;
@@ -346,16 +352,33 @@ function timeAgo(dateString) {
   }
 }
 
-function categoryEmoji(category) {
+function categoryIconSvg(category, className = 'ui-icon') {
   const cat = String(category || '').toLowerCase();
-  if (cat.includes('elect')) return '📱';
-  if (cat.includes('id')) return '🪪';
-  if (cat.includes('key')) return '🔑';
-  if (cat.includes('wallet') || cat.includes('purse')) return '👛';
-  if (cat.includes('book') || cat.includes('stationery')) return '📚';
-  if (cat.includes('cloth')) return '👕';
-  if (cat.includes('bottle')) return '💧';
-  return '🏷️';
+  if (cat.includes('elect')) {
+    return `<svg class="${className}" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>`;
+  }
+  if (cat.includes('id')) {
+    return `<svg class="${className}" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>`;
+  }
+  if (cat.includes('key')) {
+    return `<svg class="${className}" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="4.5"></circle><path d="M10.5 12.5L20 3l3 3-2 2-2-2-2 2-2-2-2.5 2.5"></path></svg>`;
+  }
+  if (cat.includes('wallet') || cat.includes('purse')) {
+    return `<svg class="${className}" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path><path d="M16 3H4a2 2 0 0 0-2 2v2"></path><circle cx="16" cy="14" r="1"></circle></svg>`;
+  }
+  if (cat.includes('book') || cat.includes('stationery') || cat.includes('note')) {
+    return `<svg class="${className}" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>`;
+  }
+  if (cat.includes('cloth')) {
+    return `<svg class="${className}" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></svg>`;
+  }
+  if (cat.includes('bottle')) {
+    return `<svg class="${className}" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>`;
+  }
+  return `<svg class="${className}" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>`;
+}
+function categoryEmoji(category) {
+  return categoryIconSvg(category);
 }
 
 function askAboutItemInChat(reportId, title) {
@@ -498,7 +521,7 @@ function renderPostCardMarkup(r, all) {
     if (canEdit) {
       claimActionHtml = `<button type="button" class="view-claims-btn" onclick="openClaimsViewer(${r.id})" title="Review submitted ownership claims"><span>👀 View Claims (${r.claimCount || 0})</span></button>`;
     } else {
-      claimActionHtml = `<button type="button" class="claim-action-btn" onclick="openClaimModal(${r.id},'${esc(r.title)}','${esc(r.secretQuestion||'')}')"><span>✋ Claim Item</span></button>`;
+      claimActionHtml = `<button type="button" class="claim-action-btn" onclick="openClaimModal(${r.id},'${esc(r.title)}','${esc(r.secretQuestion||'')}')"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg><span>Claim Item</span></button>`;
     }
   }
 
@@ -512,8 +535,8 @@ function renderPostCardMarkup(r, all) {
         </div>
       </button>
       <div class="insta-post-badges">
-        <span class="insta-type-badge ${typeIsFound?'found':'lost'}">${typeIsFound?'🟢 FOUND':'🔴 LOST'}</span>
-        ${r.matchScore && r.matchScore >= 40 ? `<span class="smart-match-score-pill" title="AI Match Confidence">✨ ${r.matchScore}% Match</span>` : ''}
+        <span class="insta-type-badge ${typeIsFound?'found':'lost'}"><span class="status-dot"></span>${typeIsFound?'FOUND':'LOST'}</span>
+        ${r.matchScore && r.matchScore >= 40 ? `<span class="smart-match-score-pill" title="AI Match Confidence"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> ${r.matchScore}% Match</span>` : ''}
         ${!canEdit?statusControl:''}
       </div>
     </div>
@@ -521,33 +544,35 @@ function renderPostCardMarkup(r, all) {
     <div class="insta-post-body">
       <div class="insta-post-tags">
         <span class="insta-meta-tag">${categoryEmoji(r.category)} ${esc(r.category)}</span>
-        <span class="insta-meta-tag">📍 ${esc(r.location)}</span>
-        ${r.itemDate?`<span class="insta-meta-tag">📅 ${esc(r.itemDate)}</span>`:''}
+        <span class="insta-meta-tag"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> ${esc(r.location)}</span>
+        ${r.itemDate?`<span class="insta-meta-tag"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> ${esc(r.itemDate)}</span>`:''}
       </div>
       <h3 class="insta-post-title">${esc(r.title)}</h3>
       ${r.description?`<p class="insta-post-desc">${esc(r.description)}</p>`:''}
-      ${m?`<div class="insta-match-banner"><span>✦ Possible Match:</span><b>${esc(m.title)}</b> (${esc(m.type)} at ${esc(m.location)})</div>`:''}
+      ${m?`<div class="insta-match-banner"><span>Possible Match:</span><b>${esc(m.title)}</b> (${esc(m.type)} at ${esc(m.location)})</div>`:''}
     </div>
 
     <!-- Instagram-style Social Bar (Like, Comment, Share, Archive) -->
     <div class="insta-social-bar">
       <div class="insta-social-left">
         <button type="button" class="insta-social-btn like-btn like-btn-${r.id} ${r.likedByMe ? 'active' : ''}" onclick="togglePostLike(${r.id}, this)" aria-label="Like post">
-          <span class="social-icon heart-icon-${r.id}">${r.likedByMe ? '❤️' : '🤍'}</span>
+          <span class="social-icon heart-icon-wrap heart-icon-${r.id}">
+            <svg class="ui-icon heart-svg ${r.likedByMe ? 'is-liked' : ''}" viewBox="0 0 24 24" width="19" height="19" fill="${r.likedByMe ? '#E11D48' : 'none'}" stroke="${r.likedByMe ? '#E11D48' : 'currentColor'}" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          </span>
           <span class="social-count like-count-${r.id}">${r.likeCount || 0}</span>
         </button>
         <button type="button" class="insta-social-btn comment-btn" onclick="openPostComments(${r.id})" aria-label="Comments">
-          <span class="social-icon">💬</span>
+          <span class="social-icon"><svg class="ui-icon" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span>
           <span class="social-count comment-count-${r.id}">${r.commentCount || 0}</span>
         </button>
         <button type="button" class="insta-social-btn share-btn" onclick="sharePost(${r.id}, '${esc(r.title)}')" aria-label="Share post">
-          <span class="social-icon">🔗</span>
+          <span class="social-icon"><svg class="ui-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></span>
           <span class="social-text">Share</span>
         </button>
       </div>
       ${canEdit ? `
         <div class="insta-social-right">
-          <button type="button" class="insta-action-pill archive-pill" onclick="archiveReport(${r.id})" title="Archive post (hides from feed)">📁 Archive</button>
+          <button type="button" class="insta-action-pill archive-pill" onclick="archiveReport(${r.id})" title="Archive post (hides from feed)"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg> Archive</button>
         </div>
       ` : ''}
     </div>
@@ -559,14 +584,14 @@ function renderPostCardMarkup(r, all) {
             Status: ${statusControl}
           </label>
           ${claimActionHtml}
-          <button type="button" class="action-btn-del" onclick="deleteReport(${r.id})" title="Move to Recently Deleted (restorable for 30 days)">🗑 Delete</button>
+          <button type="button" class="action-btn-del" onclick="deleteReport(${r.id})" title="Move to Recently Deleted (restorable for 30 days)"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Delete</button>
         </div>
       ` : `
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;">
           ${claimActionHtml}
-          ${waUrl?`<a class="action-btn-whatsapp" href="${waUrl}" target="_blank" rel="noopener noreferrer"><span>💬 WhatsApp</span></a>`:''}
-          ${cleanPhone?`<a class="action-btn-call" href="tel:${cleanPhone}"><span>📞 Call</span></a>`:''}
-          <button type="button" class="action-btn-chat" onclick="askAboutItemInChat(${r.id},'${esc(r.title)}')"><span>💬 Ask in Chat</span></button>
+          ${waUrl?`<a class="action-btn-whatsapp" href="${waUrl}" target="_blank" rel="noopener noreferrer"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg><span>WhatsApp</span></a>`:''}
+          ${cleanPhone?`<a class="action-btn-call" href="tel:${cleanPhone}"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg><span>Call</span></a>`:''}
+          <button type="button" class="action-btn-chat" onclick="askAboutItemInChat(${r.id},'${esc(r.title)}')"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg><span>Ask in Chat</span></button>
         </div>
       `}
     </div>
@@ -1771,6 +1796,10 @@ function renderCollegeBadge() {
     badge.title = `Verified Campus: ${fullName}`;
     badge.hidden = false;
   }
+  const chatSubtitle = $('chatCampusSubtitle');
+  if (chatSubtitle) {
+    chatSubtitle.textContent = fullName || 'Live Campus Hub';
+  }
 }
 
 function updateGreeting(){
@@ -2699,7 +2728,7 @@ function renderCommunityMessages(items,forceBottom){
    const username=String(m.username||'');
    const avatar=`<button type="button" class="chat-avatar chat-avatar-button" aria-label="View ${esc(fullName)}'s profile" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${avatarInner(m.avatarId,fullName,m.profileImageUrl)}</button>`;
    const authorLine=!mine?`<button type="button" class="chat-author-role" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${esc(fullName)}</button>`:'';
-   return `<div class="chat-row ${mine?'mine':'theirs'}" data-message-id="${m.id}">${mine?'':avatar}<div class="chat-message-stack">${authorLine}<div class="chat-bubble" role="group" aria-label="Chat message">${m.replyText?`<div class="chat-quoted"><b>${esc(m.replyName||'Reply')}</b><br>${esc(m.replyText)}</div>`:''}<div class="chat-text">${esc(m.message)}</div><div class="chat-time">${chatTime(m.createdAt)}</div><div class="chat-actions"><button type="button" onclick="replyToChatMessage(${m.id})">↩ Reply</button>${m.canDelete?`<button type="button" onclick="deleteChatMessage(${m.id})">Delete</button>`:''}</div></div></div></div>`
+   return `<div class="chat-row ${mine?'mine':'theirs'}" data-message-id="${m.id}">${mine?'':avatar}<div class="chat-message-stack">${authorLine}<div class="chat-bubble" role="group" aria-label="Chat message">${m.replyText?`<div class="chat-quoted"><b>${esc(m.replyName||'Reply')}</b><br>${esc(m.replyText)}</div>`:''}<div class="chat-text">${esc(m.message)}</div><div class="chat-time">${chatTime(m.createdAt)}</div><div class="chat-actions"><button type="button" onclick="replyToChatMessage(${m.id})"><svg class="ui-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg> Reply</button>${m.canDelete?`<button type="button" onclick="deleteChatMessage(${m.id})"><svg class="ui-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Delete</button>`:''}</div></div></div></div>`
  }).join('');
  box.querySelectorAll('.chat-row').forEach(row=>{
    const bubble=row.querySelector('.chat-bubble');
@@ -4525,13 +4554,18 @@ function initTheme() {
 }
 
 function applyTheme(theme) {
+  const sunSvg = `<svg class="ui-icon theme-sun-svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
+  const drawerSunSvg = `<svg class="ui-icon theme-sun-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`;
+  const moonSvg = `<svg class="ui-icon theme-moon-svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
+  const drawerMoonSvg = `<svg class="ui-icon theme-moon-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`;
+
   if (theme === 'dark') {
     document.documentElement.setAttribute('data-theme', 'dark');
     document.body.setAttribute('data-theme', 'dark');
     const hIcon = $('headerThemeIcon');
-    if (hIcon) hIcon.textContent = '☀️';
+    if (hIcon) hIcon.innerHTML = sunSvg;
     const dIcon = $('drawerThemeIcon');
-    if (dIcon) dIcon.textContent = '☀️';
+    if (dIcon) dIcon.innerHTML = drawerSunSvg;
     const dText = $('drawerThemeText');
     if (dText) dText.textContent = 'Switch to Light theme';
     const dPill = $('drawerThemePill');
@@ -4540,9 +4574,9 @@ function applyTheme(theme) {
     document.documentElement.removeAttribute('data-theme');
     document.body.removeAttribute('data-theme');
     const hIcon = $('headerThemeIcon');
-    if (hIcon) hIcon.textContent = '🌙';
+    if (hIcon) hIcon.innerHTML = moonSvg;
     const dIcon = $('drawerThemeIcon');
-    if (dIcon) dIcon.textContent = '🌙';
+    if (dIcon) dIcon.innerHTML = drawerMoonSvg;
     const dText = $('drawerThemeText');
     if (dText) dText.textContent = 'Switch to Amoled Black';
     const dPill = $('drawerThemePill');

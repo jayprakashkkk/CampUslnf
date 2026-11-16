@@ -76,8 +76,9 @@ In large university campuses, thousands of valuable personal items (student IDs,
 - **Contact Action**: One-tap direct call or WhatsApp connection with sellers.
 
 ### 4. Real-time Campus Community Chat
+- **Redesigned Modern Header**: Clean, polished topbar featuring a tactile circular back button, official CampUs brand badge with a live pulse indicator, verified college affiliation tag, and an instant notification alert toggle.
 - **Sub-Second Polling**: Responsive, lightweight chat with auto-retry and message synchronization.
-- **Swipe-to-Reply & Tap-to-Reply**: Touch and trackpad gesture support to quote messages directly.
+- **Swipe-to-Reply & Tap-to-Reply**: Touch and trackpad gesture support to quote messages directly with inline SVG reply indicators.
 - **10-Minute Deletion Window**: Users can delete their sent messages within a 10-minute grace period.
 - **Role Badges**: Highlights verified community roles: `Owner`, `Admin`, `Leader`, `Moderator`, and `Member`.
 - **Custom Avatar Suite**: Pick from 30+ custom high-resolution illustrations.
@@ -100,11 +101,12 @@ In large university campuses, thousands of valuable personal items (student IDs,
 - **Audit Logging**: Every sensitive admin action is logged with IP, timestamp, and operator username.
 - **Campus-Wide Announcements**: Broadcast pinned urgent alerts and notices across all screens.
 
-### 8. Premium UI/UX & Native Mobile Feel
-- **Signature Design**: Warm Cream-Orange aesthetic (`#FFF8EF`, `#FF6B00`) with smooth glassmorphism.
-- **Dark Mode**: High-contrast, easy-on-the-eyes dark theme with saved preference.
+### 8. Native SVG Iconography & Mobile-First UI/UX
+- **Custom Vector SVG Icon System**: Completely replaced raw system emojis with a crisp, accessible, hand-crafted SVG iconography system across desktop and mobile navigation, status chips, drawer options, feed interaction bars, and dialogs.
+- **Adaptive Light & Dark Mode**: Dynamic SVG icons adapt instantly when switching between Warm Cream-Orange (`#FFF8EF`) and AMOLED Dark Mode (`#1C1917`).
+- **Signature Aesthetics**: Warm Cream-Orange aesthetic (`#FFF8EF`, `#FF6B00`) with smooth glassmorphism.
 - **Mobile Gestures**: Left-to-right swipe-to-go-back, pull-to-refresh, in-app history layer for mobile back-button handling.
-- **Zero-Dependency Frontend**: Pure Vanilla JavaScript and CSS — no heavy frameworks, blazing fast 60fps performance.
+- **Zero-Dependency Frontend**: Pure Vanilla JavaScript and CSS — no heavy frameworks or external font icon dependencies, blazing fast 60fps performance.
 - **PWA Ready**: Offline-capable web manifest, mobile splash icons, and full-screen mobile app shell.
 
 ---
