@@ -33,7 +33,23 @@ public class CommunityChatController {
         }
         List<Map<String,Object>> result=source.stream().map(m->{
             UserAccount author=users.findByUsernameKey(m.getUsername().toLowerCase(java.util.Locale.ROOT)).orElse(null);
-            Map<String,Object> x=new LinkedHashMap<>(); x.put("id",m.getId());x.put("username",m.getUsername());x.put("displayName",author==null?m.getDisplayName():author.getDisplayName());x.put("avatarId",author==null?"":author.getAvatarId());x.put("profileImageUrl",author==null||!AuthController.canUseCustomProfilePhoto(author)||author.getProfileImageData().isBlank()?"":"/api/users/"+org.springframework.web.util.UriUtils.encodePathSegment(author.getUsername(),java.nio.charset.StandardCharsets.UTF_8)+"/photo");x.put("role",author==null?"MEMBER":author.getRole());x.put("college",m.getCollege());x.put("message",m.getMessage());x.put("replyText",m.getReplyText());x.put("replyName",m.getReplyName());x.put("createdAt",m.getCreatedAt());x.put("mine",m.getUsername().equalsIgnoreCase(current));x.put("canDelete",m.getUsername().equalsIgnoreCase(current)&&m.getCreatedAt().isAfter(LocalDateTime.now().minusMinutes(10)));return x;
+            boolean isMine = m.getUsername().equalsIgnoreCase(current);
+            boolean isAdmin = currentAcc != null && AuthController.canManageMembers(currentAcc);
+            Map<String,Object> x=new LinkedHashMap<>();
+            x.put("id",m.getId());
+            x.put("username",m.getUsername());
+            x.put("displayName",author==null?m.getDisplayName():author.getDisplayName());
+            x.put("avatarId",author==null?"":author.getAvatarId());
+            x.put("profileImageUrl",author==null||!AuthController.canUseCustomProfilePhoto(author)||author.getProfileImageData().isBlank()?"":"/api/users/"+org.springframework.web.util.UriUtils.encodePathSegment(author.getUsername(),java.nio.charset.StandardCharsets.UTF_8)+"/photo");
+            x.put("role",author==null?"MEMBER":author.getRole());
+            x.put("college",m.getCollege());
+            x.put("message",m.getMessage());
+            x.put("replyText",m.getReplyText());
+            x.put("replyName",m.getReplyName());
+            x.put("createdAt",m.getCreatedAt());
+            x.put("mine",isMine);
+            x.put("canDelete",isMine || isAdmin);
+            return x;
         }).toList();
         return ResponseEntity.ok(result);
     }
@@ -52,8 +68,10 @@ public class CommunityChatController {
     public ResponseEntity<?> delete(@PathVariable Long id,HttpServletRequest request){
         HttpSession s=request.getSession(false);if(s==null||!(s.getAttribute(AuthController.SESSION_USER_ID) instanceof Long uid))return ResponseEntity.status(401).body(Map.of("message","Please log in."));
         CommunityMessage m=messages.findById(id).orElse(null);if(m==null)return ResponseEntity.notFound().build();
-        UserAccount u=users.findById(uid).orElse(null);if(u==null||!m.getUsername().equalsIgnoreCase(u.getUsername()))return ResponseEntity.status(403).body(Map.of("message","You can delete only your own messages."));
-        if(m.getCreatedAt().isBefore(LocalDateTime.now().minusMinutes(10)))return ResponseEntity.status(403).body(Map.of("message","Messages can only be deleted within 10 minutes."));
+        UserAccount u=users.findById(uid).orElse(null);
+        boolean isAuthor = u != null && m.getUsername().equalsIgnoreCase(u.getUsername());
+        boolean isAdmin = u != null && AuthController.canManageMembers(u);
+        if(!isAuthor && !isAdmin) return ResponseEntity.status(403).body(Map.of("message","You can delete only your own messages."));
         messages.delete(m);return ResponseEntity.ok(Map.of("deleted",true));
     }
     public record NewMessage(String message, String replyText, String replyName){}

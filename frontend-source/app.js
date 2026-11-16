@@ -1550,12 +1550,14 @@ function toggleNavDrawer() {
 function openNavDrawer() {
   navDrawerOpen = true;
   pushCampusUiLayer('navDrawer');
+  document.body.classList.add('nav-drawer-open');
   const overlay = $('navDrawerOverlay');
   const btn = $('menuToggleBtn');
   if (overlay) overlay.classList.remove('hide');
   if (btn) {
     btn.classList.add('active');
     btn.setAttribute('aria-expanded', 'true');
+    btn.setAttribute('aria-label', 'Close navigation menu');
   }
   updateGreeting();
 }
@@ -1563,12 +1565,14 @@ function openNavDrawer() {
 function closeNavDrawer(fromPopstate = false) {
   if (!navDrawerOpen) return;
   navDrawerOpen = false;
+  document.body.classList.remove('nav-drawer-open');
   const overlay = $('navDrawerOverlay');
   const btn = $('menuToggleBtn');
   if (overlay) overlay.classList.add('hide');
   if (btn) {
     btn.classList.remove('active');
     btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-label', 'Open navigation menu');
   }
   if (!fromPopstate) {
     finishCampusUiLayer('navDrawer');
@@ -2743,8 +2747,31 @@ function openCommunityChat(){
 }
 function closeCommunityChat(fromPopstate=false){if(!communityChatOpen)return;communityChatOpen=false;clearInterval(chatPollTimer);chatPollTimer=null;$('communityChatOverlay').classList.add('hide');document.body.classList.remove('chat-fullscreen-open');$('communityChatOverlay').style.removeProperty('--chat-vv-height');$('communityChatOverlay').style.removeProperty('--chat-vv-top');$('communityChatInput').blur();finishCampusUiLayer('communityChat',fromPopstate);}
 $('communityChatOverlay').addEventListener('click',e=>{if(e.target===$('communityChatOverlay'))closeCommunityChat()});
-function clearChatReply(){chatReplyTarget=null;$('chatReplyPreview').classList.add('hide');$('chatReplyText').textContent='';}
-function setChatReply(msg){chatReplyTarget=msg;$('chatReplyText').textContent=`${msg.displayName}: ${msg.message}`;$('chatReplyPreview').classList.remove('hide');$('communityChatInput').focus();}
+function clearChatReply(event){
+  if(event){
+    try{event.preventDefault();event.stopPropagation();}catch{}
+  }
+  chatReplyTarget=null;
+  const p=$('chatReplyPreview');
+  if(p){
+    p.classList.add('hide');
+    p.style.setProperty('display','none','important');
+  }
+  const t=$('chatReplyText');
+  if(t)t.textContent='';
+}
+function setChatReply(msg){
+  chatReplyTarget=msg;
+  const t=$('chatReplyText');
+  if(t)t.textContent=`${msg.displayName||msg.username}: ${msg.message}`;
+  const p=$('chatReplyPreview');
+  if(p){
+    p.classList.remove('hide');
+    p.style.setProperty('display','flex','important');
+  }
+  const input=$('communityChatInput');
+  if(input)input.focus();
+}
 let cachedCommunityMessages=[];
 function chatTime(value){
   try{
@@ -2763,11 +2790,12 @@ function renderCommunityMessages(items,forceBottom){
  lastChatSignature=signature;
  box.innerHTML=items.map(m=>{
    const mine=!!m.mine;
+   const canDelete=mine || !!m.canDelete;
    const fullName=String(m.displayName||m.username||'CampUs user').trim();
    const username=String(m.username||'');
    const avatar=`<button type="button" class="chat-avatar chat-avatar-button" aria-label="View ${esc(fullName)}'s profile" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${avatarInner(m.avatarId,fullName,m.profileImageUrl)}</button>`;
    const authorLine=!mine?`<button type="button" class="chat-author-role" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${esc(fullName)}</button>`:'';
-   return `<div class="chat-row ${mine?'mine':'theirs'}" data-message-id="${m.id}">${mine?'':avatar}<div class="chat-message-stack">${authorLine}<div class="chat-bubble" role="group" aria-label="Chat message">${m.replyText?`<div class="chat-quoted"><b>${esc(m.replyName||'Reply')}</b><br>${esc(m.replyText)}</div>`:''}<div class="chat-text">${esc(m.message)}</div><div class="chat-time">${chatTime(m.createdAt)}</div><div class="chat-actions"><button type="button" onclick="replyToChatMessage(${m.id})"><svg class="ui-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg> Reply</button>${m.canDelete?`<button type="button" onclick="deleteChatMessage(${m.id})"><svg class="ui-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Delete</button>`:''}</div></div></div></div>`
+   return `<div class="chat-row ${mine?'mine':'theirs'}" data-message-id="${m.id}">${mine?'':avatar}<div class="chat-message-stack">${authorLine}<div class="chat-bubble" role="group" aria-label="Chat message">${m.replyText?`<div class="chat-quoted"><b>${esc(m.replyName||'Reply')}</b><br>${esc(m.replyText)}</div>`:''}<div class="chat-text">${esc(m.message)}</div><div class="chat-time">${chatTime(m.createdAt)}</div><div class="chat-actions"><button type="button" class="chat-reply-btn" onclick="replyToChatMessage(${m.id})"><svg class="ui-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg> Reply</button>${canDelete?`<button type="button" class="chat-delete-btn" onclick="deleteChatMessage(${m.id})" title="Delete your message"><svg class="ui-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Delete</button>`:''}</div></div></div></div>`
  }).join('');
  box.querySelectorAll('.chat-row').forEach(row=>{
    const bubble=row.querySelector('.chat-bubble');
@@ -2816,14 +2844,14 @@ function replyToChatMessage(id){
   }).catch(()=>toast('Could not open reply. Try again.'));
 }
 async function deleteChatMessage(id){
-  if(!confirm('Delete this message? You can only delete your own messages within 10 minutes.'))return;
+  if(!confirm('Delete this message?'))return;
   try{
     const r=await fetch(`/api/community-chat/${id}`,{method:'DELETE'});
     const data=await r.json().catch(()=>({}));
     if(!r.ok)throw Error(data.message||'Could not delete message.');
     lastChatSignature='';
     await loadCommunityMessages(false);
-    toast('Message deleted');
+    toast('Message deleted 🗑️');
   }catch(e){toast(e.message||'Could not delete message');}
 }
 $('communityChatForm').addEventListener('submit',async e=>{
@@ -4549,34 +4577,6 @@ async function renderAdminLogs(force = false) {
       trackpadAccumX = 0;
       trackpadAccumY = 0;
       handleSwipeBackAction();
-    }
-  }, { passive: true });
-
-  // Touchscreen / Touchpad touch event listeners
-  let touchStartX = 0;
-  let touchStartY = 0;
-  let touchStartTime = 0;
-
-  window.addEventListener('touchstart', (e) => {
-    if (!e.touches || e.touches.length !== 1) return;
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-    touchStartTime = Date.now();
-  }, { passive: true });
-
-  window.addEventListener('touchend', (e) => {
-    if (!e.changedTouches || e.changedTouches.length !== 1 || isSwipeCooldown) return;
-    const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-    const dx = endX - touchStartX;
-    const dy = endY - touchStartY;
-    const dt = Date.now() - touchStartTime;
-
-    // Left-to-right swipe: endX > startX + 60, under 500ms, mostly horizontal
-    if (dx > 60 && Math.abs(dx) > Math.abs(dy) * 1.4 && dt < 500) {
-      if (!canContainerScrollLeft(e.target)) {
-        handleSwipeBackAction();
-      }
     }
   }, { passive: true });
 })();

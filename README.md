@@ -77,11 +77,13 @@ In large university campuses, thousands of valuable personal items (student IDs,
 
 ### 4. Real-time Campus Community Chat
 - **Instagram-Style Clean Chat Experience**: Redesigned chat interface featuring ample message breathing room, distinct message groups, clean bubbles (`border-radius: 20px`), and high-legibility layout with no visual clutter.
+- **100% Full-Screen on Laptop & Desktop**: Community chat expands to a spacious, immersive 100% full-screen view (`100vw`, `100dvh`) on laptops and tablets, with edge-to-edge responsiveness.
 - **Seamless Compose Pill (No Underlines/Lines)**: Clean, borderless rounded input pill (`border-radius: 24px`) styled like modern Instagram DMs. Default browser focus outlines, harsh box-shadows, and input underline bars are completely eliminated.
-- **Balanced Topbar Spacing**: Cleanly aligned edge-to-edge header with generous spacing between the circular back arrow, verified CampUs brand avatar, university affiliation subtitle, live `LIVE` green pill, and mute notification toggle.
+- **Right-Pinned Notification Bell**: Cleanly aligned edge-to-edge header with the notification mute bell securely pinned to the far right edge of the topbar, alongside the circular back arrow, verified CampUs brand avatar, university affiliation subtitle, and live `LIVE` green pill.
+- **Author Message Deletion**: Senders have full control to delete their own messages from the community chat at any time via inline trash action icons.
+- **Instant Reply Preview Dismissal**: Dismissing a reply quote with the interactive `X` cancel button immediately clears the quoted message preview.
 - **Sub-Second Polling & Cold-Start Protection**: Responsive, lightweight chat with auto-retry and message synchronization that survives transient backend wakes.
 - **Swipe-to-Reply & Tap-to-Reply**: Touch and trackpad gesture support to quote messages directly with inline SVG reply indicators and dismissible floating preview.
-- **10-Minute Deletion Window**: Users can delete their sent messages within a 10-minute grace period with SVG trash actions.
 - **Role Badges**: Highlights verified community roles: `Owner`, `Admin`, `Leader`, `Moderator`, and `Member`.
 - **Custom Avatar Suite**: Pick from 30+ custom high-resolution illustrations.
 
@@ -112,14 +114,15 @@ In large university campuses, thousands of valuable personal items (student IDs,
   - Instagram-style Explore Search bar, Clear Cross, and Category filters.
   - Activity Center actions (Unarchive, Move to Trash, Delete Forever, View Post, Share).
   - Karma Leaderboard medals (Gold 1st, Silver 2nd, Bronze 3rd) and star badges.
-- **2-Line Animated Navigation Drawer**:
+- **2-Line Animated Morphing Navigation Drawer**:
+  - *Morphing 2-Line / X Button*: Tapping the 2-line menu button smoothly rotates and morphs the bars into a clean `✕` (cross). Closing the drawer via the `✕` button, clicking the backdrop, navigating, or performing a trackpad swipe-back animates the `✕` seamlessly back into the 2 lines.
   - *Mobile Devices*: Opens full-screen sliding smoothly from right to left (`transform: translateX(100%)` to `0`), matching Instagram's settings drawer with native gesture feel.
   - *Laptops & Desktops*: Opens as a sleek, non-intrusive 380px right-side flyout drawer panel with backdrop blur and fluid animation.
 - **Dedicated Auth Viewport**: On login and create account screens, the bottom mobile app navigation bar is completely hidden to provide a focused, distraction-free authentication experience.
 - **Protected Post Deletion Permissions**: To maintain public feed integrity and prevent accidental deletions, feed post cards no longer display a delete button. Creators can securely delete their posts exclusively from their own Profile or Activity Center.
 - **Universal Uncut Toast Notifications**: Floating snackbars and toast notifications (such as *"Light mode enabled ☀️"*) are centered with dynamic viewport bounds, word-wrap protection, safe-area offsets, and elevated z-index, ensuring notifications are never cut off by screen boundaries or bottom navigation bars.
 - **Adaptive Light & Dark Mode**: Dynamic SVG icons adapt instantly when switching between Warm Cream-Orange (`#FFF8EF`) and AMOLED Dark Mode (`#12100E`).
-- **Mobile Gestures**: Left-to-right swipe-to-go-back, pull-to-refresh, in-app history layer for mobile back-button handling.
+- **Laptop Trackpad Gestures**: Natural two-finger left-to-right swipe-to-go-back specifically for macOS and Windows laptop trackpads, while phone users enjoy standard native touchscreen navigation without touch gesture conflicts.
 - **Zero-Dependency Frontend**: Pure Vanilla JavaScript and CSS — no heavy frameworks or external font icon dependencies, blazing fast 60fps performance.
 - **PWA Ready**: Offline-capable web manifest, mobile splash icons, and full-screen mobile app shell.
 

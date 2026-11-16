@@ -303,8 +303,6 @@ body.chat-fullscreen-open{overflow:hidden!important;overscroll-behavior:none}
   .chat-compose button{min-height:44px;padding:10px 14px;border-radius:22px}
   .chat-reply-preview{padding:7px 9px}
   .chat-reply-preview small{max-width:70vw}
-  /* On phones, Reply is triggered by swiping a message, never by tapping it. */
-  .chat-row.actions-open .chat-actions{display:none!important}
 }
 
 
@@ -4828,6 +4826,11 @@ header.app-header {
 /* --------------------------------------------------------------------------
    2-LINE ANIMATED MENU BUTTON (OPENS TO ✕ AND CLOSES TO 2 LINES)
    -------------------------------------------------------------------------- */
+.header-right-actions {
+  position: relative;
+  z-index: 10005;
+}
+
 .hamburger-menu-btn {
   width: 42px;
   height: 42px;
@@ -4841,15 +4844,16 @@ header.app-header {
   border-radius: 12px;
   cursor: pointer;
   padding: 0;
-  transition: all 0.2s ease;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   flex-shrink: 0;
   position: relative;
+  z-index: 10006 !important;
 }
 .hamburger-menu-btn:hover {
   background: #FFF7EE;
   border-color: #F7C69D;
-  transform: scale(1.03);
+  transform: scale(1.04);
 }
 .hamburger-bar {
   display: block;
@@ -4857,14 +4861,66 @@ header.app-header {
   height: 2.2px;
   background: var(--insta-text-main);
   border-radius: 2px;
-  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, opacity 0.2s ease;
   transform-origin: center;
 }
+
+[data-theme="dark"] .hamburger-menu-btn {
+  background: #181512 !important;
+  border-color: #332B24 !important;
+}
+
+[data-theme="dark"] .hamburger-bar {
+  background: #F4F4F6 !important;
+}
+
+.hamburger-menu-btn.active {
+  background: #FFF7EE !important;
+  border-color: #F7C69D !important;
+  box-shadow: 0 4px 14px rgba(232, 101, 0, 0.15) !important;
+}
+
+[data-theme="dark"] .hamburger-menu-btn.active {
+  background: #25201B !important;
+  border-color: #E86500 !important;
+}
+
 .hamburger-menu-btn.active .hamburger-bar:nth-child(1) {
   transform: translateY(4.1px) rotate(45deg);
 }
 .hamburger-menu-btn.active .hamburger-bar:nth-child(2) {
   transform: translateY(-4.1px) rotate(-45deg);
+}
+
+body.nav-drawer-open .header-brand-wrap,
+body.nav-drawer-open .board-search,
+body.nav-drawer-open .desktop-nav,
+body.nav-drawer-open #headerThemeBtn,
+body.nav-drawer-open .desk-user-menu-wrap {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: opacity 0.2s ease !important;
+}
+
+body.nav-drawer-open header.app-header {
+  background: transparent !important;
+  border-bottom-color: transparent !important;
+  pointer-events: none !important;
+  z-index: 10005 !important;
+}
+
+body.nav-drawer-open .header-right-actions,
+body.nav-drawer-open #menuToggleBtn {
+  pointer-events: auto !important;
+  z-index: 10006 !important;
+}
+
+.drawer-header .drawer-close-btn {
+  display: none !important;
+}
+
+.drawer-header {
+  padding-right: 68px !important;
 }
 
 /* --------------------------------------------------------------------------
@@ -8166,18 +8222,18 @@ body[data-theme="dark"] {
 
 #communityChatOverlay:not(.hide) .community-chat-dialog {
   position: relative !important;
-  inset: auto !important;
-  width: 100% !important;
-  max-width: 780px !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  max-width: 100% !important;
   height: 100vh !important;
   height: 100dvh !important;
   min-height: 0 !important;
   max-height: none !important;
-  margin: 0 auto !important;
+  margin: 0 !important;
   padding: 0 !important;
   border: 0 !important;
   border-radius: 0 !important;
-  box-shadow: 0 0 50px rgba(0, 0, 0, 0.12) !important;
+  box-shadow: none !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 0 !important;
@@ -8375,12 +8431,13 @@ body[data-theme="dark"] {
   color: #4ADE80 !important;
 }
 
-/* Topbar Right - Notification Bell / Mute Toggle */
+/* Topbar Right - Notification Bell / Mute Toggle (Pinned to the right edge) */
 .chat-topbar-right {
   display: flex !important;
   align-items: center !important;
   gap: 8px !important;
   flex-shrink: 0 !important;
+  margin-left: auto !important;
 }
 
 .chat-mute-toggle {
@@ -8601,11 +8658,21 @@ body[data-theme="dark"] {
   align-items: center !important;
   gap: 4px !important;
   border-radius: 6px !important;
+  transition: all 0.15s ease !important;
 }
 
 .chat-actions button:hover {
   opacity: 1 !important;
   background: rgba(0, 0, 0, 0.05) !important;
+}
+
+.chat-row.mine .chat-actions {
+  border-top-color: rgba(255, 255, 255, 0.25) !important;
+  color: #FFFFFF !important;
+}
+
+.chat-row.mine .chat-actions button:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
 }
 
 /* --- Reply Preview Floating Banner --- */
@@ -8618,6 +8685,11 @@ body[data-theme="dark"] {
   border-top: 1px solid rgba(230, 218, 207, 0.8) !important;
   border-left: 4px solid #E86500 !important;
   margin: 0 !important;
+}
+
+.chat-reply-preview.hide,
+#chatReplyPreview.hide {
+  display: none !important;
 }
 
 [data-theme="dark"] .chat-reply-preview {
