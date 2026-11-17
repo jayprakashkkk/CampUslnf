@@ -90,11 +90,16 @@ In large university campuses, thousands of valuable personal items (student IDs,
   - Tapping any member's circular avatar or display name inside the chat immediately opens their full public profile modal (`z-index: 100050`).
   - View member photo, university badge, role, karma score, active lost/found items, and statistics.
   - Tapping the back button (`‹`) returns the user seamlessly and directly back to the active conversation.
-- **WhatsApp-Style Ultra-Slim Message Bubbles**:
-  - **Inline Timestamps**: Short messages ("hello", "ok", "yes") position the timestamp inline next to the text on the same line, keeping 1-word messages to a sleek single line (~26px height) rather than tall multi-line blocks.
-  - **Compact Padding**: Tight, clean `4px 7px 4px 8px` padding on mobile and desktop.
-  - **Compact Mobile Compose Bar**: Sleek 36px typing input height on phones for an unobtrusive chatting experience.
-  - **Clean Sender Name**: Styled as clean, borderless colored text with zero button bevels.
+- **WhatsApp-Style Ultra-Slim Message Bubbles (Desktop & Mobile)**:
+  - **Inline Timestamps & Flex Layout**: Uses modern flex alignment (`display: flex; align-items: flex-end; justify-content: space-between; gap: 8px;`) so short messages ("hello", "Kya", "ok") deterministically position the timestamp inline next to the text on the exact same row. Eradicates the classic CSS `fit-content` float collapse bug and prevents 1-word messages from stretching vertically into 2-line or 3-line blocks (~26px-32px total height).
+  - **WhatsApp Group Chat Sender Name**: Incoming messages display the sender's display name cleanly at the top of the bubble in distinguished campus orange/amber font with zero outer box, zero outline, zero border, and zero bevel. Outgoing messages omit the sender name entirely.
+  - **Compact WhatsApp Padding**: Tight, clean `3px 8px 3px 8px` padding on both laptop/desktop and mobile screens.
+  - **Direct Profile Navigation**: Tapping either the circular avatar or sender name opens the student's campus profile.
+- **Zero-Disappear Optimistic Send Queue (`inFlightMessages`)**:
+  - Completely eliminates the send disappear/reappear race condition. When sending a message, an optimistic item is inserted with 0ms latency and tracked in an in-flight queue. Background polling cycles (every 750ms) merge in-flight messages so database commit delays can never clobber or vanish pending messages from the screen.
+- **Slim WhatsApp-Style Compose Bar for Laptop & Mobile**:
+  - Sleek, compact 36px typing input height across laptops, desktops, and mobile phones with smooth pill geometry (`border-radius: 18px`) and 6px padding.
+  - **Desktop Keyboard Enter-to-Send**: Pressing `Enter` on laptop/desktop keyboards sends the message instantly, while `Shift+Enter` inserts a newline. Soft virtual keyboards on mobile devices retain standard newline behavior.
 - **Instagram Web DM Floating Message Actions**:
   - **Others' Messages**: Clean bubble with floating action bar on hover showing **React (`☺`)** and **Reply (`↩`)** (no 3-dots).
   - **Own Messages**: Floating action bar on hover showing **More (`⋮`)**, **Reply (`↩`)**, and **React (`☺`)**.

@@ -2873,6 +2873,7 @@ document.addEventListener('click',function(e){
 // Community chat: messages are stored on the server and refreshed for everyone.
 let communityChatOpen=false, chatReplyTarget=null, chatPollTimer=null, lastChatSignature='';
 const inFlightReactions = new Map(); // messageId -> reactionsArray (locks optimistic state during async network trip)
+const inFlightMessages = new Map(); // tempId -> optimisticMsg (locks optimistic sent messages during async network trip)
 function syncChatViewport(){
   if(!communityChatOpen)return;
   const overlay=$('communityChatOverlay');
@@ -3577,6 +3578,22 @@ async function loadCommunityMessages(forceBottom){
           m.reactions = inFlightReactions.get(m.id);
         }
       });
+      // Keep in-flight pending sent messages locked so a background poll NEVER deletes them while POST is in flight
+      if(inFlightMessages.size > 0){
+        inFlightMessages.forEach((pendingMsg, tempId) => {
+          const alreadyInItems = items.some(m => 
+            (m.id === pendingMsg.id || (pendingMsg.realId && m.id === pendingMsg.realId)) ||
+            ((m.mine || (currentUser && String(m.username).toLowerCase() === String(currentUser.username).toLowerCase())) &&
+             m.message === pendingMsg.message &&
+             Math.abs(new Date(m.createdAt).getTime() - new Date(pendingMsg.createdAt).getTime()) < 30000)
+          );
+          if(alreadyInItems){
+            inFlightMessages.delete(tempId);
+          } else {
+            items.push(pendingMsg);
+          }
+        });
+      }
       cachedCommunityMessages=items;
       renderCommunityMessages(cachedCommunityMessages,forceBottom);
       if(activeReactionDetailMessageId){
@@ -3650,7 +3667,7 @@ $('communityChatForm').addEventListener('submit', async e => {
 
   // 1. Instantly clear input and dismiss reply preview (0ms latency!)
   input.value = '';
-  input.style.height = 'auto';
+  input.style.height = '36px';
   const replyTarget = chatReplyTarget;
   const replyText = replyTarget?.message || null;
   const replyName = replyTarget?.displayName || null;
@@ -3671,10 +3688,14 @@ $('communityChatForm').addEventListener('submit', async e => {
     createdAt: new Date().toISOString(),
     mine: true
   };
+  inFlightMessages.set(tempId, optimisticMsg);
   cachedCommunityMessages.push(optimisticMsg);
   renderCommunityMessages(cachedCommunityMessages, true, true);
   const box = $('chatMessages');
-  if (box) box.scrollTop = box.scrollHeight;
+  if (box) {
+    box.scrollTop = box.scrollHeight;
+    requestAnimationFrame(() => { box.scrollTop = box.scrollHeight; });
+  }
   try { input.focus(); } catch {}
 
   // 3. Dispatch to API in the background without blocking the UI
@@ -3699,17 +3720,29 @@ $('communityChatForm').addEventListener('submit', async e => {
           body: JSON.stringify({message, replyText, replyName})
         });
         if (retryR.ok) {
+          const retryData = await retryR.json().catch(() => ({}));
+          if (retryData && retryData.id) {
+            optimisticMsg.id = retryData.id;
+            optimisticMsg.realId = retryData.id;
+          }
           lastChatSignature = '';
           await loadCommunityMessages(true);
+          inFlightMessages.delete(tempId);
           return;
         }
         data = await retryR.json().catch(() => ({}));
       }
       throw Error(data.message || 'Could not send message.');
     }
+    if (data && data.id) {
+      optimisticMsg.id = data.id;
+      optimisticMsg.realId = data.id;
+    }
     lastChatSignature = '';
     await loadCommunityMessages(true);
+    inFlightMessages.delete(tempId);
   } catch (err) {
+    inFlightMessages.delete(tempId);
     cachedCommunityMessages = cachedCommunityMessages.filter(x => x.id !== tempId);
     renderCommunityMessages(cachedCommunityMessages, false, true);
     input.value = message;
@@ -3843,14 +3876,29 @@ document.addEventListener('click',event=>{
  openChatUserProfile(target.dataset.profileName||target.dataset.chatProfileName||'',target.dataset.profileUsername||target.dataset.chatProfileUsername||target.dataset.userSearchUsername||'');
 });
 
-// Enter/Return inserts a newline (soft keyboard next line); sending happens strictly on Send button click!
-$('communityChatInput')?.addEventListener('input',function(){
-  this.style.height='auto';
-  this.style.height=Math.min(this.scrollHeight,120)+'px';
-});
-// Prevent mobile keyboard from scrolling window and hiding header
+// Enter/Return handling:
+// On laptop / desktop keyboards, pressing Enter (without Shift) immediately sends the message!
+// On mobile / touchscreen, Enter inserts a newline for soft keyboard typing.
 const chatInputElem = $('communityChatInput');
 if(chatInputElem){
+  chatInputElem.addEventListener('keydown', function(e){
+    const isDesktop = window.matchMedia('(pointer: fine)').matches || window.innerWidth >= 768;
+    if(e.key === 'Enter' && !e.shiftKey && !e.isComposing && isDesktop){
+      e.preventDefault();
+      const form = $('communityChatForm');
+      if (form) {
+        if (typeof form.requestSubmit === 'function') {
+          form.requestSubmit();
+        } else {
+          form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+        }
+      }
+    }
+  });
+  chatInputElem.addEventListener('input', function(){
+    this.style.height='36px';
+    this.style.height=Math.min(this.scrollHeight,96)+'px';
+  });
   chatInputElem.addEventListener('focus', function(){
     syncChatViewport();
     window.scrollTo(0, 0);
