@@ -126,8 +126,7 @@ In large university campuses, thousands of valuable personal items (student IDs,
   - `Shift + Enter` starts a new line and expands the textarea.
   - Mobile touchscreen soft keyboards retain standard newline behavior on Return for comfortable mobile typing.
 - **Live Browser Notifications & System Permissions**:
-  - **Instant Permission Prompt on App Open**: When any user opens the website or app, CampUs immediately requests browser notification and geolocation permissions (`requestCampusPermissions`).
-  - **Interactive Campus Permission Banner (`#campusNotificationBanner`)**: High-visibility, dismissible permission banner displayed at the top of the feed if notification permissions are pending (`Notification.permission === 'default'`), enabling 1-click activation.
+  - **Instant Native Permission Prompt on App Open**: When any user opens the website or app, CampUs immediately requests native browser notification and geolocation permissions (`requestCampusPermissions`) with zero intrusive on-screen banners.
   - **Live Web Push Alerts**: Fires native OS notifications for incoming Community Chat messages from other students (even while minimized or backgrounded), item claim updates, and campus announcements.
   - **Synthesized Web Audio Chimes (`AudioContext`)**: Zero-dependency browser-generated 2-tone melodic notification chime (E5 -> A5) plays upon new message arrival without external audio file latency.
   - **PWA Service Worker (`sw.js`)**: Handles background push events and notification clicks to refocus the active window and route users directly into Community Chat.

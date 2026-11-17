@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="CampUs">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="stylesheet" href="/style.css?v=campus-20261117-livealerts1">
+  <link rel="stylesheet" href="/style.css?v=campus-20261117-clean1">
 </head>
 <body class="auth-locked">
 
@@ -190,21 +190,6 @@
     </button>
   </div>
 </header>
-
-<!-- Live Campus Notification Permission Banner -->
-<aside id="campusNotificationBanner" class="campus-notif-banner hide" role="alert" aria-live="polite">
-  <div class="notif-banner-content">
-    <span class="notif-banner-bell" aria-hidden="true">🔔</span>
-    <div class="notif-banner-text">
-      <strong>Enable Live Campus Notifications</strong>
-      <span>Get instant alerts for Community Chat messages, item claims &amp; campus updates.</span>
-    </div>
-  </div>
-  <div class="notif-banner-actions">
-    <button type="button" class="notif-banner-btn allow" onclick="requestCampusPermissions(true)">Enable Alerts</button>
-    <button type="button" class="notif-banner-btn dismiss" onclick="dismissNotificationBanner()" aria-label="Dismiss">✕</button>
-  </div>
-</aside>
 
 <!-- Full Animated Slide-Down Menu Drawer (Unique Features Only) -->
 <div id="navDrawerOverlay" class="nav-drawer-overlay hide" onclick="handleDrawerBackdropClick(event)">
@@ -1585,7 +1570,7 @@
   </svg>
 </div>
 
-<script src="/app.js?v=campus-20261117-livealerts1"></script>
+<script src="/app.js?v=campus-20261117-clean1"></script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {

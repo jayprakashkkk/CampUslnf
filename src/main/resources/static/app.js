@@ -219,9 +219,7 @@ async function requestCampusPermissions(isUserInitiated = false) {
     if (Notification.permission === 'default' || isUserInitiated) {
       try {
         const perm = await Notification.requestPermission();
-        syncNotificationBanner();
         if (perm === 'granted') {
-          dismissNotificationBanner();
           if (isUserInitiated) {
             toast('Live Notifications Enabled! 🔔');
           }
@@ -232,8 +230,6 @@ async function requestCampusPermissions(isUserInitiated = false) {
       } catch (err) {
         console.warn('Notification permission request error:', err);
       }
-    } else {
-      syncNotificationBanner();
     }
   }
   
@@ -249,29 +245,6 @@ async function requestCampusPermissions(isUserInitiated = false) {
       );
     } catch {}
   }
-}
-
-function syncNotificationBanner() {
-  const banner = $('campusNotificationBanner');
-  if (!banner) return;
-  if (!('Notification' in window)) {
-    banner.classList.add('hide');
-    return;
-  }
-  if (Notification.permission === 'default') {
-    const dismissed = sessionStorage.getItem('campus_notif_banner_dismissed') === 'true';
-    if (!dismissed) {
-      banner.classList.remove('hide');
-    }
-  } else {
-    banner.classList.add('hide');
-  }
-}
-
-function dismissNotificationBanner() {
-  const banner = $('campusNotificationBanner');
-  if (banner) banner.classList.add('hide');
-  try { sessionStorage.setItem('campus_notif_banner_dismissed', 'true'); } catch {}
 }
 // CampUs manages its own in-app history. Do not let the browser restore a
 // stale scroll offset when returning from login, profile, or another full-screen layer.
