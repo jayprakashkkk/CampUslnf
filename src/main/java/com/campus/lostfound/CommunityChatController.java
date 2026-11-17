@@ -38,9 +38,9 @@ public class CommunityChatController {
         String current = currentAcc == null ? "" : currentAcc.getUsername();
         String userCollege = currentAcc == null ? "CU" : currentAcc.getCollege();
         List<CommunityMessage> source = messages.findTop200ByCollegeOrderByCreatedAtAsc(userCollege);
-        if (source.isEmpty() && "CU".equalsIgnoreCase(userCollege)) {
+        if (source.isEmpty()) {
             source = messages.findTop200ByOrderByCreatedAtAsc().stream()
-                    .filter(m -> m.getCollege() == null || m.getCollege().equalsIgnoreCase("CU"))
+                    .filter(m -> m.getCollege() == null || m.getCollege().isBlank() || m.getCollege().equalsIgnoreCase(userCollege))
                     .toList();
         }
 

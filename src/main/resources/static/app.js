@@ -2923,7 +2923,7 @@ function openCommunityChat(){
   clearChatReply();
   loadCommunityMessages(true);
   clearInterval(chatPollTimer);
-  chatPollTimer=setInterval(()=>{if(communityChatOpen)loadCommunityMessages(false)},4000);
+  chatPollTimer=setInterval(()=>{if(communityChatOpen)loadCommunityMessages(false)},1500);
   setTimeout(()=>{$('communityChatInput').focus();syncChatViewport()},80);
 }
 function closeCommunityChat(fromPopstate=false){
@@ -3025,14 +3025,9 @@ function getMessageReactions(messageId){
   const numId = Number(messageId);
   if (Array.isArray(cachedCommunityMessages)) {
     const msg = cachedCommunityMessages.find(m => m.id === numId);
-    if (msg && Array.isArray(msg.reactions) && msg.reactions.length > 0) {
+    if (msg && Array.isArray(msg.reactions)) {
       return msg.reactions;
     }
-  }
-  const store = getStoredReactionsV2();
-  const idStr = String(messageId);
-  if (store[idStr] && Array.isArray(store[idStr])) {
-    return store[idStr];
   }
   return [];
 }
@@ -3470,9 +3465,11 @@ function chatTime(value){
 function renderCommunityMessages(items,forceBottom,ignoreSigCheck=false){
  const box=$('chatMessages'),nearBottom=box.scrollHeight-box.scrollTop-box.clientHeight<90;
  if(!items.length){box.innerHTML='<div class="empty">No messages yet. Say hello to your campus community! 👋</div>';lastChatSignature='';return}
- const storedV2=getStoredReactionsV2();
- const reactionsKey=Object.entries(storedV2).map(([k,v])=>`${k}:${(v||[]).map(x=>x.username+x.emoji).join(',')}`).join('|');
- const signature=items.map(m=>`${m.id}:${m.username}:${m.displayName}:${m.role}:${m.message}:${m.replyText||''}`).join('|')+'|'+reactionsKey;
+ const reactionsKey=items.map(m=>{
+   const rList=Array.isArray(m.reactions)?m.reactions.map(r=>(r.username||'')+':'+(r.emoji||'')).sort().join(','):'';
+   return `${m.id}:[${rList}]`;
+ }).join('|');
+ const signature=items.map(m=>`${m.id}:${m.username}:${m.displayName}:${m.role}:${m.message}:${m.replyText||''}`).join('|')+'||'+reactionsKey;
  if(!ignoreSigCheck && signature===lastChatSignature)return;
  lastChatSignature=signature;
  box.innerHTML=items.map(m=>{
@@ -3565,6 +3562,9 @@ async function loadCommunityMessages(forceBottom){
     const items=await r.json();
     cachedCommunityMessages=Array.isArray(items)?items:[];
     renderCommunityMessages(cachedCommunityMessages,forceBottom);
+    if(activeReactionDetailMessageId){
+      renderReactionDetailContent();
+    }
   }catch{
     $('chatMessages').innerHTML='<div class="chat-unavailable"><div class="chat-unavailable-icon" aria-hidden="true">💬</div><h3>Chat page is ready</h3><p>Messages and sending will be available when the Java backend is connected.</p><button type="button" class="light" onclick="loadCommunityMessages(true)">Retry connection</button></div>';
   }
@@ -6122,7 +6122,7 @@ document.addEventListener('visibilitychange', () => {
       clearInterval(chatPollTimer);
       chatPollTimer = setInterval(() => {
         if (communityChatOpen && !document.hidden) loadCommunityMessages(false);
-      }, 4000);
+      }, 1500);
     }
   }
 });
