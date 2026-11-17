@@ -3471,7 +3471,7 @@ function renderCommunityMessages(items,forceBottom,ignoreSigCheck=false){
    const fullName=String(m.displayName||m.username||'CampUs user').trim();
    const username=String(m.username||'');
    const avatar=`<button type="button" class="chat-avatar chat-avatar-button" aria-label="View ${esc(fullName)}'s profile" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${avatarInner(m.avatarId,fullName,m.profileImageUrl)}</button>`;
-   const authorLine=!mine?`<button type="button" class="chat-author-role chat-author-name" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${esc(fullName)}</button>`:'';
+   const authorLine=!mine?`<span class="chat-author-name" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${esc(fullName)}</span>`:'';
    
    const msgReactions = getMessageReactions(m.id);
    let reactionBadge = '';
