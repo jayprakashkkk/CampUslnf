@@ -150,6 +150,8 @@ function resetCampusScrollToTop(){
 // button dismisses the top overlay instead of navigating away from CampUs.
 const campusUiHistoryStack=[];
 let ignoreCampusUiPopstate=false, campusUiToken=0;
+let lastHomeBackPressTime = 0, homeBackPressCount = 0;
+
 function pushCampusBackGuard(){
  const state=history.state&&typeof history.state==='object'?history.state:{};
  history.pushState({...state,campusFindBackGuard:true,campusFindGuardToken:++campusUiToken},'',location.href);
@@ -230,6 +232,26 @@ function closeTopUntrackedUiLayer(){
   if(profileMenuOpen){closeProfileDropdown(true);return true;}
   return false;
 }
+function handleHomeBackPress(){
+  const now = Date.now();
+  if (now - lastHomeBackPressTime < 2500) {
+    homeBackPressCount++;
+  } else {
+    homeBackPressCount = 1;
+  }
+  lastHomeBackPressTime = now;
+
+  // On rapid double/triple back press, allow app exit
+  if (homeBackPressCount >= 2) {
+    toast('Exiting CampUs… 👋');
+    try { history.back(); } catch (e) {}
+    return;
+  }
+
+  // Single back press on Home: show toast and prevent exit
+  toast('Press back again to exit CampUs');
+  pushCampusBackGuard();
+}
 window.addEventListener('popstate',()=>{
  if(ignoreCampusUiPopstate){ignoreCampusUiPopstate=false;return;}
  if($('reactionDetailModal')&&!$('reactionDetailModal').classList.contains('hide')){closeReactionDetailSheet(true);}
@@ -238,23 +260,11 @@ window.addEventListener('popstate',()=>{
  const layer=campusUiHistoryStack.pop();
  if(layer){
    closeCampusUiLayerFromBack(layer);
-   // Re-arm the same-URL guard after every intercepted Back action. Without
-   // this, the next Back can leave the site or appear to stop working.
    pushCampusBackGuard();
    return;
  }
  if(closeTopUntrackedUiLayer()){pushCampusBackGuard();return;}
- const intro=document.getElementById('firstVisitIntro');
- if(intro && intro.hidden){
-   intro.hidden=false;
-   intro.style.display='block';
-   document.body.classList.add('intro-open');
-   resetCampusScrollToTop();
-   intro.scrollTop=0;
-   pushCampusBackGuard();
-   return;
- }
- pushCampusBackGuard();
+ handleHomeBackPress();
 });
 installCampusBackGuard();
 function openForm(type){
@@ -1576,9 +1586,7 @@ let navDrawerOrigin = false;
 function returnToNavDrawerIfNeeded() {
   if (navDrawerOrigin) {
     navDrawerOrigin = false;
-    setTimeout(() => {
-      openNavDrawer(true);
-    }, 40);
+    openNavDrawer();
     return true;
   }
   return false;
@@ -1591,7 +1599,7 @@ function toggleNavDrawer() {
 
 function openNavDrawer(visualOnly = false) {
   navDrawerOpen = true;
-  if (!visualOnly) {
+  if (!visualOnly && !campusUiHistoryStack.includes('navDrawer')) {
     pushCampusUiLayer('navDrawer');
   }
   document.body.classList.add('nav-drawer-open');
@@ -1621,6 +1629,9 @@ function closeNavDrawer(fromPopstate = false) {
   }
   if (!fromPopstate) {
     finishCampusUiLayer('navDrawer');
+  } else {
+    const idx = campusUiHistoryStack.lastIndexOf('navDrawer');
+    if (idx >= 0) campusUiHistoryStack.splice(idx, 1);
   }
 }
 
@@ -1637,6 +1648,42 @@ function closeNavDrawerVisualOnly() {
     btn.setAttribute('aria-label', 'Open navigation menu');
   }
 }
+
+// Trackpad horizontal scroll & touch swipe gesture to close nav drawer
+(function setupNavDrawerGestures(){
+  const panel = $('navDrawerPanel');
+  if (!panel) return;
+  let startX = 0, startY = 0;
+  panel.addEventListener('touchstart', e => {
+    if (!navDrawerOpen || !e.touches || !e.touches[0]) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+
+  panel.addEventListener('touchend', e => {
+    if (!navDrawerOpen || !e.changedTouches || !e.changedTouches[0]) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (dx > 60 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+      closeNavDrawer();
+    }
+  }, { passive: true });
+
+  let trackpadDelta = 0;
+  let trackpadTimer = null;
+  panel.addEventListener('wheel', e => {
+    if (!navDrawerOpen) return;
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 15) {
+      trackpadDelta += e.deltaX;
+      clearTimeout(trackpadTimer);
+      trackpadTimer = setTimeout(() => { trackpadDelta = 0; }, 260);
+      if (trackpadDelta > 50 || trackpadDelta < -50) {
+        trackpadDelta = 0;
+        closeNavDrawer();
+      }
+    }
+  }, { passive: true });
+})();
 
 function handleDrawerBackdropClick(event) {
   if (event.target === $('navDrawerOverlay')) {
