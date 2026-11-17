@@ -2872,6 +2872,7 @@ document.addEventListener('click',function(e){
 
 // Community chat: messages are stored on the server and refreshed for everyone.
 let communityChatOpen=false, chatReplyTarget=null, chatPollTimer=null, lastChatSignature='';
+const inFlightReactions = new Map(); // messageId -> reactionsArray (locks optimistic state during async network trip)
 function syncChatViewport(){
   if(!communityChatOpen)return;
   const overlay=$('communityChatOverlay');
@@ -3228,15 +3229,11 @@ function closeChatReactionPicker(){
 async function setChatMessageReaction(messageId, emoji){
   closeChatReactionPicker();
   const id = Number(messageId);
-  const idStr = String(messageId);
-  const msg = Array.isArray(cachedCommunityMessages) ? cachedCommunityMessages.find(m => m.id === id) : null;
   const currentUname = currentUser ? String(currentUser.username).toLowerCase() : 'you';
   
+  // Find target message in cachedCommunityMessages
+  const msg = Array.isArray(cachedCommunityMessages) ? cachedCommunityMessages.find(m => m.id === id) : null;
   let list = msg && Array.isArray(msg.reactions) ? [...msg.reactions] : [];
-  if (!list.length) {
-    const store = getStoredReactionsV2();
-    if (store[idStr] && Array.isArray(store[idStr])) list = [...store[idStr]];
-  }
 
   const existingIdx = list.findIndex(r => String(r.username).toLowerCase() === currentUname);
   
@@ -3264,23 +3261,25 @@ async function setChatMessageReaction(messageId, emoji){
     });
   }
 
+  // Lock this optimistic state so background polls NEVER clobber it while in flight
+  inFlightReactions.set(id, list);
   if (msg) {
     msg.reactions = list;
   }
-  const store = getStoredReactionsV2();
-  store[idStr] = list;
-  saveStoredReactionsV2(store);
-  
-  const legacy = getStoredReactions();
-  const myReaction = list.find(r => String(r.username).toLowerCase() === currentUname);
-  if(myReaction){
-    legacy[idStr] = myReaction.emoji;
-  }else{
-    delete legacy[idStr];
-  }
-  saveStoredReactions(legacy);
-  
+
+  // Immediate render on screen (0ms latency, zero flicker)
   renderCommunityMessages(cachedCommunityMessages, false, true);
+  if (activeReactionDetailMessageId === id) {
+    renderReactionDetailContent();
+  }
+
+  // Reset poll timer to prevent polling collisions while request is active
+  if (chatPollTimer) {
+    clearInterval(chatPollTimer);
+    chatPollTimer = setInterval(() => {
+      if (communityChatOpen && !document.hidden) loadCommunityMessages(false);
+    }, 1500);
+  }
 
   // Sync with PostgreSQL backend API for real multi-user visibility
   try {
@@ -3291,8 +3290,12 @@ async function setChatMessageReaction(messageId, emoji){
     });
     if (res.ok) {
       const data = await res.json();
-      if (data && Array.isArray(data.reactions) && msg) {
-        msg.reactions = data.reactions;
+      if (data && Array.isArray(data.reactions)) {
+        inFlightReactions.delete(id);
+        const liveMsg = cachedCommunityMessages.find(m => m.id === id);
+        if (liveMsg) {
+          liveMsg.reactions = data.reactions;
+        }
         renderCommunityMessages(cachedCommunityMessages, false, true);
         if (activeReactionDetailMessageId === id) {
           renderReactionDetailContent();
@@ -3301,6 +3304,8 @@ async function setChatMessageReaction(messageId, emoji){
     }
   } catch (err) {
     console.warn('Could not sync reaction to server:', err);
+  } finally {
+    inFlightReactions.delete(id);
   }
 }
 
@@ -3560,10 +3565,18 @@ async function loadCommunityMessages(forceBottom){
     }
     if(!r.ok)throw new Error('Chat service is unavailable');
     const items=await r.json();
-    cachedCommunityMessages=Array.isArray(items)?items:[];
-    renderCommunityMessages(cachedCommunityMessages,forceBottom);
-    if(activeReactionDetailMessageId){
-      renderReactionDetailContent();
+    if(Array.isArray(items)){
+      // Keep in-flight reactions locked so a background poll NEVER reverts them
+      items.forEach(m => {
+        if(inFlightReactions.has(m.id)){
+          m.reactions = inFlightReactions.get(m.id);
+        }
+      });
+      cachedCommunityMessages=items;
+      renderCommunityMessages(cachedCommunityMessages,forceBottom);
+      if(activeReactionDetailMessageId){
+        renderReactionDetailContent();
+      }
     }
   }catch{
     $('chatMessages').innerHTML='<div class="chat-unavailable"><div class="chat-unavailable-icon" aria-hidden="true">💬</div><h3>Chat page is ready</h3><p>Messages and sending will be available when the Java backend is connected.</p><button type="button" class="light" onclick="loadCommunityMessages(true)">Retry connection</button></div>';
