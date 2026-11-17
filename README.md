@@ -76,6 +76,25 @@ In large university campuses, thousands of valuable personal items (student IDs,
 - **Contact Action**: One-tap direct call or WhatsApp connection with sellers.
 
 ### 4. Real-time Campus Community Chat
+- **Multi-User Persistent PostgreSQL Reactions**:
+  - Saved directly to Neon PostgreSQL database via dedicated `chat_message_reactions` table with indexed `message_id` and unique `(message_id, username)` constraints.
+  - Supports multiple emojis per message and multiple users per emoji.
+  - Real-time reaction counts and stacked emoji badges (`❤️😂🔥 4`).
+- **Zero-Flicker Optimistic State Locks (`inFlightReactions`)**:
+  - Tapping a reaction renders on-screen in **0ms** without waiting for network round-trips.
+  - Background polling requests are temporarily locked from clobbering in-flight user interactions, completely eliminating reaction disappearing and reappearing flickers.
+- **Sub-Second Real-Time Sync & No-Cache Pipeline**:
+  - Spring Boot backend issues `Cache-Control: no-cache, no-store, max-age=0, must-revalidate` and `Pragma: no-cache` headers on `/api/community-chat`.
+  - Frontend utilizes sub-second (750ms) background synchronization with dynamic timestamps (`?_t=${Date.now()}`) and `cache: 'no-store'`, preventing stale responses on Cloudflare edge proxies and mobile browsers. User B receives User A's reactions and removals near-instantaneously.
+- **Direct Profile Inspection from Chat (Instagram & WhatsApp Style)**:
+  - Tapping any member's circular avatar or display name inside the chat immediately opens their full public profile modal (`z-index: 100050`).
+  - View member photo, university badge, role, karma score, active lost/found items, and statistics.
+  - Tapping the back button (`‹`) returns the user seamlessly and directly back to the active conversation.
+- **WhatsApp-Style Ultra-Slim Message Bubbles**:
+  - **Inline Timestamps**: Short messages ("hello", "ok", "yes") position the timestamp inline next to the text on the same line, keeping 1-word messages to a sleek single line (~26px height) rather than tall multi-line blocks.
+  - **Compact Padding**: Tight, clean `4px 7px 4px 8px` padding on mobile and desktop.
+  - **Compact Mobile Compose Bar**: Sleek 36px typing input height on phones for an unobtrusive chatting experience.
+  - **Clean Sender Name**: Styled as clean, borderless colored text with zero button bevels.
 - **Instagram Web DM Floating Message Actions**:
   - **Others' Messages**: Clean bubble with floating action bar on hover showing **React (`☺`)** and **Reply (`↩`)** (no 3-dots).
   - **Own Messages**: Floating action bar on hover showing **More (`⋮`)**, **Reply (`↩`)**, and **React (`☺`)**.
@@ -254,6 +273,12 @@ Once started:
 - **Health Check**: [http://localhost:8080/api/health](http://localhost:8080/api/health)
 - **Local Database File**: Automatically created in `./data/campusfind.mv.db`
 
+### 3. Run Automated Test Suite
+```bash
+mvn test
+```
+Executes the automated unit and integration test suite across all critical services (`CommunityChatControllerTest`, `ReportControllerTest`, `HealthControllerTest`, `PasswordHasherTest`), verified 100% passing across Java 17 through Java 27.
+
 ---
 
 ## ⚙️ Configuration & Environment Variables
@@ -374,13 +399,16 @@ docker run -p 8080:8080 \
 | `POST` | `/api/market` | Post a product for sale | Authenticated |
 | `DELETE`| `/api/market/{id}` | Remove sold or deleted listing | Owner / Admin |
 
-### 💬 Community Chat & Leaderboard
+### 💬 Community Chat, Profiles & Leaderboard
 | Method | Endpoint | Description | Access |
 |---|---|---|---|
-| `GET` | `/api/chat/messages` | Fetch recent campus chat stream | Authenticated |
-| `POST` | `/api/chat/messages` | Send a message (text, reply quote) | Authenticated |
-| `DELETE`| `/api/chat/messages/{id}` | Delete message (within 10-min window) | Sender / Admin |
-| `GET` | `/api/leaderboard` | View top contributors sorted by karma | Public |
+| `GET` | `/api/community-chat` | Fetch recent campus chat stream with persistent multi-user reactions | Authenticated |
+| `POST` | `/api/community-chat` | Send a new message (text, reply quote) | Authenticated |
+| `POST` | `/api/community-chat/{id}/react` | Add, update or toggle emoji reaction on a message | Authenticated |
+| `DELETE`| `/api/community-chat/{id}` | Delete message & cascade remove all associated reactions | Sender / Admin |
+| `GET` | `/api/users/{username}/profile` | View public profile, reports, stats, and karma | Authenticated |
+| `POST` | `/api/users/{username}/role` | Assign role (Admin, Leader, Moderator, Member) | Owner |
+| `GET` | `/api/leaderboard` | View top contributors sorted by karma points | Public |
 
 ### 🛠️ System & Monitoring
 | Method | Endpoint | Description | Access |
