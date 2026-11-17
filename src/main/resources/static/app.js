@@ -160,11 +160,10 @@ async function showLiveBrowserNotification(title, body, tag = 'campus-alert') {
     vibrate: [200, 100, 200]
   };
 
-  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
   let delivered = false;
 
-  // Android Chrome: ServiceWorkerRegistration.showNotification is mandatory because `new Notification()` throws Illegal Constructor
-  if (isMobile && 'serviceWorker' in navigator) {
+  // 1. Service Worker showNotification is standard across Android, Windows, and modern Chrome/Safari PWAs
+  if ('serviceWorker' in navigator) {
     try {
       const reg = await Promise.race([
         navigator.serviceWorker.ready,
@@ -177,7 +176,7 @@ async function showLiveBrowserNotification(title, body, tag = 'campus-alert') {
     } catch (swErr) {}
   }
 
-  // Desktop macOS, Windows, Linux (Chrome, Safari, Edge, Firefox)
+  // 2. Desktop fallback (Safari macOS, browsers without SW active)
   if (!delivered) {
     try {
       const n = new Notification(title, options);
@@ -189,17 +188,7 @@ async function showLiveBrowserNotification(title, body, tag = 'campus-alert') {
         this.close();
       };
       delivered = true;
-    } catch (err) {
-      if ('serviceWorker' in navigator) {
-        try {
-          const reg = await navigator.serviceWorker.ready;
-          if (reg && typeof reg.showNotification === 'function') {
-            await reg.showNotification(title, options);
-            delivered = true;
-          }
-        } catch (swErr2) {}
-      }
-    }
+    } catch (err) {}
   }
 }
 
@@ -419,13 +408,12 @@ function startBackgroundChatPolling() {
     clearInterval(backgroundChatTimer);
     backgroundChatTimer = null;
   }
-  if (!currentUser) return;
   loadCommunityMessages(false);
   backgroundChatTimer = setInterval(() => {
-    if (currentUser && !communityChatOpen) {
+    if (!communityChatOpen) {
       loadCommunityMessages(false);
     }
-  }, 3500);
+  }, 3000);
 }
 function stopBackgroundChatPolling() {
   if (backgroundChatTimer) {
@@ -3014,6 +3002,7 @@ document.addEventListener('click',function(e){
 let communityChatOpen=false, chatReplyTarget=null, chatPollTimer=null, lastChatSignature='';
 const inFlightReactions = new Map(); // messageId -> reactionsArray (locks optimistic state during async network trip)
 const inFlightMessages = new Map(); // tempId -> optimisticMsg (locks optimistic sent messages during async network trip)
+const inFlightDeletedMessages = new Set(); // messageId -> deleted flag (locks optimistic unsent state)
 function syncChatViewport(){
   if(!communityChatOpen)return;
   const overlay=$('communityChatOverlay');
@@ -3202,6 +3191,9 @@ function getDemoReactionsForMessage(messageId){
 
 function getMessageReactions(messageId){
   const numId = Number(messageId);
+  if (inFlightReactions.has(numId)) {
+    return inFlightReactions.get(numId);
+  }
   if (Array.isArray(cachedCommunityMessages)) {
     const msg = cachedCommunityMessages.find(m => m.id === numId);
     if (msg && Array.isArray(msg.reactions)) {
@@ -3469,7 +3461,7 @@ async function setChatMessageReaction(messageId, emoji){
     if (res.ok) {
       const data = await res.json();
       if (data && Array.isArray(data.reactions)) {
-        inFlightReactions.delete(id);
+        inFlightReactions.set(id, data.reactions);
         const liveMsg = cachedCommunityMessages.find(m => m.id === id);
         if (liveMsg) {
           liveMsg.reactions = data.reactions;
@@ -3483,7 +3475,9 @@ async function setChatMessageReaction(messageId, emoji){
   } catch (err) {
     console.warn('Could not sync reaction to server:', err);
   } finally {
-    inFlightReactions.delete(id);
+    setTimeout(() => {
+      inFlightReactions.delete(id);
+    }, 4500);
   }
 }
 
@@ -3754,26 +3748,30 @@ async function loadCommunityMessages(forceBottom){
       return;
     }
     if(!r.ok)throw new Error('Chat service is unavailable');
-    const items=await r.json();
+    let items = await r.json();
     if(Array.isArray(items)){
-      // Keep in-flight reactions locked so a background poll NEVER reverts them
+      // 1. Filter out any in-flight deleted messages
+      if (inFlightDeletedMessages.size > 0) {
+        items = items.filter(m => !inFlightDeletedMessages.has(Number(m.id)));
+      }
+
+      // 2. Keep in-flight reactions locked so a background poll NEVER reverts them
       items.forEach(m => {
-        if(inFlightReactions.has(m.id)){
-          m.reactions = inFlightReactions.get(m.id);
+        const numId = Number(m.id);
+        if(inFlightReactions.has(numId)){
+          m.reactions = inFlightReactions.get(numId);
         }
       });
-      // Keep in-flight pending sent messages locked so a background poll NEVER deletes them while POST is in flight
+
+      // 3. Keep in-flight pending sent messages locked so a background poll NEVER deletes them while POST is in flight
       if(inFlightMessages.size > 0){
         inFlightMessages.forEach((pendingMsg, tempId) => {
           const alreadyInItems = items.some(m => 
-            (m.id === pendingMsg.id || (pendingMsg.realId && m.id === pendingMsg.realId)) ||
-            ((m.mine || (currentUser && String(m.username).toLowerCase() === String(currentUser.username).toLowerCase())) &&
-             m.message === pendingMsg.message &&
-             Math.abs(new Date(m.createdAt).getTime() - new Date(pendingMsg.createdAt).getTime()) < 30000)
+            Number(m.id) === Number(pendingMsg.id) || 
+            (pendingMsg.realId && Number(m.id) === Number(pendingMsg.realId)) ||
+            (m.message === pendingMsg.message && String(m.username).toLowerCase() === String(pendingMsg.username).toLowerCase())
           );
-          if(alreadyInItems){
-            inFlightMessages.delete(tempId);
-          } else {
+          if(!alreadyInItems){
             items.push(pendingMsg);
           }
         });
@@ -3853,20 +3851,34 @@ function handleUnsendBackdropClick(event){
 
 async function confirmUnsendMessage(){
   if(!pendingUnsendMessageId) return;
-  const id = pendingUnsendMessageId;
+  const id = Number(pendingUnsendMessageId);
   closeUnsendModal();
+
+  // 1. Lock in deleted set so background polls NEVER bring it back
+  inFlightDeletedMessages.add(id);
+
+  // 2. Instantly remove from local UI & cache (0ms latency, zero delay!)
+  cachedCommunityMessages = cachedCommunityMessages.filter(x => x.id !== id);
+  renderCommunityMessages(cachedCommunityMessages, false, true);
+  toast('Message unsent');
+
+  // 3. Keep delete lock active for 8 seconds
+  setTimeout(() => {
+    inFlightDeletedMessages.delete(id);
+  }, 8000);
+
+  // 4. Send DELETE to backend
   try{
     const r=await fetch(`/api/community-chat/${id}`,{method:'DELETE'});
-    const data=await r.json().catch(()=>({}));
-    if(!r.ok)throw Error(data.message||'Could not unsend message.');
-    lastChatSignature='';
-    await loadCommunityMessages(false);
-    toast('Message unsent');
+    if(!r.ok){
+      const data=await r.json().catch(()=>({}));
+      throw Error(data.message||'Could not unsend message.');
+    }
   }catch(e){
-    // Keep local cache in sync if mock/offline
-    cachedCommunityMessages = cachedCommunityMessages.filter(x => x.id !== id);
-    renderCommunityMessages(cachedCommunityMessages, false, true);
-    toast('Message unsent');
+    console.warn('Could not unsend on server:', e);
+    inFlightDeletedMessages.delete(id);
+    await loadCommunityMessages(false);
+    toast(e.message||'Could not unsend message');
   }
 }
 $('communityChatForm').addEventListener('submit', async e => {
@@ -3930,10 +3942,15 @@ $('communityChatForm').addEventListener('submit', async e => {
           if (retryData && retryData.id) {
             optimisticMsg.id = retryData.id;
             optimisticMsg.realId = retryData.id;
+            const inCache = cachedCommunityMessages.find(m => m.id === tempId);
+            if (inCache) {
+              inCache.id = retryData.id;
+              inCache.realId = retryData.id;
+            }
           }
-          lastChatSignature = '';
-          await loadCommunityMessages(true);
-          inFlightMessages.delete(tempId);
+          setTimeout(() => {
+            inFlightMessages.delete(tempId);
+          }, 4000);
           return;
         }
         data = await retryR.json().catch(() => ({}));
@@ -3943,10 +3960,15 @@ $('communityChatForm').addEventListener('submit', async e => {
     if (data && data.id) {
       optimisticMsg.id = data.id;
       optimisticMsg.realId = data.id;
+      const inCache = cachedCommunityMessages.find(m => m.id === tempId);
+      if (inCache) {
+        inCache.id = data.id;
+        inCache.realId = data.id;
+      }
     }
-    lastChatSignature = '';
-    await loadCommunityMessages(true);
-    inFlightMessages.delete(tempId);
+    setTimeout(() => {
+      inFlightMessages.delete(tempId);
+    }, 4000);
   } catch (err) {
     inFlightMessages.delete(tempId);
     cachedCommunityMessages = cachedCommunityMessages.filter(x => x.id !== tempId);
@@ -4092,18 +4114,30 @@ function autoResizeChatInput(elem) {
     elem.style.setProperty('border-radius', '18px', 'important');
     return;
   }
-  // Collapse height temporarily to 36px base so scrollHeight measures true content
-  elem.style.setProperty('height', '36px', 'important');
+
+  const hasLineBreak = val.includes('\n');
+  const len = val.length;
+
+  // If text is short (< 45 chars) and has no newline, it is guaranteed to fit on 1 single line
+  if (!hasLineBreak && len < 45) {
+    elem.style.setProperty('height', '36px', 'important');
+    elem.style.setProperty('overflow-y', 'hidden', 'important');
+    elem.style.setProperty('border-radius', '18px', 'important');
+    return;
+  }
+
+  // Collapse height temporarily to 0px so scrollHeight reflects true unconstrained content height
+  elem.style.setProperty('height', '0px', 'important');
   const scrollH = elem.scrollHeight;
-  
-  // Single line check: content fits in 1 line (scrollH <= 38px)
-  if (scrollH <= 38) {
+
+  // Single line check: content fits in 1 line (scrollH <= 46px or text without newlines fits width)
+  if ((!hasLineBreak && (elem.scrollWidth <= elem.clientWidth + 4)) || scrollH <= 46) {
     elem.style.setProperty('height', '36px', 'important');
     elem.style.setProperty('overflow-y', 'hidden', 'important');
     elem.style.setProperty('border-radius', '18px', 'important');
   } else {
-    // Multi-line: expand to content scrollHeight + 2px border offset, capped at 120px
-    const targetH = Math.min(scrollH + 2, 120);
+    // Multi-line: expand dynamically to exact content height, capped at 120px max
+    const targetH = Math.min(Math.max(scrollH + 2, 36), 120);
     elem.style.setProperty('height', targetH + 'px', 'important');
     elem.style.setProperty('overflow-y', scrollH > 118 ? 'auto' : 'hidden', 'important');
     elem.style.setProperty('border-radius', '14px', 'important');
@@ -6446,8 +6480,8 @@ document.addEventListener('visibilitychange', () => {
       clearInterval(chatPollTimer);
     }
     chatPollTimer = setInterval(() => {
-      if (currentUser) loadCommunityMessages(false);
-    }, 3500);
+      loadCommunityMessages(false);
+    }, 3000);
   } else {
     // When tab is restored, resume 750ms fast polling if chat is open
     if (communityChatOpen) {
@@ -6464,6 +6498,9 @@ document.addEventListener('visibilitychange', () => {
     }
   }
 });
+
+// Start background chat polling immediately on launch so device notifications fire
+startBackgroundChatPolling();
 
 // Touch /api/health every 5 minutes when user is logged in to keep Railway instance warm
 setInterval(() => {

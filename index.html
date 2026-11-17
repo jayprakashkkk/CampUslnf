@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="CampUs">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="stylesheet" href="/style.css?v=campus-20261117-chatscroll4">
+  <link rel="stylesheet" href="/style.css?v=campus-20261117-bulletproof6">
 </head>
 <body class="auth-locked">
 
@@ -1570,11 +1570,15 @@
   </svg>
 </div>
 
-<script src="/app.js?v=campus-20261117-chatscroll4"></script>
+<script src="/app.js?v=campus-20261117-bulletproof6"></script>
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/sw.js').catch(function() {});
+    navigator.serviceWorker.register('/sw.js').then(function(reg) {
+      if ('periodicSync' in reg) {
+        reg.periodicSync.register('campus-chat-sync', { minInterval: 60 * 1000 }).catch(function() {});
+      }
+    }).catch(function() {});
   });
 }
 </script>

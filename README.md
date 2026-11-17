@@ -82,21 +82,13 @@ In large university campuses, thousands of valuable personal items (student IDs,
   - Real-time reaction counts and stacked emoji badges (`❤️😂🔥 4`).
 - **Zero-Flicker Optimistic State Locks (`inFlightReactions`)**:
   - Tapping a reaction renders on-screen in **0ms** without waiting for network round-trips.
-  - Background polling requests are temporarily locked from clobbering in-flight user interactions, completely eliminating reaction disappearing and reappearing flickers.
-- **Sub-Second Real-Time Sync & No-Cache Pipeline**:
-  - Spring Boot backend issues `Cache-Control: no-cache, no-store, max-age=0, must-revalidate` and `Pragma: no-cache` headers on `/api/community-chat`.
-  - Frontend utilizes sub-second (750ms) background synchronization with dynamic timestamps (`?_t=${Date.now()}`) and `cache: 'no-store'`, preventing stale responses on Cloudflare edge proxies and mobile browsers. User B receives User A's reactions and removals near-instantaneously.
-- **Direct Profile Inspection from Chat (Instagram & WhatsApp Style)**:
-  - Tapping any member's circular avatar or display name inside the chat immediately opens their full public profile modal (`z-index: 100050`).
-  - View member photo, university badge, role, karma score, active lost/found items, and statistics.
-  - Tapping the back button (`‹`) returns the user seamlessly and directly back to the active conversation.
-- **WhatsApp-Style Ultra-Slim Message Bubbles (Desktop & Mobile)**:
-  - **Inline Timestamps & Flex Layout**: Uses modern flex alignment (`display: flex; align-items: flex-end; justify-content: space-between; gap: 8px;`) so short messages ("hello", "Kya", "ok") deterministically position the timestamp inline next to the text on the exact same row. Eradicates the classic CSS `fit-content` float collapse bug and prevents 1-word messages from stretching vertically into 2-line or 3-line blocks (~26px-32px total height).
-  - **WhatsApp Group Chat Sender Name**: Incoming messages display the sender's display name cleanly at the top of the bubble in distinguished campus orange/amber font with zero outer box, zero outline, zero border, and zero bevel. Outgoing messages omit the sender name entirely.
-  - **Compact WhatsApp Padding**: Tight, clean `3px 8px 3px 8px` padding on both laptop/desktop and mobile screens.
-  - **Direct Profile Navigation**: Tapping either the circular avatar or sender name opens the student's campus profile.
+  - Background polling requests are locked for 4.5 seconds with confirmed server state so in-flight polls returning old database snapshots can never overwrite or cause the reaction to disappear and reappear.
+- **Instant 0ms Unsend with Anti-Resurrection Lock (`inFlightDeletedMessages`)**:
+  - Tapping **Unsend** immediately deletes the message from the user's screen in 0ms.
+  - An 8-second exclusion lock prevents any asynchronous background polling from resurrecting or flickering the deleted message back onto the screen.
 - **Zero-Disappear Optimistic Send Queue (`inFlightMessages`)**:
-  - Completely eliminates the send disappear/reappear race condition. When sending a message, an optimistic item is inserted with 0ms latency and tracked in an in-flight queue. Background polling cycles (every 750ms) merge in-flight messages so database commit delays can never clobber or vanish pending messages from the screen.
+  - Completely eliminates the send disappear/reappear race condition. When sending a message, an optimistic item is inserted with 0ms latency and tracked in an in-flight queue.
+  - Background polling cycles (every 750ms) merge in-flight messages cleanly without full DOM wipes or timezone mismatch bugs, ensuring sent messages never vanish while database writes commit.
 - **Slim WhatsApp-Style Compose Bar for Laptop & Mobile**:
   - Sleek, compact 36px typing input height across laptops, desktops, and mobile phones with smooth pill geometry (`border-radius: 18px`) and 6px padding.
   - **Desktop Keyboard Enter-to-Send**: Pressing `Enter` on laptop/desktop keyboards sends the message instantly, while `Shift+Enter` inserts a newline. Soft virtual keyboards on mobile devices retain standard newline behavior.
