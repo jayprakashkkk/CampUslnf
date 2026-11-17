@@ -2820,17 +2820,35 @@ document.addEventListener('click',function(e){
 let communityChatOpen=false, chatReplyTarget=null, chatPollTimer=null, lastChatSignature='';
 function syncChatViewport(){
   if(!communityChatOpen)return;
-  const overlay=$('communityChatOverlay'),vv=window.visualViewport;
+  const overlay=$('communityChatOverlay');
+  if(!overlay)return;
+  const dlg = overlay.querySelector('.community-chat-dialog');
+  const vv=window.visualViewport;
   if(vv){
-    overlay.style.setProperty('--chat-vv-height',`${Math.round(vv.height)}px`);
-    overlay.style.setProperty('--chat-vv-top','0px');
+    const h = Math.round(vv.height);
+    const top = Math.round(vv.offsetTop || 0);
+    overlay.style.setProperty('--chat-vv-height',`${h}px`);
+    overlay.style.setProperty('--chat-vv-top',`${top}px`);
+    overlay.style.setProperty('height', `${h}px`, 'important');
+    overlay.style.setProperty('top', `${top}px`, 'important');
+    if(dlg) {
+      dlg.style.setProperty('height', `${h}px`, 'important');
+      dlg.style.setProperty('max-height', `${h}px`, 'important');
+    }
   } else {
-    overlay.style.setProperty('--chat-vv-height',`${window.innerHeight}px`);
+    const h = window.innerHeight;
+    overlay.style.setProperty('--chat-vv-height',`${h}px`);
     overlay.style.setProperty('--chat-vv-top','0px');
+    overlay.style.setProperty('height', `${h}px`, 'important');
+    overlay.style.setProperty('top', '0px', 'important');
+    if(dlg) {
+      dlg.style.setProperty('height', `${h}px`, 'important');
+      dlg.style.setProperty('max-height', `${h}px`, 'important');
+    }
   }
   window.scrollTo(0, 0);
-  document.documentElement.scrollTop = 0;
-  document.body.scrollTop = 0;
+  if(document.documentElement.scrollTop !== 0) document.documentElement.scrollTop = 0;
+  if(document.body.scrollTop !== 0) document.body.scrollTop = 0;
 }
 function openCommunityChat(){
   if(!communityChatOpen)pushCampusUiLayer('communityChat');
@@ -2868,6 +2886,13 @@ function closeCommunityChat(fromPopstate=false){
     overlay.classList.add('hide');
     overlay.style.removeProperty('--chat-vv-height');
     overlay.style.removeProperty('--chat-vv-top');
+    overlay.style.removeProperty('height');
+    overlay.style.removeProperty('top');
+    const dlg = overlay.querySelector('.community-chat-dialog');
+    if(dlg){
+      dlg.style.removeProperty('height');
+      dlg.style.removeProperty('max-height');
+    }
   }
   document.body.classList.remove('chat-fullscreen-open');
   try{$('communityChatInput')?.blur();}catch(e){}
@@ -3740,25 +3765,49 @@ $('communityChatInput')?.addEventListener('input',function(){
   this.style.height=Math.min(this.scrollHeight,120)+'px';
 });
 // Prevent mobile keyboard from scrolling window and hiding header
-$('communityChatInput')?.addEventListener('focus', function(){
-  window.scrollTo(0, 0);
-  document.documentElement.scrollTop = 0;
-  document.body.scrollTop = 0;
-  setTimeout(() => {
+const chatInputElem = $('communityChatInput');
+if(chatInputElem){
+  chatInputElem.addEventListener('focus', function(){
+    syncChatViewport();
     window.scrollTo(0, 0);
-    const box = $('chatMessages');
-    if (box) box.scrollTop = box.scrollHeight;
-  }, 100);
-});
-$('communityChatInput')?.addEventListener('click', function(){
-  window.scrollTo(0, 0);
-});
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    setTimeout(() => {
+      syncChatViewport();
+      window.scrollTo(0, 0);
+      const box = $('chatMessages');
+      if (box) box.scrollTop = box.scrollHeight;
+    }, 60);
+    setTimeout(() => {
+      syncChatViewport();
+      window.scrollTo(0, 0);
+    }, 200);
+  });
+  chatInputElem.addEventListener('click', function(){
+    syncChatViewport();
+    window.scrollTo(0, 0);
+  });
+  chatInputElem.addEventListener('blur', function(){
+    setTimeout(() => {
+      syncChatViewport();
+      window.scrollTo(0, 0);
+    }, 60);
+  });
+}
 // Keep the full-screen chat fitted to the visible viewport when the phone keyboard opens.
 window.addEventListener('resize',syncChatViewport,{passive:true});
+window.addEventListener('orientationchange',syncChatViewport,{passive:true});
 if(window.visualViewport){
   window.visualViewport.addEventListener('resize',syncChatViewport,{passive:true});
   window.visualViewport.addEventListener('scroll',syncChatViewport,{passive:true});
 }
+window.addEventListener('scroll', function() {
+  if (communityChatOpen) {
+    if (window.scrollY !== 0 || window.scrollX !== 0) {
+      window.scrollTo(0, 0);
+    }
+  }
+}, { passive: true });
 
 // Use the same circular ‹ back control on phone, tablet, and desktop.
 // Back actions remain in-app; only their visual treatment is unified.
