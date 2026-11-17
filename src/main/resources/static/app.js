@@ -408,9 +408,10 @@ function startBackgroundChatPolling() {
     clearInterval(backgroundChatTimer);
     backgroundChatTimer = null;
   }
+  if (!currentUser) return;
   loadCommunityMessages(false);
   backgroundChatTimer = setInterval(() => {
-    if (!communityChatOpen) {
+    if (currentUser && !communityChatOpen) {
       loadCommunityMessages(false);
     }
   }, 3000);
@@ -3744,7 +3745,9 @@ async function loadCommunityMessages(forceBottom){
       headers:{'Accept':'application/json','Cache-Control':'no-cache','Pragma':'no-cache'}
     });
     if(r.status===401){
-      $('chatMessages').innerHTML='<div class="chat-unavailable"><div class="chat-unavailable-icon" aria-hidden="true">💬</div><h3>Community chat is ready</h3><p>Connect the Java backend and sign in to load campus messages and send replies.</p><button type="button" class="light" onclick="loadCommunityMessages(true)">Try again</button></div>';
+      if (communityChatOpen) {
+        $('chatMessages').innerHTML='<div class="chat-unavailable"><div class="chat-unavailable-icon" aria-hidden="true">💬</div><h3>Community chat is ready</h3><p>Connect the Java backend and sign in to load campus messages and send replies.</p><button type="button" class="light" onclick="loadCommunityMessages(true)">Try again</button></div>';
+      }
       return;
     }
     if(!r.ok)throw new Error('Chat service is unavailable');
@@ -6480,7 +6483,7 @@ document.addEventListener('visibilitychange', () => {
       clearInterval(chatPollTimer);
     }
     chatPollTimer = setInterval(() => {
-      loadCommunityMessages(false);
+      if (currentUser) loadCommunityMessages(false);
     }, 3000);
   } else {
     // When tab is restored, resume 750ms fast polling if chat is open
@@ -6499,8 +6502,8 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-// Start background chat polling immediately on launch so device notifications fire
-startBackgroundChatPolling();
+// Start background chat polling if logged in so device notifications fire
+if (currentUser) startBackgroundChatPolling();
 
 // Touch /api/health every 5 minutes when user is logged in to keep Railway instance warm
 setInterval(() => {
