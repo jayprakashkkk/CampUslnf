@@ -4847,6 +4847,13 @@ header.app-header {
   flex-direction: column;
   gap: 4px;
 }
+main.app-main > .app-footer,
+.feed-main-container ~ .app-footer {
+  display: none !important;
+}
+.about-app-footer {
+  display: flex !important;
+}
 
 /* --------------------------------------------------------------------------
    AUTHENTIC APPLE iOS 12-BLADE ACTIVITY LOADING SPINNER (NETWORK-DRIVEN, NO BOX)
@@ -4914,7 +4921,8 @@ header.app-header {
   position: relative !important;
   z-index: 10006 !important;
   touch-action: manipulation !important;
-  overflow: hidden !important;
+  overflow: visible !important;
+  -webkit-tap-highlight-color: transparent !important;
 }
 .hamburger-menu-btn:hover {
   background: #FFF7EE !important;
@@ -5014,7 +5022,7 @@ body.nav-drawer-open header.app-header {
 
 body.nav-drawer-open .header-right-actions {
   position: fixed !important;
-  top: 13px !important;
+  top: 14px !important;
   right: clamp(16px, 2.5vw, 32px) !important;
   transform: none !important;
   margin: 0 !important;
@@ -5025,9 +5033,16 @@ body.nav-drawer-open .header-right-actions {
   justify-content: flex-end !important;
 }
 
+@media (max-width: 1023px) {
+  body.nav-drawer-open .header-right-actions {
+    top: 11px !important;
+    right: 20px !important;
+  }
+}
+
 @media (max-width: 640px) {
   body.nav-drawer-open .header-right-actions {
-    top: 7px !important;
+    top: 8px !important;
     right: 12px !important;
   }
 }

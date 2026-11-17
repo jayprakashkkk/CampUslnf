@@ -244,7 +244,11 @@ function handleHomeBackPress(){
   // On rapid double/triple back press, allow app exit
   if (homeBackPressCount >= 2) {
     toast('Exiting CampUs… 👋');
-    try { history.back(); } catch (e) {}
+    try {
+      setTimeout(() => {
+        window.history.go(-1);
+      }, 50);
+    } catch (e) {}
     return;
   }
 
@@ -260,7 +264,6 @@ window.addEventListener('popstate',()=>{
  const layer=campusUiHistoryStack.pop();
  if(layer){
    closeCampusUiLayerFromBack(layer);
-   pushCampusBackGuard();
    return;
  }
  if(closeTopUntrackedUiLayer()){pushCampusBackGuard();return;}
