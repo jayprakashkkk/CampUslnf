@@ -3484,7 +3484,7 @@ function renderCommunityMessages(items,forceBottom,ignoreSigCheck=false){
    const fullName=String(m.displayName||m.username||'CampUs user').trim();
    const username=String(m.username||'');
    const avatar=`<button type="button" class="chat-avatar chat-avatar-button" aria-label="View ${esc(fullName)}'s profile" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}" onclick="openChatUserProfile('${esc(fullName)}', '${esc(username)}'); event.stopPropagation();">${avatarInner(m.avatarId,fullName,m.profileImageUrl)}</button>`;
-   const authorLine=!mine?`<button type="button" class="chat-author-name" aria-label="View ${esc(fullName)}'s profile" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}" onclick="openChatUserProfile('${esc(fullName)}', '${esc(username)}'); event.stopPropagation();">${esc(fullName)}</button>`:'';
+   const authorLine=!mine?`<span class="chat-author-name" role="button" tabindex="0" aria-label="View ${esc(fullName)}'s profile" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}" onclick="openChatUserProfile('${esc(fullName)}', '${esc(username)}'); event.stopPropagation();">${esc(fullName)}</span>`:'';
    
    const msgReactions = getMessageReactions(m.id);
    let reactionBadge = '';
@@ -3518,8 +3518,10 @@ function renderCommunityMessages(items,forceBottom,ignoreSigCheck=false){
          <div class="chat-bubble" role="group" aria-label="Chat message">
            ${authorLine}
            ${m.replyText?`<div class="chat-quoted"><b>${esc(m.replyName||'Reply')}</b><br>${esc(m.replyText)}</div>`:''}
-           <div class="chat-text">${esc(m.message)}</div>
-           <div class="chat-time">${chatTime(m.createdAt)}</div>
+           <div class="chat-content-wrap">
+             <span class="chat-text">${esc(m.message)}</span>
+             <span class="chat-time">${chatTime(m.createdAt)}</span>
+           </div>
            ${reactionBadge}
          </div>
          ${actionsHtml}
