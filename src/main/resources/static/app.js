@@ -177,36 +177,59 @@ function playNotificationChime() {
   } catch {}
 }
 
-function showLiveBrowserNotification(title, body, tag = 'campus-alert') {
+async function showLiveBrowserNotification(title, body, tag = 'campus-alert') {
   if (communityMuted) return;
   if (!('Notification' in window)) return;
   if (Notification.permission !== 'granted') return;
-  try {
-    const icon = '/icons/campusfind-192.png';
-    const n = new Notification(title, {
-      body: body,
-      icon: icon,
-      badge: icon,
-      tag: tag,
-      renotify: true
-    });
-    n.onclick = function() {
-      window.focus();
-      if (tag.startsWith('chat') && !communityChatOpen) {
-        openCommunityChat();
+  
+  const options = {
+    body: body,
+    icon: '/icons/campusfind-192.png',
+    badge: '/icons/campusfind-192.png',
+    tag: tag + '-' + Date.now(),
+    renotify: true,
+    vibrate: [200, 100, 200]
+  };
+
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || '');
+  let delivered = false;
+
+  // Android Chrome: ServiceWorkerRegistration.showNotification is mandatory because `new Notification()` throws Illegal Constructor
+  if (isMobile && 'serviceWorker' in navigator) {
+    try {
+      const reg = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise((_, reject) => setTimeout(() => reject('timeout'), 1200))
+      ]);
+      if (reg && typeof reg.showNotification === 'function') {
+        await reg.showNotification(title, options);
+        delivered = true;
       }
-      this.close();
-    };
-  } catch (err) {
-    if (navigator.serviceWorker && navigator.serviceWorker.ready) {
-      navigator.serviceWorker.ready.then(reg => {
-        reg.showNotification(title, {
-          body: body,
-          icon: '/icons/campusfind-192.png',
-          badge: '/icons/campusfind-192.png',
-          tag: tag
-        });
-      }).catch(()=>{});
+    } catch (swErr) {}
+  }
+
+  // Desktop macOS, Windows, Linux (Chrome, Safari, Edge, Firefox)
+  if (!delivered) {
+    try {
+      const n = new Notification(title, options);
+      n.onclick = function() {
+        window.focus();
+        if (tag.startsWith('chat') && !communityChatOpen) {
+          openCommunityChat();
+        }
+        this.close();
+      };
+      delivered = true;
+    } catch (err) {
+      if ('serviceWorker' in navigator) {
+        try {
+          const reg = await navigator.serviceWorker.ready;
+          if (reg && typeof reg.showNotification === 'function') {
+            await reg.showNotification(title, options);
+            delivered = true;
+          }
+        } catch (swErr2) {}
+      }
     }
   }
 }
@@ -220,16 +243,19 @@ async function requestCampusPermissions(isUserInitiated = false) {
       try {
         const perm = await Notification.requestPermission();
         if (perm === 'granted') {
-          if (isUserInitiated) {
-            toast('Live Notifications Enabled! 🔔');
-          }
-          showLiveBrowserNotification('CampUs Live Alerts Active 🔔', 'You will receive real-time notifications for Community Chat, Lost & Found claims, and updates.', 'welcome-notif');
+          toast('Live Notifications Enabled! 🔔');
+          playNotificationChime();
+          await showLiveBrowserNotification('CampUs Live Alerts Active! 🔔', 'Notification Center alerts are now active on your device for chat messages & campus updates.', 'welcome-notif');
         } else if (perm === 'denied' && isUserInitiated) {
-          toast('Notifications blocked in browser settings. You can re-enable anytime.');
+          toast('Notifications blocked in browser. Click the lock/tune icon near URL to Allow 🔔');
         }
       } catch (err) {
         console.warn('Notification permission request error:', err);
       }
+    } else if (Notification.permission === 'granted' && isUserInitiated) {
+      toast('Live Notifications Active in Notification Center 🔔');
+      playNotificationChime();
+      await showLiveBrowserNotification('CampUs Live Alerts Active! 🔔', 'Notification Center alerts are active for chat and campus updates.', 'test-notif');
     }
   }
   
@@ -422,18 +448,40 @@ function toast(s) {
     toastTimer = null;
   }, 3200);
 }
+let backgroundChatTimer = null;
+function startBackgroundChatPolling() {
+  if (backgroundChatTimer) {
+    clearInterval(backgroundChatTimer);
+    backgroundChatTimer = null;
+  }
+  if (!currentUser) return;
+  loadCommunityMessages(false);
+  backgroundChatTimer = setInterval(() => {
+    if (currentUser && !communityChatOpen) {
+      loadCommunityMessages(false);
+    }
+  }, 3500);
+}
+function stopBackgroundChatPolling() {
+  if (backgroundChatTimer) {
+    clearInterval(backgroundChatTimer);
+    backgroundChatTimer = null;
+  }
+}
 function startNotificationPolling(){
- stopNotificationPolling();
- if(!currentUser)return;
- notificationHasInitialLoad=false;latestNotificationId=0;
- refreshNotifications();
- notificationRefreshTimer=setInterval(()=>{if(currentUser)refreshNotifications()},12000);
+  stopNotificationPolling();
+  if(!currentUser)return;
+  notificationHasInitialLoad=false;latestNotificationId=0;
+  refreshNotifications();
+  notificationRefreshTimer=setInterval(()=>{if(currentUser)refreshNotifications()},12000);
+  startBackgroundChatPolling();
 }
 function stopNotificationPolling(){
- if(notificationRefreshTimer){clearInterval(notificationRefreshTimer);notificationRefreshTimer=null;}
- notificationHasInitialLoad=false;latestNotificationId=0;
- communityMuted=false;
- syncCommunityMuteControls();
+  if(notificationRefreshTimer){clearInterval(notificationRefreshTimer);notificationRefreshTimer=null;}
+  stopBackgroundChatPolling();
+  notificationHasInitialLoad=false;latestNotificationId=0;
+  communityMuted=false;
+  syncCommunityMuteControls();
 }
 async function refreshNotifications(){
  if(!currentUser)return;
@@ -479,7 +527,24 @@ async function toggleCommunityMute(){
  communityMuted=!communityMuted;
  try{localStorage.setItem('campus_chat_muted',communityMuted?'true':'false')}catch{}
  syncCommunityMuteControls();
- toast(communityMuted?'Chat notifications & sounds muted 🔕':'Chat notifications & sounds unmuted 🔔');
+ 
+ if ('Notification' in window) {
+   if (Notification.permission === 'default') {
+     await requestCampusPermissions(true);
+   } else if (Notification.permission === 'granted') {
+     if (!communityMuted) {
+       toast('Live Notifications Active in Notification Center 🔔');
+       playNotificationChime();
+       await showLiveBrowserNotification('CampUs Live Alerts Active! 🔔', 'Live Notification Center alerts are active for Community Chat and campus updates.', 'bell-test');
+     } else {
+       toast('Chat notifications & sounds muted 🔕');
+     }
+   } else if (Notification.permission === 'denied') {
+     toast('Notifications blocked in browser. Click the lock/tune icon near URL to Allow 🔔');
+   }
+ } else {
+   toast(communityMuted ? 'Chat notifications & sounds muted 🔕' : 'Chat notifications & sounds active 🔔');
+ }
  try{
   fetch('/api/notifications/community-mute',{
    method:'POST',
@@ -3022,6 +3087,9 @@ function openCommunityChat(){
   if(!communityChatOpen)pushCampusUiLayer('communityChat');
   communityChatOpen=true;
   chatReplyTarget=null;
+  if ('Notification' in window && Notification.permission === 'default') {
+    requestCampusPermissions(false);
+  }
   if (lastKnownChatMaxId === 0 && cachedCommunityMessages.length > 0) {
     lastKnownChatMaxId = cachedCommunityMessages.reduce((max, m) => Math.max(max, Number(m.id || 0)), 0);
   }
@@ -3034,6 +3102,8 @@ function openCommunityChat(){
     chatSubtitle.textContent = clg;
   }
 
+  const input = $('communityChatInput');
+  if (input) autoResizeChatInput(input);
   syncChatViewport();
   syncCommunityMuteControls();
   refreshNotifications();
@@ -3709,16 +3779,18 @@ async function loadCommunityMessages(forceBottom){
           }
         });
       }
-      // Check for incoming new messages from other campus members to trigger sound & browser notification
+      // Check for incoming new messages to trigger sound & browser notification
       const currentMaxId = items.reduce((max, m) => Math.max(max, Number(m.id || 0)), 0);
       if (lastKnownChatMaxId > 0 && currentMaxId > lastKnownChatMaxId) {
-        const newOthersMsgs = items.filter(m => 
-          Number(m.id || 0) > lastKnownChatMaxId && 
-          !m.mine && 
-          (!currentUser || String(m.username).toLowerCase() !== String(currentUser.username).toLowerCase())
+        const newMsgs = items.filter(m => Number(m.id || 0) > lastKnownChatMaxId);
+        // Alert if tab is hidden/minimized OR chat overlay is closed OR message is from someone else
+        const shouldNotifyMsgs = newMsgs.filter(m => 
+          document.hidden || 
+          !communityChatOpen ||
+          (!m.mine && (!currentUser || String(m.username).toLowerCase() !== String(currentUser.username).toLowerCase()))
         );
-        if (newOthersMsgs.length > 0) {
-          const latest = newOthersMsgs[newOthersMsgs.length - 1];
+        if (shouldNotifyMsgs.length > 0) {
+          const latest = shouldNotifyMsgs[shouldNotifyMsgs.length - 1];
           playNotificationChime();
           const author = latest.displayName || latest.username || 'Campus Member';
           showLiveBrowserNotification(`${author} (Community Chat)`, latest.message, `chat-${latest.id}`);
@@ -3731,13 +3803,17 @@ async function loadCommunityMessages(forceBottom){
         lastKnownChatMaxId = Math.max(lastKnownChatMaxId, currentMaxId);
       }
       cachedCommunityMessages=items;
-      renderCommunityMessages(cachedCommunityMessages,forceBottom);
-      if(activeReactionDetailMessageId){
-        renderReactionDetailContent();
+      if (communityChatOpen) {
+        renderCommunityMessages(cachedCommunityMessages,forceBottom);
+        if(activeReactionDetailMessageId){
+          renderReactionDetailContent();
+        }
       }
     }
   }catch{
-    $('chatMessages').innerHTML='<div class="chat-unavailable"><div class="chat-unavailable-icon" aria-hidden="true">💬</div><h3>Chat page is ready</h3><p>Messages and sending will be available when the Java backend is connected.</p><button type="button" class="light" onclick="loadCommunityMessages(true)">Retry connection</button></div>';
+    if (communityChatOpen) {
+      $('chatMessages').innerHTML='<div class="chat-unavailable"><div class="chat-unavailable-icon" aria-hidden="true">💬</div><h3>Chat page is ready</h3><p>Messages and sending will be available when the Java backend is connected.</p><button type="button" class="light" onclick="loadCommunityMessages(true)">Retry connection</button></div>';
+    }
   }
 }
 function replyToChatMessage(id){
@@ -4015,19 +4091,40 @@ document.addEventListener('click',event=>{
 
 function autoResizeChatInput(elem) {
   if (!elem) return;
-  elem.style.height = '36px';
+  const val = elem.value || '';
+  if (!val.trim()) {
+    elem.style.setProperty('height', '36px', 'important');
+    elem.style.setProperty('overflow-y', 'hidden', 'important');
+    elem.style.setProperty('border-radius', '18px', 'important');
+    return;
+  }
+  // Collapse height temporarily to 36px base so scrollHeight measures true content
+  elem.style.setProperty('height', '36px', 'important');
   const scrollH = elem.scrollHeight;
-  if (scrollH > 38) {
-    const targetH = Math.min(scrollH, 120);
-    elem.style.height = targetH + 'px';
-    elem.style.overflowY = scrollH > 120 ? 'auto' : 'hidden';
-    elem.style.borderRadius = '14px';
+  
+  // Single line check: content fits in 1 line (scrollH <= 38px)
+  if (scrollH <= 38) {
+    elem.style.setProperty('height', '36px', 'important');
+    elem.style.setProperty('overflow-y', 'hidden', 'important');
+    elem.style.setProperty('border-radius', '18px', 'important');
   } else {
-    elem.style.height = '36px';
-    elem.style.overflowY = 'hidden';
-    elem.style.borderRadius = '18px';
+    // Multi-line: expand to content scrollHeight + 2px border offset, capped at 120px
+    const targetH = Math.min(scrollH + 2, 120);
+    elem.style.setProperty('height', targetH + 'px', 'important');
+    elem.style.setProperty('overflow-y', scrollH > 118 ? 'auto' : 'hidden', 'important');
+    elem.style.setProperty('border-radius', '14px', 'important');
   }
 }
+
+// Global user gesture listener for native browser notification prompt
+let hasRequestedInitialNotif = false;
+document.addEventListener('click', function handleInitialUserGesture() {
+  if (hasRequestedInitialNotif) return;
+  if ('Notification' in window && Notification.permission === 'default') {
+    hasRequestedInitialNotif = true;
+    requestCampusPermissions(false);
+  }
+}, { capture: true, once: true });
 
 // Enter/Return handling:
 // On laptop / desktop keyboards, pressing Enter (without Shift) immediately sends the message!
@@ -4059,10 +4156,14 @@ if(chatInputElem){
   chatInputElem.addEventListener('paste', function(){
     setTimeout(() => autoResizeChatInput(this), 10);
   });
-  chatInputElem.addEventListener('keyup', function(e){
-    if (e.key === 'Backspace' || e.key === 'Delete') {
-      autoResizeChatInput(this);
-    }
+  chatInputElem.addEventListener('keyup', function(){
+    autoResizeChatInput(this);
+  });
+  chatInputElem.addEventListener('cut', function(){
+    setTimeout(() => autoResizeChatInput(this), 10);
+  });
+  chatInputElem.addEventListener('change', function(){
+    autoResizeChatInput(this);
   });
   chatInputElem.addEventListener('focus', function(){
     syncChatViewport();

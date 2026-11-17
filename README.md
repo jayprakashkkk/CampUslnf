@@ -117,17 +117,21 @@ In large university campuses, thousands of valuable personal items (student IDs,
 - **Instant Mute/Unmute Toggle**: Crisp notification toggle button pinned to the far right corner of the chat header; toggles instantly between Muted (`🔕`) and Unmuted (`🔔`), with custom SVG bell/bell-off icons, toast confirmation, and persistent localStorage sync.
 - **Pure Navigation Drawer View & Morphing 2-Line/X Button**: Opening the 2-line animated menu locks the button at the top-right corner where it smoothly morphs into an `✕` in place; clicking it again (or tapping the backdrop) morphs it back into 2 lines. All top header elements (CampUs brand logo, college badge, search bar, greeting) are cleanly hidden when open, with zero backdrop blur (`backdrop-filter: none`).
 - **Decluttered Home Header**: Removed the redundant dark/light mode toggle button from the home topbar (theme switching remains conveniently accessible inside the drawer menu).
-- **Dynamic Line-by-Line Auto-Expanding Typing Box**:
+- **Dynamic Line-by-Line Auto-Expanding & Auto-Shrinking Typing Box**:
   - The typing input starts as a sleek, slim 36px single-line pill.
   - As the user types multiple lines or enters newlines (`Shift+Enter`), the textarea automatically grows dynamically line-by-line (`autoResizeChatInput`) up to 120px max height, then enables smooth vertical scrolling.
-  - Once sent or cleared, it immediately snaps back down to its ultra-compact 36px height.
+  - **Instant Shrink on Backspace / Line Deletion**: As soon as any line or character is removed with Backspace or Delete, the compose box recalculates synchronously and snaps immediately down to fit only the remaining lines (collapsing down to 36px 1-line slim), eliminating CSS animation height locks.
+  - Once sent or cleared, it instantly resets to its ultra-compact 36px height.
 - **Laptop / PC Hardware Keyboard Enter-to-Send**:
   - Pressing `Enter` or `Return` (without Shift) on laptop/desktop keyboards dispatches the message instantly with 0ms latency.
   - `Shift + Enter` starts a new line and expands the textarea.
   - Mobile touchscreen soft keyboards retain standard newline behavior on Return for comfortable mobile typing.
-- **Live Browser Notifications & System Permissions**:
-  - **Instant Native Permission Prompt on App Open**: When any user opens the website or app, CampUs immediately requests native browser notification and geolocation permissions (`requestCampusPermissions`) with zero intrusive on-screen banners.
-  - **Live Web Push Alerts**: Fires native OS notifications for incoming Community Chat messages from other students (even while minimized or backgrounded), item claim updates, and campus announcements.
+- **Cross-Platform Live Notifications (macOS & Windows Notification Center + Android Notification Tray)**:
+  - **Native User-Gesture Permission Prompt**: Permission requests are tied to user click gestures (clicking anywhere, clicking inside chat, or clicking the Mute Bell), ensuring modern Chrome and Safari never silence or block the prompt.
+  - **Direct Desktop Notification Delivery**: Uses native `new Notification()` on macOS and Windows to instantly display alerts in the system Notification Center with zero ServiceWorker delay.
+  - **Android Service Worker Alerts**: Dispatches alerts via `ServiceWorkerRegistration.showNotification()` on Android Chrome & PWA with hardware vibration pattern (`[200, 100, 200]`).
+  - **One-Tap Bell Test**: Tapping the Bell icon (`🔔`) in the chat topbar immediately sends a live test notification directly into the Notification Center with sound chime.
+  - **Continuous Background Polling**: A gentle 3.5s background check ensures incoming Community Chat messages trigger OS notifications even when the user is browsing the Lost & Found feed or has the tab minimized/backgrounded.
   - **Synthesized Web Audio Chimes (`AudioContext`)**: Zero-dependency browser-generated 2-tone melodic notification chime (E5 -> A5) plays upon new message arrival without external audio file latency.
   - **PWA Service Worker (`sw.js`)**: Handles background push events and notification clicks to refocus the active window and route users directly into Community Chat.
 - **100% Full-Screen on Laptop & Desktop**: Community chat expands to a spacious, immersive 100% full-screen view (`100vw`, `100dvh`) on laptops and tablets, with edge-to-edge responsiveness.

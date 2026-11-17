@@ -9535,7 +9535,7 @@ body[data-theme="dark"] {
   overflow-y: hidden !important;
   -webkit-appearance: none !important;
   appearance: none !important;
-  transition: height 0.08s ease, border-color 0.18s ease !important;
+  transition: border-color 0.18s ease, background 0.18s ease !important;
 }
 
 @media (max-width: 768px) {
