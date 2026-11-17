@@ -126,13 +126,17 @@ In large university campuses, thousands of valuable personal items (student IDs,
   - Pressing `Enter` or `Return` (without Shift) on laptop/desktop keyboards dispatches the message instantly with 0ms latency.
   - `Shift + Enter` starts a new line and expands the textarea.
   - Mobile touchscreen soft keyboards retain standard newline behavior on Return for comfortable mobile typing.
-- **Cross-Platform Live Notifications (macOS & Windows Notification Center + Android Notification Tray)**:
+- **Automatic Bottom-Scroll on Chat Entry (WhatsApp & Instagram DM Style)**:
+  - When any user (e.g. User D) opens Community Chat, the view immediately locks to the **very bottom** (`scrollChatToBottom`), showing the latest messages exchanged by active members (User A, B, C) right in front of them.
+  - Older messages are positioned above, and the user can freely scroll up (`overflow-y: auto`) to read complete message history without forced downward scroll interruptions while reading.
+  - When the user is at the bottom (`nearBottom`), new incoming messages smoothly keep the view pinned to the bottom.
+- **Cross-Platform Live Notifications with Native System Sounds**:
+  - **Native OS System Sound Alerts**: Synthetic audio beeps have been eliminated so that notification sound alerts are driven entirely by the user's native device / operating system settings (macOS Alert sound, Windows system sound, Android notification ringtone).
   - **Native User-Gesture Permission Prompt**: Permission requests are tied to user click gestures (clicking anywhere, clicking inside chat, or clicking the Mute Bell), ensuring modern Chrome and Safari never silence or block the prompt.
   - **Direct Desktop Notification Delivery**: Uses native `new Notification()` on macOS and Windows to instantly display alerts in the system Notification Center with zero ServiceWorker delay.
   - **Android Service Worker Alerts**: Dispatches alerts via `ServiceWorkerRegistration.showNotification()` on Android Chrome & PWA with hardware vibration pattern (`[200, 100, 200]`).
-  - **One-Tap Bell Test**: Tapping the Bell icon (`🔔`) in the chat topbar immediately sends a live test notification directly into the Notification Center with sound chime.
+  - **One-Tap Bell Test**: Tapping the Bell icon (`🔔`) in the chat topbar immediately sends a live test notification directly into the Notification Center.
   - **Continuous Background Polling**: A gentle 3.5s background check ensures incoming Community Chat messages trigger OS notifications even when the user is browsing the Lost & Found feed or has the tab minimized/backgrounded.
-  - **Synthesized Web Audio Chimes (`AudioContext`)**: Zero-dependency browser-generated 2-tone melodic notification chime (E5 -> A5) plays upon new message arrival without external audio file latency.
   - **PWA Service Worker (`sw.js`)**: Handles background push events and notification clicks to refocus the active window and route users directly into Community Chat.
 - **100% Full-Screen on Laptop & Desktop**: Community chat expands to a spacious, immersive 100% full-screen view (`100vw`, `100dvh`) on laptops and tablets, with edge-to-edge responsiveness.
 - **Pinned Far-Right Notification Bell**: Notification alert toggle icon is firmly pinned to the far right corner (`right: 18px; top: 50%; transform: translateY(-50%)`) of the chat header with reserved safe padding.

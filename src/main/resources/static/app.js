@@ -142,39 +142,8 @@ const $=id=>document.getElementById(id);
 // --------------------------------------------------------------------------
 // LIVE BROWSER NOTIFICATIONS & SYSTEM PERMISSIONS
 // --------------------------------------------------------------------------
-let audioCtxInstance = null;
-
-function unlockAudioContext() {
-  try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (AudioCtx && !audioCtxInstance) {
-      audioCtxInstance = new AudioCtx();
-    }
-    if (audioCtxInstance && audioCtxInstance.state === 'suspended') {
-      audioCtxInstance.resume();
-    }
-  } catch {}
-}
-
 function playNotificationChime() {
-  if (communityMuted) return;
-  try {
-    unlockAudioContext();
-    const ctx = audioCtxInstance || new (window.AudioContext || window.webkitAudioContext)();
-    if (!ctx) return;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    // Gentle melodic 2-tone ping (E5 -> A5)
-    osc.frequency.setValueAtTime(659.25, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
-    gain.gain.setValueAtTime(0.18, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.32);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.32);
-  } catch {}
+  // Artificial chime removed as requested: notification alerts rely purely on the native system/device notification sound
 }
 
 async function showLiveBrowserNotification(title, body, tag = 'campus-alert') {
@@ -235,8 +204,6 @@ async function showLiveBrowserNotification(title, body, tag = 'campus-alert') {
 }
 
 async function requestCampusPermissions(isUserInitiated = false) {
-  unlockAudioContext();
-  
   // 1. Web Browser Push/Notification Permission
   if ('Notification' in window) {
     if (Notification.permission === 'default' || isUserInitiated) {
@@ -244,7 +211,6 @@ async function requestCampusPermissions(isUserInitiated = false) {
         const perm = await Notification.requestPermission();
         if (perm === 'granted') {
           toast('Live Notifications Enabled! 🔔');
-          playNotificationChime();
           await showLiveBrowserNotification('CampUs Live Alerts Active! 🔔', 'Notification Center alerts are now active on your device for chat messages & campus updates.', 'welcome-notif');
         } else if (perm === 'denied' && isUserInitiated) {
           toast('Notifications blocked in browser. Click the lock/tune icon near URL to Allow 🔔');
@@ -254,7 +220,6 @@ async function requestCampusPermissions(isUserInitiated = false) {
       }
     } else if (Notification.permission === 'granted' && isUserInitiated) {
       toast('Live Notifications Active in Notification Center 🔔');
-      playNotificationChime();
       await showLiveBrowserNotification('CampUs Live Alerts Active! 🔔', 'Notification Center alerts are active for chat and campus updates.', 'test-notif');
     }
   }
@@ -499,7 +464,6 @@ async function refreshNotifications(){
    const incoming=newReports[newReports.length-1];
    if(incoming){
      toast(`${incoming.title||'New Lost & Found post'}: ${incoming.message||''}`);
-     playNotificationChime();
      showLiveBrowserNotification(incoming.title || 'CampUs Notification', incoming.message || 'New update available', `notif-${incoming.id}`);
    }
   }
@@ -534,7 +498,6 @@ async function toggleCommunityMute(){
    } else if (Notification.permission === 'granted') {
      if (!communityMuted) {
        toast('Live Notifications Active in Notification Center 🔔');
-       playNotificationChime();
        await showLiveBrowserNotification('CampUs Live Alerts Active! 🔔', 'Live Notification Center alerts are active for Community Chat and campus updates.', 'bell-test');
      } else {
        toast('Chat notifications & sounds muted 🔕');
@@ -3083,6 +3046,26 @@ function syncChatViewport(){
   if(document.documentElement.scrollTop !== 0) document.documentElement.scrollTop = 0;
   if(document.body.scrollTop !== 0) document.body.scrollTop = 0;
 }
+
+function scrollChatToBottom(smooth = false) {
+  const box = $('chatMessages');
+  if (!box) return;
+  const doScroll = () => {
+    try {
+      if (smooth) {
+        box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' });
+      } else {
+        box.scrollTop = box.scrollHeight;
+      }
+    } catch {}
+  };
+  doScroll();
+  requestAnimationFrame(doScroll);
+  setTimeout(doScroll, 30);
+  setTimeout(doScroll, 100);
+  setTimeout(doScroll, 250);
+}
+
 function openCommunityChat(){
   if(!communityChatOpen)pushCampusUiLayer('communityChat');
   communityChatOpen=true;
@@ -3108,10 +3091,19 @@ function openCommunityChat(){
   syncCommunityMuteControls();
   refreshNotifications();
   clearChatReply();
+
+  // Instantly render cached messages and scroll to bottom (newest message)
+  if (cachedCommunityMessages && cachedCommunityMessages.length > 0) {
+    renderCommunityMessages(cachedCommunityMessages, true, true);
+  }
+  scrollChatToBottom(false);
+
   loadCommunityMessages(true);
   clearInterval(chatPollTimer);
   chatPollTimer=setInterval(()=>{if(communityChatOpen)loadCommunityMessages(false)},750);
-  setTimeout(()=>{$('communityChatInput').focus();syncChatViewport()},80);
+  setTimeout(()=>{$('communityChatInput').focus();syncChatViewport();scrollChatToBottom(false);},80);
+  setTimeout(()=>scrollChatToBottom(false),220);
+  setTimeout(()=>scrollChatToBottom(false),450);
 }
 function closeCommunityChat(fromPopstate=false){
   const overlay=$('communityChatOverlay');
@@ -3654,14 +3646,21 @@ function chatTime(value){
 }
 
 function renderCommunityMessages(items,forceBottom,ignoreSigCheck=false){
- const box=$('chatMessages'),nearBottom=box.scrollHeight-box.scrollTop-box.clientHeight<90;
+ const box=$('chatMessages');
+ if(!box)return;
+ const nearBottom=(box.scrollHeight - box.scrollTop - box.clientHeight) < 140;
  if(!items.length){box.innerHTML='<div class="empty">No messages yet. Say hello to your campus community! 👋</div>';lastChatSignature='';return}
  const reactionsKey=items.map(m=>{
    const rList=Array.isArray(m.reactions)?m.reactions.map(r=>(r.username||'')+':'+(r.emoji||'')).sort().join(','):'';
    return `${m.id}:[${rList}]`;
  }).join('|');
  const signature=items.map(m=>`${m.id}:${m.username}:${m.displayName}:${m.role}:${m.message}:${m.replyText||''}`).join('|')+'||'+reactionsKey;
- if(!ignoreSigCheck && signature===lastChatSignature)return;
+ if(!ignoreSigCheck && signature===lastChatSignature){
+   if(forceBottom){
+     scrollChatToBottom(false);
+   }
+   return;
+ }
  lastChatSignature=signature;
  box.innerHTML=items.map(m=>{
    const isAuthor = Boolean(currentUser && m.username && String(m.username).toLowerCase() === String(currentUser.username).toLowerCase());
@@ -3742,7 +3741,7 @@ function renderCommunityMessages(items,forceBottom,ignoreSigCheck=false){
    },{passive:true});
  });
 
- if(forceBottom||nearBottom)box.scrollTop=box.scrollHeight;
+ if(forceBottom||nearBottom)scrollChatToBottom(false);
 }
 async function loadCommunityMessages(forceBottom){
   try{
@@ -3791,7 +3790,6 @@ async function loadCommunityMessages(forceBottom){
         );
         if (shouldNotifyMsgs.length > 0) {
           const latest = shouldNotifyMsgs[shouldNotifyMsgs.length - 1];
-          playNotificationChime();
           const author = latest.displayName || latest.username || 'Campus Member';
           showLiveBrowserNotification(`${author} (Community Chat)`, latest.message, `chat-${latest.id}`);
           if (!communityChatOpen) {
@@ -3903,11 +3901,7 @@ $('communityChatForm').addEventListener('submit', async e => {
   inFlightMessages.set(tempId, optimisticMsg);
   cachedCommunityMessages.push(optimisticMsg);
   renderCommunityMessages(cachedCommunityMessages, true, true);
-  const box = $('chatMessages');
-  if (box) {
-    box.scrollTop = box.scrollHeight;
-    requestAnimationFrame(() => { box.scrollTop = box.scrollHeight; });
-  }
+  scrollChatToBottom(true);
   try { input.focus(); } catch {}
 
   // 3. Dispatch to API in the background without blocking the UI
