@@ -62,6 +62,9 @@ public class UserAccount {
     @Column(name = "community_muted")
     private Boolean communityMuted = Boolean.FALSE;
 
+    @Column(name = "chat_notifications_muted")
+    private Boolean chatNotificationsMuted = Boolean.FALSE;
+
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
@@ -114,6 +117,8 @@ public class UserAccount {
     public void setRole(String role) { this.role = role == null || role.isBlank() ? "MEMBER" : role.toUpperCase(java.util.Locale.ROOT); }
     public boolean isCommunityMuted() { return Boolean.TRUE.equals(communityMuted); }
     public void setCommunityMuted(Boolean communityMuted) { this.communityMuted = communityMuted; }
+    public boolean isChatNotificationsMuted() { return Boolean.TRUE.equals(chatNotificationsMuted); }
+    public void setChatNotificationsMuted(Boolean chatNotificationsMuted) { this.chatNotificationsMuted = chatNotificationsMuted; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUsernameChangeWindowStart() { return usernameChangeWindowStart; }

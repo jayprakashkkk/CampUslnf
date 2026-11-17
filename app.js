@@ -318,7 +318,7 @@ async function refreshNotifications(){
   if(response.status===401)return;
   if(!response.ok)throw new Error('notifications unavailable');
   const data=await response.json(),items=Array.isArray(data.notifications)?data.notifications:[];
-  communityMuted=!!data.communityMuted;
+  communityMuted=(data.chatNotificationsMuted!==undefined)?!!data.chatNotificationsMuted:(function(){try{return localStorage.getItem('campus_chat_muted')==='true'}catch{return false}})();
   syncCommunityMuteControls();
   const newestId=items.reduce((max,n)=>Math.max(max,Number(n.id||0)),0);
   if(notificationHasInitialLoad&&newestId>latestNotificationId){
@@ -351,7 +351,7 @@ async function toggleCommunityMute(){
  communityMuted=!communityMuted;
  try{localStorage.setItem('campus_chat_muted',communityMuted?'true':'false')}catch{}
  syncCommunityMuteControls();
- toast(communityMuted?'Chat notifications muted 🔕':'Chat notifications unmuted 🔔');
+ toast(communityMuted?'Chat notifications & sounds muted 🔕':'Chat notifications & sounds unmuted 🔔');
  try{
   fetch('/api/notifications/community-mute',{
    method:'POST',
@@ -3423,7 +3423,7 @@ function renderCommunityMessages(items,forceBottom,ignoreSigCheck=false){
      ? `<div class="chat-hover-actions">${moreBtn}${replyBtn}${reactBtn}</div>`
      : `<div class="chat-hover-actions">${reactBtn}${replyBtn}</div>`;
 
-   return `<div class="chat-row ${mine?'mine':'theirs'}" data-message-id="${m.id}" data-message-text="${esc(m.message)}" data-sender-name="${esc(fullName)}">
+   return `<div class="chat-row ${mine?'mine':'theirs'} ${msgReactions && msgReactions.length > 0 ? 'has-reaction' : ''}" data-message-id="${m.id}" data-message-text="${esc(m.message)}" data-sender-name="${esc(fullName)}">
      ${mine?'':avatar}
      <div class="chat-message-stack">
        ${authorLine}
@@ -3580,8 +3580,29 @@ $('communityChatForm').addEventListener('submit', async e => {
       headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
       body: JSON.stringify({message, replyText, replyName})
     });
-    const data = await r.json().catch(() => ({}));
-    if (!r.ok) throw Error(data.message || 'Could not send message.');
+    let data = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      if (r.status === 403 && data.message && data.message.includes('muted')) {
+        // Auto-heal self-muted state from previous bug and retry once
+        await fetch('/api/notifications/community-mute', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+          body: JSON.stringify({muted: false})
+        }).catch(()=>{});
+        const retryR = await fetch('/api/community-chat', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+          body: JSON.stringify({message, replyText, replyName})
+        });
+        if (retryR.ok) {
+          lastChatSignature = '';
+          await loadCommunityMessages(true);
+          return;
+        }
+        data = await retryR.json().catch(() => ({}));
+      }
+      throw Error(data.message || 'Could not send message.');
+    }
     lastChatSignature = '';
     await loadCommunityMessages(true);
   } catch (err) {

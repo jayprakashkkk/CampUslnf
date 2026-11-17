@@ -41,7 +41,7 @@ public class NotificationService {
         String snippet = safe(chatMessage.getMessage(), 90);
         List<CampusNotification> batch = new ArrayList<>();
         for (UserAccount recipient : users.findAll()) {
-            if (recipient.getId() == null || recipient.getId().equals(actor.getId()) || recipient.isCommunityMuted()) continue;
+            if (recipient.getId() == null || recipient.getId().equals(actor.getId()) || recipient.isChatNotificationsMuted()) continue;
             if (!recipient.getCollege().equalsIgnoreCase(actor.getCollege())) continue;
             batch.add(new CampusNotification(recipient.getId(), "CHAT", "New community message",
                     actor.getDisplayName() + ": " + snippet, actor.getUsername(), actor.getDisplayName(), null));

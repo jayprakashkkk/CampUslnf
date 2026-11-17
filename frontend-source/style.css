@@ -763,15 +763,19 @@ body:not(.device-phone) .chat-topbar .chat-mute-toggle {
   left: auto !important;
   right: auto !important;
   transform: none !important;
-  width: 40px !important;
-  height: 40px !important;
-  min-width: 40px !important;
-  max-width: 40px !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
+  aspect-ratio: 1 / 1 !important;
   border-radius: 50% !important;
+  box-sizing: border-box !important;
   background: #FFF7EE !important;
   border: 1px solid rgba(230, 218, 207, 0.9) !important;
   color: #C25E17 !important;
-  display: flex !important;
+  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   cursor: pointer !important;
@@ -781,6 +785,9 @@ body:not(.device-phone) .chat-topbar .chat-mute-toggle {
   opacity: 1 !important;
   z-index: 101 !important;
   padding: 0 !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+  overflow: hidden !important;
   transition: all 0.15s ease !important;
 }
 
@@ -2296,7 +2303,7 @@ button,.button,.intro-top-cta,.intro-final-content>button,.auth-primary{min-heig
   .intro-hero-footer{flex-wrap:wrap;font-size:8px;letter-spacing:.5px}
   .profile-editor-actions{flex-wrap:wrap}
   .profile-editor-actions button{flex:1 1 100%;min-width:0}
-  .chat-mute-toggle{right:8px;width:36px;height:36px}
+  .chat-mute-toggle{right:8px;width:36px;height:36px;aspect-ratio:1/1!important;border-radius:50%!important}
 }
 @media(max-width:380px){
   .logo{font-size:15px;gap:6px}
@@ -2399,7 +2406,7 @@ html,body{max-width:100%;overflow-x:clip}
 .chat-page-heading h2{margin:0!important;font-size:clamp(18px,2vw,23px);line-height:1.2;color:#38271E}
 .chat-page-heading small{display:block;margin-top:4px;color:#9B7B65;font-size:11px;letter-spacing:.02em}
 .chat-topbar{display:flex;align-items:center;justify-content:flex-start;gap:14px;flex:0 0 auto;padding:4px 0 14px;border-bottom:1px solid #F0DDCB}
-.chat-back,.chat-mute-toggle{flex:0 0 44px;width:44px;height:44px;border:1px solid #F0D9C5!important;border-radius:14px!important;background:#FFF8EF!important;color:#B95525!important;display:grid;place-items:center;font-size:25px;line-height:1}
+.chat-back,.chat-mute-toggle{flex:0 0 38px;width:38px;height:38px;aspect-ratio:1/1!important;border:1px solid #F0D9C5!important;border-radius:50%!important;background:#FFF8EF!important;color:#B95525!important;display:grid;place-items:center;font-size:20px;line-height:1}
 #communityChatOverlay:not(.hide){position:fixed!important;inset:0!important;top:0!important;left:0!important;right:0!important;bottom:0!important;width:100vw!important;height:100vh!important;height:100dvh!important;max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;display:block!important;overflow:hidden!important;background:#FFFCF7!important;border-radius:0!important;z-index:10000!important}
 #communityChatOverlay:not(.hide) .community-chat-dialog{position:absolute!important;inset:0!important;left:0!important;right:0!important;top:0!important;bottom:0!important;width:100%!important;height:100%!important;height:100dvh!important;min-height:0!important;max-height:none!important;max-width:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;gap:0!important;background:#FFFCF7!important}
 body.chat-fullscreen-open{overflow:hidden!important;position:fixed!important;width:100%!important;height:100%!important;background:#FFFCF7!important}
@@ -8255,23 +8262,34 @@ body[data-theme="dark"] {
 /* Universal Clean Back & Close Buttons */
 .universal-back-circle-btn,
 .chat-back-btn,
+.chat-mute-toggle,
 .activity-back,
 .community-profile-back,
-.profile-editor-back {
+.profile-editor-back,
+.reaction-sheet-close,
+.chat-reply-dismiss-btn,
+.modal-close-btn {
   width: 38px !important;
   height: 38px !important;
   min-width: 38px !important;
+  max-width: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
+  aspect-ratio: 1 / 1 !important;
   border-radius: 50% !important;
   border: 1px solid #E9CBB4 !important;
   background: #FCEBDD !important;
   color: #A84A20 !important;
-  display: flex !important;
+  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   cursor: pointer !important;
   transition: all 0.15s ease !important;
   padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
   flex-shrink: 0 !important;
+  overflow: hidden !important;
   box-shadow: none !important;
 }
 
@@ -8286,22 +8304,25 @@ body[data-theme="dark"] {
 
 .universal-back-circle-btn svg,
 .chat-back-btn svg,
+.chat-mute-toggle svg,
 .activity-back svg,
 .community-profile-back svg,
-.profile-editor-back svg {
+.profile-editor-back svg,
+.reaction-sheet-close svg,
+.chat-reply-dismiss-btn svg,
+.modal-close-btn svg {
   width: 20px !important;
   height: 20px !important;
+  min-width: 20px !important;
+  max-width: 20px !important;
+  min-height: 20px !important;
+  max-height: 20px !important;
   stroke: currentColor !important;
   fill: none !important;
   stroke-width: 2.3 !important;
-}
-
-.modal-close-btn svg {
-  width: 18px !important;
-  height: 18px !important;
-  stroke: currentColor !important;
-  fill: none !important;
-  stroke-width: 2.3 !important;
+  display: block !important;
+  margin: auto !important;
+  flex-shrink: 0 !important;
 }
 
 /* ==========================================================================
@@ -8391,11 +8412,15 @@ body[data-theme="dark"] {
   width: 38px !important;
   height: 38px !important;
   min-width: 38px !important;
+  max-width: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
+  aspect-ratio: 1 / 1 !important;
   border-radius: 50% !important;
   border: 1px solid rgba(230, 218, 207, 0.8) !important;
   background: #FFF7EE !important;
   color: #C25E17 !important;
-  display: flex !important;
+  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   cursor: pointer !important;
@@ -8404,8 +8429,22 @@ body[data-theme="dark"] {
   touch-action: manipulation !important;
   transition: all 0.18s ease !important;
   padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
   flex-shrink: 0 !important;
-  margin-right: 2px !important;
+  overflow: hidden !important;
+}
+
+.chat-back-btn svg {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  max-width: 20px !important;
+  min-height: 20px !important;
+  max-height: 20px !important;
+  display: block !important;
+  margin: auto !important;
+  flex-shrink: 0 !important;
 }
 
 .chat-back-btn:hover {
@@ -8561,24 +8600,47 @@ body[data-theme="dark"] {
 }
 
 .chat-mute-toggle {
-  width: 40px !important;
-  height: 40px !important;
-  min-width: 40px !important;
-  max-width: 40px !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
+  aspect-ratio: 1 / 1 !important;
   border-radius: 50% !important;
   background: #FFF7EE !important;
   border: 1px solid rgba(230, 218, 207, 0.9) !important;
   color: #C25E17 !important;
-  display: flex !important;
+  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   cursor: pointer !important;
   transition: all 0.18s ease !important;
   padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
   touch-action: manipulation !important;
   visibility: visible !important;
   opacity: 1 !important;
+  flex-shrink: 0 !important;
+  overflow: hidden !important;
+}
+
+.chat-mute-toggle svg,
+.chat-mute-icon-wrap {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  max-width: 20px !important;
+  min-height: 20px !important;
+  max-height: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: auto !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
 }
 
 .chat-mute-toggle:hover {
@@ -8847,64 +8909,82 @@ body[data-theme="dark"] {
   color: #FFFFFF !important;
 }
 
-/* Reaction Badge anchored to the bottom corner of the bubble */
+/* Reaction Badge anchored to the bottom corner of the bubble (Half inside, half outside) */
 .chat-bubble-reaction {
   position: absolute !important;
-  bottom: -11px !important;
-  right: 12px !important;
+  bottom: -10px !important;
+  right: 8px !important;
+  left: auto !important;
   background: #FFFFFF !important;
-  border: 1px solid rgba(210, 195, 180, 0.8) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14) !important;
+  border: 1px solid rgba(210, 195, 180, 0.85) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.16) !important;
   border-radius: 999px !important;
-  padding: 2px 8px !important;
-  font-size: 12px !important;
-  font-weight: 650 !important;
-  line-height: 1.2 !important;
+  padding: 0 5px !important;
+  height: 20px !important;
+  min-height: 20px !important;
+  max-height: 20px !important;
+  box-sizing: border-box !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
   cursor: pointer !important;
-  z-index: 2 !important;
+  z-index: 5 !important;
   user-select: none !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 4px !important;
+  justify-content: center !important;
+  gap: 2px !important;
   transition: transform 0.14s ease, box-shadow 0.14s ease !important;
   animation: popBadge 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
 }
 
 .chat-bubble-reaction:hover {
-  transform: scale(1.08) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+  transform: scale(1.1) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22) !important;
 }
 
 .chat-row.mine .chat-bubble-reaction {
-  left: 12px !important;
-  right: auto !important;
+  right: 8px !important;
+  left: auto !important;
   background: #FFFFFF !important;
   color: #1A140F !important;
 }
 
-[data-theme="dark"] .chat-bubble-reaction {
-  background: #252220 !important;
-  color: #F5EFEB !important;
-  border-color: #483E34 !important;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45) !important;
+.chat-row.theirs .chat-bubble-reaction {
+  right: 8px !important;
+  left: auto !important;
 }
 
 .chat-reaction-emojis {
-  font-size: 13px !important;
-  letter-spacing: 0.5px !important;
+  font-size: 11.5px !important;
+  letter-spacing: 0.3px !important;
   line-height: 1 !important;
+  display: inline-block !important;
 }
 
 .chat-reaction-count {
-  font-size: 11px !important;
-  font-weight: 750 !important;
-  color: #6E5F52 !important;
+  font-size: 9.5px !important;
+  font-weight: 800 !important;
+  color: #5C4E41 !important;
   line-height: 1 !important;
-  margin-left: 2px !important;
+  margin-left: 1px !important;
+}
+
+[data-theme="dark"] .chat-bubble-reaction {
+  background: #221F1C !important;
+  color: #F5EFEB !important;
+  border-color: #3D352D !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5) !important;
 }
 
 [data-theme="dark"] .chat-reaction-count {
-  color: #C0B1A2 !important;
+  color: #C5B6A8 !important;
+}
+
+/* Extra spacing for rows with reactions so hanging badge never covers row below */
+.chat-row:has(.chat-bubble-reaction),
+.chat-row.has-reaction {
+  margin-bottom: 8px !important;
 }
 
 @keyframes popBadge {
@@ -9418,6 +9498,16 @@ body[data-theme="dark"] {
     width: 36px !important;
     height: 36px !important;
     min-width: 36px !important;
+    max-width: 36px !important;
+    min-height: 36px !important;
+    max-height: 36px !important;
+    aspect-ratio: 1 / 1 !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+    overflow: hidden !important;
   }
   .chat-brand-avatar {
     width: 36px !important;

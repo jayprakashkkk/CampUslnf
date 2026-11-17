@@ -44,10 +44,16 @@ public class NotificationController {
                     item.put("read", n.isReadFlag());
                     return item;
                 }).toList();
+        if (account.isCommunityMuted()) {
+            // Auto-heal any account mistakenly marked muted from the notification bell toggle
+            account.setCommunityMuted(false);
+            users.save(account);
+        }
         return ResponseEntity.ok(Map.of(
                 "notifications", items,
                 "unreadCount", notifications.countByRecipientUserIdAndReadFlagFalse(account.getId()),
-                "communityMuted", account.isCommunityMuted()));
+                "communityMuted", false,
+                "chatNotificationsMuted", account.isChatNotificationsMuted()));
     }
 
     @PostMapping("/{id}/read")
@@ -79,9 +85,11 @@ public class NotificationController {
         UserAccount account = currentAccount(request);
         if (account == null) return unauthorized();
         boolean muted = body != null && body.muted();
-        account.setCommunityMuted(muted);
+        account.setChatNotificationsMuted(muted);
+        // Toggling chat notification sound/alerts must NEVER ban the student from speaking in chat!
+        account.setCommunityMuted(false);
         users.save(account);
-        return ResponseEntity.ok(Map.of("communityMuted", muted));
+        return ResponseEntity.ok(Map.of("chatNotificationsMuted", muted, "communityMuted", false));
     }
 
     private UserAccount currentAccount(HttpServletRequest request) {
