@@ -2415,7 +2415,7 @@ body.chat-fullscreen-open{overflow:hidden!important;position:fixed!important;wid
 body.chat-fullscreen-open>header:not(.community-profile-topbar),body.chat-fullscreen-open>.board-search,body.chat-fullscreen-open>main{display:none!important}
 #communityChatOverlay .chat-messages{flex:1 1 auto!important;min-height:0!important;max-height:none!important;width:100%!important;background:#FAF6F0!important;border:0!important;border-radius:0!important;padding:16px clamp(12px,2.5vw,36px)!important}
 #communityChatOverlay .chat-compose{flex:0 0 auto!important;width:100%!important;padding:6px 14px max(8px,env(safe-area-inset-bottom,8px)) 14px!important;border:0!important;border-top:1px solid rgba(225,212,200,.6)!important;border-radius:0!important;background:#FFFFFF!important;box-shadow:0 -1px 8px rgba(0,0,0,.04)!important}
-#communityChatOverlay .chat-compose textarea{min-height:36px!important;height:36px!important;max-height:96px!important;padding:7px 14px!important;font-size:13.5px!important;border-radius:18px!important;border:1px solid rgba(0,0,0,.1)!important;background:#F4F1EC!important;outline:none!important}
+#communityChatOverlay .chat-compose textarea{min-height:36px!important;max-height:120px!important;padding:7px 14px!important;font-size:13.5px!important;line-height:20px!important;border-radius:18px!important;border:1px solid rgba(0,0,0,.1)!important;background:#F4F1EC!important;outline:none!important;resize:none!important;overflow-y:hidden!important}
 @media(max-width:700px){
   .chat-page-heading{gap:9px}
   .chat-page-heading img{width:36px;height:36px;border-radius:10px}
@@ -9519,23 +9519,23 @@ body[data-theme="dark"] {
   flex: 1 !important;
   min-width: 0 !important;
   min-height: 36px !important;
-  height: 36px !important;
-  max-height: 96px !important;
+  max-height: 120px !important;
   padding: 7px 14px !important;
   border: 1px solid rgba(0, 0, 0, 0.1) !important;
   border-radius: 18px !important;
   font-family: inherit !important;
   font-size: 13.5px !important;
-  line-height: 1.35 !important;
+  line-height: 20px !important;
   background: #F4F1EC !important;
   color: #2D1F12 !important;
   outline: none !important;
   resize: none !important;
   box-sizing: border-box !important;
   box-shadow: none !important;
+  overflow-y: hidden !important;
   -webkit-appearance: none !important;
   appearance: none !important;
-  transition: background 0.18s ease, border-color 0.18s ease !important;
+  transition: height 0.08s ease, border-color 0.18s ease !important;
 }
 
 @media (max-width: 768px) {
@@ -9546,11 +9546,12 @@ body[data-theme="dark"] {
   .chat-compose textarea,
   #communityChatInput {
     min-height: 36px !important;
-    height: 36px !important;
+    max-height: 120px !important;
     padding: 7px 12px !important;
     font-size: 13.5px !important;
+    line-height: 20px !important;
     border-radius: 18px !important;
-    max-height: 84px !important;
+    overflow-y: hidden !important;
   }
   .chat-send-btn {
     height: 36px !important;
@@ -10361,4 +10362,114 @@ input[type="submit"]:active,
   background: #181512 !important;
   border: 1px solid #332A20 !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65) !important;
+}
+
+/* --- Live Campus Alerts / Permission Banner --- */
+.campus-notif-banner {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 10px clamp(14px, 3vw, 24px) !important;
+  background: #FFF7ED !important;
+  border-bottom: 1px solid #FED7AA !important;
+  color: #7C2D12 !important;
+  font-size: 13px !important;
+  z-index: 900 !important;
+  animation: slideNotifDown 0.25s ease-out !important;
+}
+
+[data-theme="dark"] .campus-notif-banner {
+  background: #1C1917 !important;
+  border-bottom: 1px solid rgba(251, 146, 60, 0.25) !important;
+  color: #FFEDD5 !important;
+}
+
+.notif-banner-content {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  min-width: 0 !important;
+}
+
+.notif-banner-bell {
+  font-size: 20px !important;
+  flex-shrink: 0 !important;
+  animation: ringBell 2.5s infinite ease-in-out !important;
+}
+
+.notif-banner-text {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 1px !important;
+  min-width: 0 !important;
+}
+
+.notif-banner-text strong {
+  font-size: 13px !important;
+  font-weight: 750 !important;
+  color: #9A3412 !important;
+}
+
+[data-theme="dark"] .notif-banner-text strong {
+  color: #FB923C !important;
+}
+
+.notif-banner-text span {
+  font-size: 12px !important;
+  opacity: 0.9 !important;
+  white-space: normal !important;
+}
+
+.notif-banner-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+.notif-banner-btn.allow {
+  background: var(--p, #E65100) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  border-radius: 999px !important;
+  padding: 6px 14px !important;
+  font-size: 12.5px !important;
+  font-weight: 750 !important;
+  cursor: pointer !important;
+  box-shadow: 0 1px 3px rgba(230, 81, 0, 0.3) !important;
+  transition: transform 0.12s ease, opacity 0.12s ease !important;
+}
+
+.notif-banner-btn.allow:hover {
+  transform: translateY(-1px) !important;
+  opacity: 0.95 !important;
+}
+
+.notif-banner-btn.dismiss {
+  background: transparent !important;
+  border: none !important;
+  color: inherit !important;
+  font-size: 16px !important;
+  padding: 4px 8px !important;
+  cursor: pointer !important;
+  opacity: 0.65 !important;
+  border-radius: 50% !important;
+}
+
+.notif-banner-btn.dismiss:hover {
+  opacity: 1 !important;
+}
+
+@keyframes slideNotifDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes ringBell {
+  0%, 100% { transform: rotate(0); }
+  5%, 15% { transform: rotate(14deg); }
+  10%, 20% { transform: rotate(-14deg); }
+  25% { transform: rotate(0); }
 }

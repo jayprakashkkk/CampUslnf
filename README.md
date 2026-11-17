@@ -117,7 +117,20 @@ In large university campuses, thousands of valuable personal items (student IDs,
 - **Instant Mute/Unmute Toggle**: Crisp notification toggle button pinned to the far right corner of the chat header; toggles instantly between Muted (`🔕`) and Unmuted (`🔔`), with custom SVG bell/bell-off icons, toast confirmation, and persistent localStorage sync.
 - **Pure Navigation Drawer View & Morphing 2-Line/X Button**: Opening the 2-line animated menu locks the button at the top-right corner where it smoothly morphs into an `✕` in place; clicking it again (or tapping the backdrop) morphs it back into 2 lines. All top header elements (CampUs brand logo, college badge, search bar, greeting) are cleanly hidden when open, with zero backdrop blur (`backdrop-filter: none`).
 - **Decluttered Home Header**: Removed the redundant dark/light mode toggle button from the home topbar (theme switching remains conveniently accessible inside the drawer menu).
-- **Next Line on Return Key (Send via Button Only)**: Pressing Enter/Return key in the chat textarea inserts a newline for multi-line formatting. Sending happens strictly on clicking the **Send** button.
+- **Dynamic Line-by-Line Auto-Expanding Typing Box**:
+  - The typing input starts as a sleek, slim 36px single-line pill.
+  - As the user types multiple lines or enters newlines (`Shift+Enter`), the textarea automatically grows dynamically line-by-line (`autoResizeChatInput`) up to 120px max height, then enables smooth vertical scrolling.
+  - Once sent or cleared, it immediately snaps back down to its ultra-compact 36px height.
+- **Laptop / PC Hardware Keyboard Enter-to-Send**:
+  - Pressing `Enter` or `Return` (without Shift) on laptop/desktop keyboards dispatches the message instantly with 0ms latency.
+  - `Shift + Enter` starts a new line and expands the textarea.
+  - Mobile touchscreen soft keyboards retain standard newline behavior on Return for comfortable mobile typing.
+- **Live Browser Notifications & System Permissions**:
+  - **Instant Permission Prompt on App Open**: When any user opens the website or app, CampUs immediately requests browser notification and geolocation permissions (`requestCampusPermissions`).
+  - **Interactive Campus Permission Banner (`#campusNotificationBanner`)**: High-visibility, dismissible permission banner displayed at the top of the feed if notification permissions are pending (`Notification.permission === 'default'`), enabling 1-click activation.
+  - **Live Web Push Alerts**: Fires native OS notifications for incoming Community Chat messages from other students (even while minimized or backgrounded), item claim updates, and campus announcements.
+  - **Synthesized Web Audio Chimes (`AudioContext`)**: Zero-dependency browser-generated 2-tone melodic notification chime (E5 -> A5) plays upon new message arrival without external audio file latency.
+  - **PWA Service Worker (`sw.js`)**: Handles background push events and notification clicks to refocus the active window and route users directly into Community Chat.
 - **100% Full-Screen on Laptop & Desktop**: Community chat expands to a spacious, immersive 100% full-screen view (`100vw`, `100dvh`) on laptops and tablets, with edge-to-edge responsiveness.
 - **Pinned Far-Right Notification Bell**: Notification alert toggle icon is firmly pinned to the far right corner (`right: 18px; top: 50%; transform: translateY(-50%)`) of the chat header with reserved safe padding.
 - **Snappy, Lag-Free Button Response**: Zero mobile 300ms delay with `touch-action: manipulation`, `-webkit-tap-highlight-color: transparent`, and instant 0.04s tactile `:active` state across all app buttons.

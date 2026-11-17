@@ -135,9 +135,144 @@ window.fetch = async function(input, init) {
 
 let chosenType='', myReportsOnly=false, statFilter='', currentUser=null, authMode='login';
 let cachedAllReports=[], exploreSearchQuery='', exploreTypeFilter='', exploreCategoryFilter='', exploreSearchTimer=null, exploreMemberSearchSeq=0;
-let notificationRefreshTimer=null, communityMuted=(function(){try{return localStorage.getItem('campus_chat_muted')==='true'}catch{return false}})(), notificationHasInitialLoad=false, latestNotificationId=0;
+let notificationRefreshTimer=null, communityMuted=(function(){try{return localStorage.getItem('campus_chat_muted')==='true'}catch{return false}})(), notificationHasInitialLoad=false, latestNotificationId=0, lastKnownChatMaxId=0;
 let profileImageDataDraft='', bannerImageDataDraft='';
 const $=id=>document.getElementById(id);
+
+// --------------------------------------------------------------------------
+// LIVE BROWSER NOTIFICATIONS & SYSTEM PERMISSIONS
+// --------------------------------------------------------------------------
+let audioCtxInstance = null;
+
+function unlockAudioContext() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx && !audioCtxInstance) {
+      audioCtxInstance = new AudioCtx();
+    }
+    if (audioCtxInstance && audioCtxInstance.state === 'suspended') {
+      audioCtxInstance.resume();
+    }
+  } catch {}
+}
+
+function playNotificationChime() {
+  if (communityMuted) return;
+  try {
+    unlockAudioContext();
+    const ctx = audioCtxInstance || new (window.AudioContext || window.webkitAudioContext)();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    // Gentle melodic 2-tone ping (E5 -> A5)
+    osc.frequency.setValueAtTime(659.25, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.32);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.32);
+  } catch {}
+}
+
+function showLiveBrowserNotification(title, body, tag = 'campus-alert') {
+  if (communityMuted) return;
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+  try {
+    const icon = '/icons/campusfind-192.png';
+    const n = new Notification(title, {
+      body: body,
+      icon: icon,
+      badge: icon,
+      tag: tag,
+      renotify: true
+    });
+    n.onclick = function() {
+      window.focus();
+      if (tag.startsWith('chat') && !communityChatOpen) {
+        openCommunityChat();
+      }
+      this.close();
+    };
+  } catch (err) {
+    if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.showNotification(title, {
+          body: body,
+          icon: '/icons/campusfind-192.png',
+          badge: '/icons/campusfind-192.png',
+          tag: tag
+        });
+      }).catch(()=>{});
+    }
+  }
+}
+
+async function requestCampusPermissions(isUserInitiated = false) {
+  unlockAudioContext();
+  
+  // 1. Web Browser Push/Notification Permission
+  if ('Notification' in window) {
+    if (Notification.permission === 'default' || isUserInitiated) {
+      try {
+        const perm = await Notification.requestPermission();
+        syncNotificationBanner();
+        if (perm === 'granted') {
+          dismissNotificationBanner();
+          if (isUserInitiated) {
+            toast('Live Notifications Enabled! 🔔');
+          }
+          showLiveBrowserNotification('CampUs Live Alerts Active 🔔', 'You will receive real-time notifications for Community Chat, Lost & Found claims, and updates.', 'welcome-notif');
+        } else if (perm === 'denied' && isUserInitiated) {
+          toast('Notifications blocked in browser settings. You can re-enable anytime.');
+        }
+      } catch (err) {
+        console.warn('Notification permission request error:', err);
+      }
+    } else {
+      syncNotificationBanner();
+    }
+  }
+  
+  // 2. Campus Geolocation Permission (for auto campus proximity & lost item tagging)
+  if ('geolocation' in navigator && !window.userGeoLocation) {
+    try {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          window.userGeoLocation = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        },
+        () => {},
+        { timeout: 6000, maximumAge: 300000 }
+      );
+    } catch {}
+  }
+}
+
+function syncNotificationBanner() {
+  const banner = $('campusNotificationBanner');
+  if (!banner) return;
+  if (!('Notification' in window)) {
+    banner.classList.add('hide');
+    return;
+  }
+  if (Notification.permission === 'default') {
+    const dismissed = sessionStorage.getItem('campus_notif_banner_dismissed') === 'true';
+    if (!dismissed) {
+      banner.classList.remove('hide');
+    }
+  } else {
+    banner.classList.add('hide');
+  }
+}
+
+function dismissNotificationBanner() {
+  const banner = $('campusNotificationBanner');
+  if (banner) banner.classList.add('hide');
+  try { sessionStorage.setItem('campus_notif_banner_dismissed', 'true'); } catch {}
+}
 // CampUs manages its own in-app history. Do not let the browser restore a
 // stale scroll offset when returning from login, profile, or another full-screen layer.
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
@@ -341,7 +476,11 @@ async function refreshNotifications(){
    const newReports=items.filter(n=>Number(n.id||0)>latestNotificationId&&String(n.type||'').startsWith('REPORT_'))
      .sort((a,b)=>Number(a.id||0)-Number(b.id||0));
    const incoming=newReports[newReports.length-1];
-   if(incoming)toast(`${incoming.title||'New Lost & Found post'}: ${incoming.message||''}`);
+   if(incoming){
+     toast(`${incoming.title||'New Lost & Found post'}: ${incoming.message||''}`);
+     playNotificationChime();
+     showLiveBrowserNotification(incoming.title || 'CampUs Notification', incoming.message || 'New update available', `notif-${incoming.id}`);
+   }
   }
   notificationHasInitialLoad=true;
   latestNotificationId=Math.max(latestNotificationId,newestId);
@@ -1583,7 +1722,7 @@ document.addEventListener('click',event=>{
  if(results&&!results.hidden&&!event.target.closest('.board-search'))hideUserSearchResults();
  if(!event.target.closest('#publicProfileOwnerActions'))closePublicProfileRoleMenu();
 });
-let timer;['q','filterCategory','filterLocation','dateFrom','dateTo'].forEach(id=>{const el=$(id);if(el)el.addEventListener(id==='q'||id==='filterLocation'?'input':'change',()=>{clearTimeout(timer);timer=setTimeout(load,220)})});initAuth();loadPrivacyPreferences();
+let timer;['q','filterCategory','filterLocation','dateFrom','dateTo'].forEach(id=>{const el=$(id);if(el)el.addEventListener(id==='q'||id==='filterLocation'?'input':'change',()=>{clearTimeout(timer);timer=setTimeout(load,220)})});initAuth();loadPrivacyPreferences();setTimeout(requestCampusPermissions, 350);document.addEventListener('pointerdown',()=>{requestCampusPermissions();},{once:true});
 /* Profile button opens the phone navigation or the profile editor on desktop. */
 let menuOpen=false, profileMenuOpen=false, activeNavPopup='', selectedProfileAvatarId='';
 let mobileNavHomeParent=null, mobileNavHomeNextSibling=null;
@@ -2910,6 +3049,9 @@ function openCommunityChat(){
   if(!communityChatOpen)pushCampusUiLayer('communityChat');
   communityChatOpen=true;
   chatReplyTarget=null;
+  if (lastKnownChatMaxId === 0 && cachedCommunityMessages.length > 0) {
+    lastKnownChatMaxId = cachedCommunityMessages.reduce((max, m) => Math.max(max, Number(m.id || 0)), 0);
+  }
   document.body.classList.add('chat-fullscreen-open');
   $('communityChatOverlay').classList.remove('hide');
 
@@ -3594,6 +3736,27 @@ async function loadCommunityMessages(forceBottom){
           }
         });
       }
+      // Check for incoming new messages from other campus members to trigger sound & browser notification
+      const currentMaxId = items.reduce((max, m) => Math.max(max, Number(m.id || 0)), 0);
+      if (lastKnownChatMaxId > 0 && currentMaxId > lastKnownChatMaxId) {
+        const newOthersMsgs = items.filter(m => 
+          Number(m.id || 0) > lastKnownChatMaxId && 
+          !m.mine && 
+          (!currentUser || String(m.username).toLowerCase() !== String(currentUser.username).toLowerCase())
+        );
+        if (newOthersMsgs.length > 0) {
+          const latest = newOthersMsgs[newOthersMsgs.length - 1];
+          playNotificationChime();
+          const author = latest.displayName || latest.username || 'Campus Member';
+          showLiveBrowserNotification(`${author} (Community Chat)`, latest.message, `chat-${latest.id}`);
+          if (!communityChatOpen) {
+            toast(`💬 ${author}: ${latest.message}`);
+          }
+        }
+      }
+      if (currentMaxId > 0) {
+        lastKnownChatMaxId = Math.max(lastKnownChatMaxId, currentMaxId);
+      }
       cachedCommunityMessages=items;
       renderCommunityMessages(cachedCommunityMessages,forceBottom);
       if(activeReactionDetailMessageId){
@@ -3667,7 +3830,7 @@ $('communityChatForm').addEventListener('submit', async e => {
 
   // 1. Instantly clear input and dismiss reply preview (0ms latency!)
   input.value = '';
-  input.style.height = '36px';
+  autoResizeChatInput(input);
   const replyTarget = chatReplyTarget;
   const replyText = replyTarget?.message || null;
   const replyName = replyTarget?.displayName || null;
@@ -3746,6 +3909,7 @@ $('communityChatForm').addEventListener('submit', async e => {
     cachedCommunityMessages = cachedCommunityMessages.filter(x => x.id !== tempId);
     renderCommunityMessages(cachedCommunityMessages, false, true);
     input.value = message;
+    autoResizeChatInput(input);
     toast(err.message || 'Could not send message');
   }
 });
@@ -3876,28 +4040,56 @@ document.addEventListener('click',event=>{
  openChatUserProfile(target.dataset.profileName||target.dataset.chatProfileName||'',target.dataset.profileUsername||target.dataset.chatProfileUsername||target.dataset.userSearchUsername||'');
 });
 
+function autoResizeChatInput(elem) {
+  if (!elem) return;
+  elem.style.height = '36px';
+  const scrollH = elem.scrollHeight;
+  if (scrollH > 38) {
+    const targetH = Math.min(scrollH, 120);
+    elem.style.height = targetH + 'px';
+    elem.style.overflowY = scrollH > 120 ? 'auto' : 'hidden';
+    elem.style.borderRadius = '14px';
+  } else {
+    elem.style.height = '36px';
+    elem.style.overflowY = 'hidden';
+    elem.style.borderRadius = '18px';
+  }
+}
+
 // Enter/Return handling:
 // On laptop / desktop keyboards, pressing Enter (without Shift) immediately sends the message!
 // On mobile / touchscreen, Enter inserts a newline for soft keyboard typing.
 const chatInputElem = $('communityChatInput');
 if(chatInputElem){
   chatInputElem.addEventListener('keydown', function(e){
-    const isDesktop = window.matchMedia('(pointer: fine)').matches || window.innerWidth >= 768;
-    if(e.key === 'Enter' && !e.shiftKey && !e.isComposing && isDesktop){
-      e.preventDefault();
-      const form = $('communityChatForm');
-      if (form) {
-        if (typeof form.requestSubmit === 'function') {
-          form.requestSubmit();
-        } else {
-          form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    if ((e.key === 'Enter' || e.code === 'Enter' || e.keyCode === 13) && !e.shiftKey && !e.isComposing) {
+      const isMobileTouch = ('ontouchstart' in window || (navigator.maxTouchPoints > 1)) && window.innerWidth < 768 && !window.matchMedia('(pointer: fine)').matches;
+      if (!isMobileTouch) {
+        e.preventDefault();
+        e.stopPropagation();
+        const form = $('communityChatForm');
+        if (form) {
+          if (typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+          } else {
+            form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+          }
         }
       }
+    } else {
+      setTimeout(() => autoResizeChatInput(this), 0);
     }
   });
   chatInputElem.addEventListener('input', function(){
-    this.style.height='36px';
-    this.style.height=Math.min(this.scrollHeight,96)+'px';
+    autoResizeChatInput(this);
+  });
+  chatInputElem.addEventListener('paste', function(){
+    setTimeout(() => autoResizeChatInput(this), 10);
+  });
+  chatInputElem.addEventListener('keyup', function(e){
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+      autoResizeChatInput(this);
+    }
   });
   chatInputElem.addEventListener('focus', function(){
     syncChatViewport();
@@ -6181,19 +6373,26 @@ async function fetchLeaderboard() {
 // --------------------------------------------------------------------------
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
-    // When tab is hidden/minimized, stop polling to save user battery and network
+    // When tab is hidden/minimized, maintain gentle 3.5s background polling so desktop push notifications fire!
     if (chatPollTimer) {
       clearInterval(chatPollTimer);
-      chatPollTimer = null;
     }
+    chatPollTimer = setInterval(() => {
+      if (currentUser) loadCommunityMessages(false);
+    }, 3500);
   } else {
-    // When tab is restored, refresh chat immediately if active
+    // When tab is restored, resume 750ms fast polling if chat is open
     if (communityChatOpen) {
       loadCommunityMessages(false);
       clearInterval(chatPollTimer);
       chatPollTimer = setInterval(() => {
         if (communityChatOpen && !document.hidden) loadCommunityMessages(false);
       }, 750);
+    } else {
+      if (chatPollTimer) {
+        clearInterval(chatPollTimer);
+        chatPollTimer = null;
+      }
     }
   }
 });
