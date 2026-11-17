@@ -3471,7 +3471,7 @@ function renderCommunityMessages(items,forceBottom,ignoreSigCheck=false){
    const fullName=String(m.displayName||m.username||'CampUs user').trim();
    const username=String(m.username||'');
    const avatar=`<button type="button" class="chat-avatar chat-avatar-button" aria-label="View ${esc(fullName)}'s profile" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${avatarInner(m.avatarId,fullName,m.profileImageUrl)}</button>`;
-   const authorLine=!mine?`<button type="button" class="chat-author-role" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${esc(fullName)}</button>`:'';
+   const authorLine=!mine?`<button type="button" class="chat-author-role chat-author-name" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${esc(fullName)}</button>`:'';
    
    const msgReactions = getMessageReactions(m.id);
    let reactionBadge = '';
@@ -3501,9 +3501,9 @@ function renderCommunityMessages(items,forceBottom,ignoreSigCheck=false){
    return `<div class="chat-row ${mine?'mine':'theirs'} ${msgReactions && msgReactions.length > 0 ? 'has-reaction' : ''}" data-message-id="${m.id}" data-message-text="${esc(m.message)}" data-sender-name="${esc(fullName)}">
      ${mine?'':avatar}
      <div class="chat-message-stack">
-       ${authorLine}
        <div class="chat-bubble-container">
          <div class="chat-bubble" role="group" aria-label="Chat message">
+           ${authorLine}
            ${m.replyText?`<div class="chat-quoted"><b>${esc(m.replyName||'Reply')}</b><br>${esc(m.replyText)}</div>`:''}
            <div class="chat-text">${esc(m.message)}</div>
            <div class="chat-time">${chatTime(m.createdAt)}</div>
