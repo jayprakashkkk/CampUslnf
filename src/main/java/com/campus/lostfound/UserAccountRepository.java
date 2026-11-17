@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 public interface UserAccountRepository extends JpaRepository<UserAccount, Long> {
     boolean existsByUsernameKey(String usernameKey);
     Optional<UserAccount> findByUsernameKey(String usernameKey);
+    java.util.List<UserAccount> findByUsernameKeyIn(java.util.Collection<String> usernameKeys);
     boolean existsByEmailKey(String emailKey);
     Optional<UserAccount> findByEmailKey(String emailKey);
     Optional<UserAccount> findByAuthToken(String authToken);

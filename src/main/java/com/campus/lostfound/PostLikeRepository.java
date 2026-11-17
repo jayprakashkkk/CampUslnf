@@ -7,6 +7,7 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
     boolean existsByReportIdAndUsername(Long reportId, String username);
     long countByReportId(Long reportId);
     void deleteByReportIdAndUsername(Long reportId, String username);
+    List<PostLike> findByReportIdIn(java.util.Collection<Long> reportIds);
     List<PostLike> findByUsernameOrderByCreatedAtDesc(String username);
     void deleteByReportId(Long reportId);
 }

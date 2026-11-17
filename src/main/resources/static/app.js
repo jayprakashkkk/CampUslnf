@@ -91,16 +91,19 @@ window.fetch = async function(input, init) {
       if (!init.credentials) {
         init.credentials = 'include';
       }
-      // Attach X-Auth-Token from localStorage for bulletproof cross-domain sessions
+      // Attach X-Auth-Token and Authorization: Bearer from localStorage for bulletproof cross-domain sessions
       const authToken = localStorage.getItem('campus_auth_token');
       if (authToken) {
         if (!init.headers) init.headers = {};
         if (init.headers instanceof Headers) {
           if (!init.headers.has('X-Auth-Token')) init.headers.set('X-Auth-Token', authToken);
+          if (!init.headers.has('Authorization')) init.headers.set('Authorization', `Bearer ${authToken}`);
         } else if (Array.isArray(init.headers)) {
           init.headers.push(['X-Auth-Token', authToken]);
+          init.headers.push(['Authorization', `Bearer ${authToken}`]);
         } else {
           if (!init.headers['X-Auth-Token']) init.headers['X-Auth-Token'] = authToken;
+          if (!init.headers['Authorization']) init.headers['Authorization'] = `Bearer ${authToken}`;
         }
       }
       const getFallbackUrl = (currentUrl) => {
@@ -593,7 +596,7 @@ function renderPostCardMarkup(r, all) {
         ${!canEdit?statusControl:''}
       </div>
     </div>
-    ${r.imageData?`<div class="insta-post-media" onclick="viewFullImage('${esc(r.imageData)}')" title="Click to view full photo"><img src="${esc(r.imageData)}" alt="Photo of ${esc(r.title)}" loading="lazy"></div>`:`<div class="insta-post-no-media"><div class="insta-no-media-icon">${categoryEmoji(r.category)}</div><div class="insta-no-media-text"><b>${esc(r.category||'Item')}</b><small>No photo attached by reporter</small></div></div>`}
+    ${(r.imageUrl || r.imageData)?`<div class="insta-post-media" onclick="viewFullImage('${esc(r.imageUrl || r.imageData)}')" title="Click to view full photo"><img src="${esc(r.imageUrl || r.imageData)}" alt="Photo of ${esc(r.title)}" loading="lazy"></div>`:`<div class="insta-post-no-media"><div class="insta-no-media-icon">${categoryEmoji(r.category)}</div><div class="insta-no-media-text"><b>${esc(r.category||'Item')}</b><small>No photo attached by reporter</small></div></div>`}
     <div class="insta-post-body">
       <div class="insta-post-tags">
         <span class="insta-meta-tag">${categoryEmoji(r.category)} ${esc(r.category)}</span>
@@ -694,7 +697,7 @@ async function load(retryCount = 0){
 }
 $('photo').addEventListener('change',()=>{const file=$('photo').files[0];if(!file){$('photoPreview').src='';$('photoPreview').classList.add('hide');return}if(!file.type.startsWith('image/')){toast('Please choose an image file.');$('photo').value='';return}const reader=new FileReader();reader.onload=()=>{$('photoPreview').src=reader.result;$('photoPreview').classList.remove('hide')};reader.onerror=()=>{toast('Could not read the photo. Please try another image.');$('photo').value='';$('photoPreview').src='';$('photoPreview').classList.add('hide')};reader.readAsDataURL(file)});
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeForm()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeForm()});
-$('form').addEventListener('submit',async e=>{e.preventDefault();const file=$('photo').files[0];let imageData=null;if(file){try{imageData=await compressProfileImage(file,1200,1200,0.8)}catch{try{imageData=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)})}catch{$('error').textContent='Could not read the photo. Please try another image.';return}}}
+$('form').addEventListener('submit',async e=>{e.preventDefault();const file=$('photo').files[0];let imageData=null;if(file){try{imageData=await compressProfileImage(file,800,800,0.72)}catch{try{imageData=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)})}catch{$('error').textContent='Could not read the photo. Please try another image.';return}}}
 let payload={imageData,type:$('type').value,title:$('title').value.trim(),category:$('category').value,location:$('location').value.trim(),itemDate:$('itemDate').value||null,reporterName:$('name').value.trim(),reporterPhone:$('phone').value.trim(),description:$('description').value.trim(),secretQuestion:$('secretQuestion')?$('secretQuestion').value.trim():''};
 try{let res=await fetch('/api/reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!res.ok){let d=await res.json().catch(()=>({}));throw Error(d.message||'Please check the form and try again.')}const created=await res.json().catch(()=>null);$('form').reset();if($('secretQuestion'))$('secretQuestion').value='';$('photoPreview').src='';$('photoPreview').classList.add('hide');closeForm();toast('Report submitted. Thanks for helping your campus! 💜');load()}catch(err){$('error').textContent=err.message||'Could not submit report.'}});
 async function updateStatus(id,status){try{let r=await fetch(`/api/reports/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});if(!r.ok)throw 0;toast('Status updated');load()}catch{toast('Could not update status')}}
@@ -1242,10 +1245,11 @@ function renderExploreGrid() {
       : `<span class="explore-tile-badge lost"><span class="status-dot"></span> LOST</span>`);
     const likes = r.likeCount || 0;
     const comments = r.commentCount || 0;
-    const hasImage = Boolean(r.imageData);
+    const imgUrl = r.imageUrl || r.imageData;
+    const hasImage = Boolean(imgUrl);
 
     const mediaMarkup = hasImage
-      ? `<img src="${esc(r.imageData)}" alt="${esc(r.title)}" class="explore-tile-img" loading="lazy">`
+      ? `<img src="${esc(imgUrl)}" alt="${esc(r.title)}" class="explore-tile-img" loading="lazy">`
       : `<div class="explore-tile-nophoto">
            <span class="explore-tile-nophoto-emoji">${categoryEmoji(r.category)}</span>
            <span class="explore-tile-nophoto-title">${esc(r.title)}</span>
@@ -3014,44 +3018,23 @@ function saveStoredReactionsV2(reactions){
 }
 
 function getDemoReactionsForMessage(messageId){
-  const num = Number(messageId);
-  if(num === 1 || num === 2){
-    return [
-      { username: 'kartik', displayName: 'Kartik Gupta', college: 'CGC University', avatarId: 'avatar-1', profileImageUrl: '', emoji: '❤️', time: Date.now() - 3600000 },
-      { username: 'abeer', displayName: 'Abeer Sen', college: 'CGC University', avatarId: 'avatar-2', profileImageUrl: '', emoji: '❤️', time: Date.now() - 3000000 },
-      { username: 'pushkar', displayName: 'Pushkar Arora', college: 'CGC Landran', avatarId: 'avatar-3', profileImageUrl: '', emoji: '❤️', time: Date.now() - 2400000 },
-      { username: 'krish', displayName: 'Krish Sharma', college: 'Chandigarh University', avatarId: 'avatar-4', profileImageUrl: '', emoji: '❤️', time: Date.now() - 1800000 },
-      { username: 'sourabh', displayName: 'Sourabh Bishnoi', college: 'CGC University', avatarId: 'avatar-5', profileImageUrl: '', emoji: '🔥', time: Date.now() - 1200000 },
-      { username: 'simran', displayName: 'Simran Kaur', college: 'CGC University', avatarId: 'avatar-6', profileImageUrl: '', emoji: '👍', time: Date.now() - 900000 },
-      { username: 'mayank', displayName: 'Mayank Patel', college: 'CGC University', avatarId: 'avatar-7', profileImageUrl: '', emoji: '❤️', time: Date.now() - 600000 },
-      { username: 'rajan', displayName: 'Rajan Sinha', college: 'CGC University', avatarId: 'avatar-8', profileImageUrl: '', emoji: '😂', time: Date.now() - 300000 }
-    ];
-  }
   return [];
 }
 
 function getMessageReactions(messageId){
+  const numId = Number(messageId);
+  if (Array.isArray(cachedCommunityMessages)) {
+    const msg = cachedCommunityMessages.find(m => m.id === numId);
+    if (msg && Array.isArray(msg.reactions) && msg.reactions.length > 0) {
+      return msg.reactions;
+    }
+  }
   const store = getStoredReactionsV2();
   const idStr = String(messageId);
   if (store[idStr] && Array.isArray(store[idStr])) {
     return store[idStr];
   }
-  const legacyStore = getStoredReactions();
-  if (legacyStore[idStr]) {
-    const legacyEmoji = legacyStore[idStr];
-    const uName = currentUser ? currentUser.username : 'you';
-    const dName = currentUser ? (currentUser.displayName || currentUser.username) : 'You';
-    return [{
-      username: uName,
-      displayName: dName,
-      college: currentUser?.collegeName || 'CGC University',
-      avatarId: currentUser?.avatarId || '',
-      profileImageUrl: currentUser?.profileImageUrl || '',
-      emoji: legacyEmoji,
-      time: Date.now()
-    }];
-  }
-  return getDemoReactionsForMessage(messageId);
+  return [];
 }
 
 let activeReactionDetailMessageId = null;
@@ -3247,17 +3230,19 @@ function closeChatReactionPicker(){
   }
 }
 
-function setChatMessageReaction(messageId, emoji){
+async function setChatMessageReaction(messageId, emoji){
   closeChatReactionPicker();
+  const id = Number(messageId);
   const idStr = String(messageId);
-  const store = getStoredReactionsV2();
-  let list = store[idStr] ? [...store[idStr]] : [];
-  
-  if(!list.length){
-    list = [...getMessageReactions(messageId)];
-  }
-  
+  const msg = Array.isArray(cachedCommunityMessages) ? cachedCommunityMessages.find(m => m.id === id) : null;
   const currentUname = currentUser ? String(currentUser.username).toLowerCase() : 'you';
+  
+  let list = msg && Array.isArray(msg.reactions) ? [...msg.reactions] : [];
+  if (!list.length) {
+    const store = getStoredReactionsV2();
+    if (store[idStr] && Array.isArray(store[idStr])) list = [...store[idStr]];
+  }
+
   const existingIdx = list.findIndex(r => String(r.username).toLowerCase() === currentUname);
   
   if(!emoji){
@@ -3267,22 +3252,27 @@ function setChatMessageReaction(messageId, emoji){
       list.splice(existingIdx, 1);
     }else{
       list[existingIdx].emoji = emoji;
-      list[existingIdx].time = Date.now();
+      list[existingIdx].createdAt = new Date().toISOString();
     }
   }else{
     const uName = currentUser ? currentUser.username : 'you';
     const dName = currentUser ? (currentUser.displayName || currentUser.username) : 'You';
     list.push({
+      id: Date.now(),
       username: uName,
       displayName: dName,
       college: currentUser?.collegeName || 'CGC University',
       avatarId: currentUser?.avatarId || '',
       profileImageUrl: currentUser?.profileImageUrl || '',
       emoji: emoji,
-      time: Date.now()
+      createdAt: new Date().toISOString()
     });
   }
-  
+
+  if (msg) {
+    msg.reactions = list;
+  }
+  const store = getStoredReactionsV2();
   store[idStr] = list;
   saveStoredReactionsV2(store);
   
@@ -3296,6 +3286,27 @@ function setChatMessageReaction(messageId, emoji){
   saveStoredReactions(legacy);
   
   renderCommunityMessages(cachedCommunityMessages, false, true);
+
+  // Sync with PostgreSQL backend API for real multi-user visibility
+  try {
+    const res = await fetch(`/api/community-chat/${id}/react`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ emoji: emoji || '' })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && Array.isArray(data.reactions) && msg) {
+        msg.reactions = data.reactions;
+        renderCommunityMessages(cachedCommunityMessages, false, true);
+        if (activeReactionDetailMessageId === id) {
+          renderReactionDetailContent();
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Could not sync reaction to server:', err);
+  }
 }
 
 function openChatMoreMenu(event, messageId){
@@ -6093,3 +6104,33 @@ async function fetchLeaderboard() {
     listEl.innerHTML = '<div class="empty">Could not load leaderboard.</div>';
   }
 }
+
+// --------------------------------------------------------------------------
+// PERFORMANCE, POLLING OPTIMIZATION & RAILWAY KEEPALIVE
+// --------------------------------------------------------------------------
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    // When tab is hidden/minimized, stop polling to save user battery and network
+    if (chatPollTimer) {
+      clearInterval(chatPollTimer);
+      chatPollTimer = null;
+    }
+  } else {
+    // When tab is restored, refresh chat immediately if active
+    if (communityChatOpen) {
+      loadCommunityMessages(false);
+      clearInterval(chatPollTimer);
+      chatPollTimer = setInterval(() => {
+        if (communityChatOpen && !document.hidden) loadCommunityMessages(false);
+      }, 4000);
+    }
+  }
+});
+
+// Touch /api/health every 5 minutes when user is logged in to keep Railway instance warm
+setInterval(() => {
+  if (!document.hidden && currentUser) {
+    fetch('/api/health', { isBackground: true }).catch(() => {});
+  }
+}, 5 * 60 * 1000);
+

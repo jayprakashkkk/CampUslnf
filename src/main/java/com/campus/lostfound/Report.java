@@ -52,6 +52,7 @@ public class Report {
     @Transient private Long likeCount = 0L;
     @Transient private Boolean likedByMe = false;
     @Transient private Long claimCount = 0L;
+    @Transient private String imageUrl;
     @Transient private Integer matchScore = 0;
     @Transient private Long matchedReportId;
     @Transient private String matchedReportTitle;
@@ -123,6 +124,12 @@ public class Report {
     public void setSecretQuestion(String secretQuestion) { this.secretQuestion = secretQuestion; }
     public Long getClaimCount() { return claimCount == null ? 0L : claimCount; }
     public void setClaimCount(Long claimCount) { this.claimCount = claimCount; }
+    public String getImageUrl() {
+        if (imageUrl != null && !imageUrl.isBlank()) return imageUrl;
+        if (id != null && imageData != null && !imageData.isBlank()) return "/api/reports/" + id + "/photo";
+        return "";
+    }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public Integer getMatchScore() { return matchScore == null ? 0 : matchScore; }
     public void setMatchScore(Integer matchScore) { this.matchScore = matchScore; }
     public Long getMatchedReportId() { return matchedReportId; }

@@ -1,11 +1,14 @@
 package com.campus.lostfound;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -53,37 +56,86 @@ public class ReportController {
     }
 
     private void populateReportMeta(Report report, String currentUsername) {
-        String owner = report.getAccountUsername();
-        if (owner != null && !owner.isBlank()) {
-            users.findByUsernameKey(owner.toLowerCase(java.util.Locale.ROOT)).ifPresent(account -> {
-                report.setOwnerDisplayName(account.getDisplayName());
-                report.setOwnerCourse(account.getCourse());
-                report.setOwnerAvatarId(account.getAvatarId());
-                report.setOwnerProfileImageUrl(!AuthController.canUseCustomProfilePhoto(account) || account.getProfileImageData().isBlank() ? "" : "/api/users/" + org.springframework.web.util.UriUtils.encodePathSegment(account.getUsername(), java.nio.charset.StandardCharsets.UTF_8) + "/photo");
-                report.setOwnerRole(account.getRole());
-            });
-        } else {
-            report.setOwnerDisplayName(report.getReporterName());
-        }
-        report.setLikeCount(postLikes.countByReportId(report.getId()));
-        report.setCommentCount(postComments.countByReportId(report.getId()));
-        report.setClaimCount(itemClaims.countByReportId(report.getId()));
-        if (currentUsername != null && !currentUsername.isBlank()) {
-            report.setLikedByMe(postLikes.existsByReportIdAndUsername(report.getId(), currentUsername));
-        } else {
-            report.setLikedByMe(false);
-        }
-        if (report.isDeleted() && report.getDeletedAt() != null) {
-            long daysPassed = ChronoUnit.DAYS.between(report.getDeletedAt(), LocalDateTime.now());
-            report.setDaysRemaining(Math.max(0, 30 - daysPassed));
+        if (report == null) return;
+        populateReportsMetaBatch(Collections.singletonList(report), currentUsername);
+    }
+
+    private void populateReportsMetaBatch(List<Report> reportList, String currentUsername) {
+        if (reportList == null || reportList.isEmpty()) return;
+        List<Long> reportIds = reportList.stream().map(Report::getId).filter(Objects::nonNull).toList();
+        if (reportIds.isEmpty()) return;
+
+        // 1. Batch likes
+        List<PostLike> allLikes = postLikes.findByReportIdIn(reportIds);
+        Map<Long, Long> likeCounts = allLikes.stream()
+                .collect(Collectors.groupingBy(PostLike::getReportId, Collectors.counting()));
+        Set<Long> myLikedReportIds = (currentUsername != null && !currentUsername.isBlank())
+                ? allLikes.stream()
+                    .filter(l -> l.getUsername().equalsIgnoreCase(currentUsername))
+                    .map(PostLike::getReportId)
+                    .collect(Collectors.toSet())
+                : Collections.emptySet();
+
+        // 2. Batch comments
+        List<PostComment> allComments = postComments.findByReportIdIn(reportIds);
+        Map<Long, Long> commentCounts = allComments.stream()
+                .collect(Collectors.groupingBy(PostComment::getReportId, Collectors.counting()));
+
+        // 3. Batch claims
+        List<ItemClaim> allClaims = itemClaims.findByReportIdIn(reportIds);
+        Map<Long, Long> claimCounts = allClaims.stream()
+                .collect(Collectors.groupingBy(ItemClaim::getReportId, Collectors.counting()));
+
+        // 4. Batch owners
+        Set<String> ownerKeys = reportList.stream()
+                .map(Report::getAccountUsername)
+                .filter(u -> u != null && !u.isBlank())
+                .map(u -> u.toLowerCase(Locale.ROOT))
+                .collect(Collectors.toSet());
+        Map<String, UserAccount> accountMap = ownerKeys.isEmpty()
+                ? Collections.emptyMap()
+                : users.findByUsernameKeyIn(ownerKeys).stream()
+                    .collect(Collectors.toMap(UserAccount::getUsernameKey, a -> a, (a, b) -> a));
+
+        LocalDateTime now = LocalDateTime.now();
+        for (Report r : reportList) {
+            String owner = r.getAccountUsername();
+            if (owner != null && !owner.isBlank()) {
+                UserAccount account = accountMap.get(owner.toLowerCase(Locale.ROOT));
+                if (account != null) {
+                    r.setOwnerDisplayName(account.getDisplayName());
+                    r.setOwnerCourse(account.getCourse());
+                    r.setOwnerAvatarId(account.getAvatarId());
+                    r.setOwnerProfileImageUrl(!AuthController.canUseCustomProfilePhoto(account) || account.getProfileImageData().isBlank()
+                            ? ""
+                            : "/api/users/" + org.springframework.web.util.UriUtils.encodePathSegment(account.getUsername(), StandardCharsets.UTF_8) + "/photo");
+                    r.setOwnerRole(account.getRole());
+                } else {
+                    r.setOwnerDisplayName(r.getReporterName());
+                }
+            } else {
+                r.setOwnerDisplayName(r.getReporterName());
+            }
+            r.setLikeCount(likeCounts.getOrDefault(r.getId(), 0L));
+            r.setCommentCount(commentCounts.getOrDefault(r.getId(), 0L));
+            r.setClaimCount(claimCounts.getOrDefault(r.getId(), 0L));
+            r.setLikedByMe(myLikedReportIds.contains(r.getId()));
+            r.setImageUrl(r.getImageUrl());
+            if (r.isDeleted() && r.getDeletedAt() != null) {
+                long daysPassed = ChronoUnit.DAYS.between(r.getDeletedAt(), now);
+                r.setDaysRemaining(Math.max(0, 30 - daysPassed));
+            }
         }
     }
 
     @GetMapping
     public List<Report> all(HttpServletRequest request,
+                            HttpServletResponse response,
                             @RequestParam(required = false) String type,
                             @RequestParam(required = false) String q,
-                            @RequestParam(required = false, defaultValue = "false") boolean mine) {
+                            @RequestParam(required = false, defaultValue = "false") boolean mine,
+                            @RequestParam(required = false) Integer page,
+                            @RequestParam(required = false) Integer size) {
         requireLogin(request);
         cleanupExpiredDeletedReports();
 
@@ -98,15 +150,58 @@ public class ReportController {
                 .filter(x -> q == null || q.isBlank() ||
                         ((x.getTitle() + " " + x.getCategory() + " " + x.getLocation() + " " + x.getDescription())
                                 .toLowerCase().contains(q.toLowerCase())))
-                .filter(x -> !mine || username.equalsIgnoreCase(x.getAccountUsername()))
+                .filter(x -> !mine || (username != null && username.equalsIgnoreCase(x.getAccountUsername())))
                 .sorted(Comparator.comparing(Report::getCreatedAt,
                         Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
 
-        for (Report report : results) {
-            populateReportMeta(report, username);
+        int total = results.size();
+        if (response != null) {
+            response.setHeader("X-Total-Count", String.valueOf(total));
         }
-        return results;
+
+        List<Report> slice;
+        if (page != null) {
+            int pageSize = (size != null && size > 0 && size <= 100) ? size : 20;
+            int fromIndex = Math.max(0, page * pageSize);
+            if (fromIndex >= total) {
+                slice = Collections.emptyList();
+            } else {
+                int toIndex = Math.min(total, fromIndex + pageSize);
+                slice = results.subList(fromIndex, toIndex);
+            }
+        } else {
+            slice = results;
+        }
+
+        populateReportsMetaBatch(slice, username);
+        return slice;
+    }
+
+    @GetMapping("/{id}/photo")
+    public ResponseEntity<byte[]> getReportPhoto(@PathVariable Long id) {
+        Report report = repo.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found"));
+        String data = report.getImageData();
+        if (data == null || data.isBlank()) {
+            return ResponseEntity.notFound().build();
+        }
+        String mime = "image/jpeg";
+        String base64 = data;
+        if (data.startsWith("data:") && data.contains(";base64,")) {
+            int comma = data.indexOf(";base64,");
+            mime = data.substring(5, comma);
+            base64 = data.substring(comma + 8);
+        }
+        try {
+            byte[] bytes = java.util.Base64.getDecoder().decode(base64.replaceAll("\\s+", ""));
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(mime))
+                    .cacheControl(org.springframework.http.CacheControl.maxAge(30, java.util.concurrent.TimeUnit.DAYS).cachePublic())
+                    .header("ETag", "\"report-img-" + id + "\"")
+                    .body(bytes);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/{id}")
@@ -237,9 +332,7 @@ public class ReportController {
                 .filter(r -> username != null && username.equalsIgnoreCase(r.getAccountUsername()))
                 .sorted(Comparator.comparing(Report::getArchivedAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
-        for (Report r : list) {
-            populateReportMeta(r, username);
-        }
+        populateReportsMetaBatch(list, username);
         return list;
     }
 
@@ -313,9 +406,7 @@ public class ReportController {
                 .filter(r -> username != null && username.equalsIgnoreCase(r.getAccountUsername()))
                 .sorted(Comparator.comparing(Report::getDeletedAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
-        for (Report r : list) {
-            populateReportMeta(r, username);
-        }
+        populateReportsMetaBatch(list, username);
         return list;
     }
 
@@ -342,15 +433,12 @@ public class ReportController {
         requireLogin(request);
         String username = AuthController.currentUsername(request);
         List<PostLike> likes = postLikes.findByUsernameOrderByCreatedAtDesc(username);
-        List<Report> reports = new ArrayList<>();
-        for (PostLike pl : likes) {
-            repo.findById(pl.getReportId()).ifPresent(report -> {
-                if (!report.isDeleted() && !report.isArchived()) {
-                    populateReportMeta(report, username);
-                    reports.add(report);
-                }
-            });
-        }
+        List<Long> likedReportIds = likes.stream().map(PostLike::getReportId).filter(Objects::nonNull).toList();
+        if (likedReportIds.isEmpty()) return Collections.emptyList();
+        List<Report> reports = repo.findAllById(likedReportIds).stream()
+                .filter(r -> !r.isDeleted() && !r.isArchived())
+                .toList();
+        populateReportsMetaBatch(reports, username);
         return reports;
     }
 
