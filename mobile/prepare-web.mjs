@@ -35,14 +35,14 @@ for (const directory of ['icons', 'avatars']) {
 const indexPath = join(webDir, 'index.html');
 let html = await readFile(indexPath, 'utf8');
 
-const appScriptPattern = /(<script\\s+src=["']\\/app\\.js[^>]*><\\/script>)/i;
+const appScriptPattern = /(<script\s+src=["']\/app\.js[^>]*><\/script>)/i;
 if (!appScriptPattern.test(html)) {
   throw new Error('Could not find the CampUs app.js script tag in frontend-source/index.html');
 }
 
 html = html.replace(
   appScriptPattern,
-  '<script>window.CAMPUS_API_BASE = "https://campuslnf-production.up.railway.app";</script>\\n$1'
+  '<script>window.CAMPUS_API_BASE = "https://campuslnf-production.up.railway.app";</script>\n$1'
 );
 
 // A service worker is useful on the website, but the native WebView owns its
