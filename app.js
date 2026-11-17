@@ -2924,7 +2924,7 @@ function openCommunityChat(){
   clearChatReply();
   loadCommunityMessages(true);
   clearInterval(chatPollTimer);
-  chatPollTimer=setInterval(()=>{if(communityChatOpen)loadCommunityMessages(false)},1500);
+  chatPollTimer=setInterval(()=>{if(communityChatOpen)loadCommunityMessages(false)},750);
   setTimeout(()=>{$('communityChatInput').focus();syncChatViewport()},80);
 }
 function closeCommunityChat(fromPopstate=false){
@@ -3278,7 +3278,7 @@ async function setChatMessageReaction(messageId, emoji){
     clearInterval(chatPollTimer);
     chatPollTimer = setInterval(() => {
       if (communityChatOpen && !document.hidden) loadCommunityMessages(false);
-    }, 1500);
+    }, 750);
   }
 
   // Sync with PostgreSQL backend API for real multi-user visibility
@@ -3483,8 +3483,8 @@ function renderCommunityMessages(items,forceBottom,ignoreSigCheck=false){
    const canDelete = mine || Boolean(m.canDelete);
    const fullName=String(m.displayName||m.username||'CampUs user').trim();
    const username=String(m.username||'');
-   const avatar=`<button type="button" class="chat-avatar chat-avatar-button" aria-label="View ${esc(fullName)}'s profile" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${avatarInner(m.avatarId,fullName,m.profileImageUrl)}</button>`;
-   const authorLine=!mine?`<span class="chat-author-name" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}">${esc(fullName)}</span>`:'';
+   const avatar=`<button type="button" class="chat-avatar chat-avatar-button" aria-label="View ${esc(fullName)}'s profile" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}" onclick="openChatUserProfile('${esc(fullName)}', '${esc(username)}'); event.stopPropagation();">${avatarInner(m.avatarId,fullName,m.profileImageUrl)}</button>`;
+   const authorLine=!mine?`<button type="button" class="chat-author-name" aria-label="View ${esc(fullName)}'s profile" data-chat-profile-name="${esc(fullName)}" data-chat-profile-username="${esc(username)}" onclick="openChatUserProfile('${esc(fullName)}', '${esc(username)}'); event.stopPropagation();">${esc(fullName)}</button>`:'';
    
    const msgReactions = getMessageReactions(m.id);
    let reactionBadge = '';
@@ -3531,7 +3531,7 @@ function renderCommunityMessages(items,forceBottom,ignoreSigCheck=false){
  box.querySelectorAll('.chat-row').forEach(row=>{
    const bubble=row.querySelector('.chat-bubble');
    bubble.addEventListener('click',e=>{
-     if(e.target.closest('button') || e.target.closest('.chat-bubble-reaction'))return;
+     if(e.target.closest('button') || e.target.closest('.chat-bubble-reaction') || e.target.closest('.chat-author-name') || e.target.closest('.chat-avatar-button'))return;
      row.classList.toggle('actions-active');
    });
    let sx=0,sy=0;
@@ -3558,7 +3558,10 @@ function renderCommunityMessages(items,forceBottom,ignoreSigCheck=false){
 }
 async function loadCommunityMessages(forceBottom){
   try{
-    const r=await fetch('/api/community-chat',{headers:{'Accept':'application/json'}});
+    const r=await fetch('/api/community-chat?_t=' + Date.now(),{
+      cache: 'no-store',
+      headers:{'Accept':'application/json','Cache-Control':'no-cache','Pragma':'no-cache'}
+    });
     if(r.status===401){
       $('chatMessages').innerHTML='<div class="chat-unavailable"><div class="chat-unavailable-icon" aria-hidden="true">💬</div><h3>Community chat is ready</h3><p>Connect the Java backend and sign in to load campus messages and send replies.</p><button type="button" class="light" onclick="loadCommunityMessages(true)">Try again</button></div>';
       return;
@@ -3724,6 +3727,8 @@ async function openChatUserProfile(fullName, username){
  if(document.activeElement&&typeof document.activeElement.blur==='function')document.activeElement.blur();
  profileLastName=safeFallbackName;profileLastUsername=String(username||'');
  profile.classList.remove('hide');
+ profile.style.setProperty('display', 'flex', 'important');
+ profile.style.setProperty('z-index', '100050', 'important');
  content.scrollTop=0;
  document.body.classList.add('public-profile-open');
  $('publicProfileOwnerActions')?.classList.add('hide');
@@ -3819,7 +3824,10 @@ function retryCommunityProfile(){openChatUserProfile(profileLastName,profileLast
 function closeChatUserProfile(fromPopstate=false){
  const page=$('communityProfilePage');if(!page||page.classList.contains('hide'))return;
  const returnToHome=!communityChatOpen;
- profileLoadToken++;page.classList.add('hide');
+ profileLoadToken++;
+ page.classList.add('hide');
+ page.style.removeProperty('display');
+ page.style.removeProperty('z-index');
  document.body.classList.remove('public-profile-open');
  finishCampusUiLayer('publicProfile',fromPopstate);
  if(returnToHome)resetCampusScrollToTop();
@@ -6135,7 +6143,7 @@ document.addEventListener('visibilitychange', () => {
       clearInterval(chatPollTimer);
       chatPollTimer = setInterval(() => {
         if (communityChatOpen && !document.hidden) loadCommunityMessages(false);
-      }, 1500);
+      }, 750);
     }
   }
 });

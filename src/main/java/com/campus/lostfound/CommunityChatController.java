@@ -81,7 +81,11 @@ public class CommunityChatController {
             x.put("reactions", reactionsByMessage.getOrDefault(m.getId(), List.of()));
             return x;
         }).toList();
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok()
+                .header("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate")
+                .header("Pragma", "no-cache")
+                .header("Expires", "0")
+                .body(result);
     }
 
     @PostMapping
@@ -146,7 +150,11 @@ public class CommunityChatController {
             reactions.save(newR);
         }
         List<ChatMessageReaction> updated = reactions.findByMessageIdOrderByCreatedAtAsc(id);
-        return ResponseEntity.ok(Map.of("success", true, "reactions", updated));
+        return ResponseEntity.ok()
+                .header("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate")
+                .header("Pragma", "no-cache")
+                .header("Expires", "0")
+                .body(Map.of("success", true, "reactions", updated));
     }
 
     @DeleteMapping("/{id}")
