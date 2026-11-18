@@ -757,17 +757,16 @@
             <small class="hint">When someone claims this item, they must answer this question to prove genuine ownership.</small>
           </label>
         </div>
-        <label class="wide item-photo-field">Item photo <span class="optional">(optional)</span>
-          <div class="photo-upload-box" id="photoUploadBox" onclick="$('photo').click()">
+        <label class="wide item-photo-field">Item photos <span class="optional">(optional)</span>
+          <div class="photo-upload-box" id="photoUploadBox" onclick="triggerPostPhotoSelect()">
             <svg class="ui-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
             <span>Tap to select or take photo</span>
           </div>
           <input id="photo" type="file" accept="image/*" style="display:none;">
           <div id="photoPreviewContainer" class="photo-preview-container hide">
-            <img id="photoPreview" class="photo-preview-img" alt="Selected item photo preview" onclick="reopenImageCropper()" title="Tap to re-crop photo (4:3)">
-            <button type="button" class="photo-remove-btn" id="photoRemoveBtn" onclick="clearSelectedPhoto(event)" aria-label="Remove selected photo" title="Remove photo">✕</button>
+            <div id="photoPreviewGrid" class="photo-preview-grid"></div>
           </div>
-          <small class="hint">Upload a photo to show the community. Automatically compressed.</small>
+          <small class="hint">Upload up to 5 photos (3:4 ratio). Swipe horizontally to view in post feed.</small>
         </label>
       </div>
       
@@ -781,18 +780,18 @@
   </div>
 </div>
 
-<!-- 4:3 Image Cropper Modal for Post Creation -->
+<!-- 3:4 Image Cropper Modal for Post Creation -->
 <div id="imageCropperModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="imageCropperTitle">
   <div class="dialog cropper-dialog modern-modal-card">
     <div class="cropper-header">
       <div class="cropper-header-title">
         <h3 id="imageCropperTitle">Crop Photo</h3>
-        <span class="cropper-ratio-pill">4:3 Post Ratio</span>
+        <span class="cropper-ratio-pill">3:4 Portrait Ratio</span>
       </div>
       <button type="button" class="modal-close-btn x" onclick="cancelImageCrop()" aria-label="Cancel crop"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
     </div>
 
-    <!-- Cropper Viewport with 4:3 frame & Rule-of-Thirds Grid -->
+    <!-- Cropper Viewport with 3:4 portrait frame & Rule-of-Thirds Grid -->
     <div class="cropper-viewport-wrap">
       <div class="cropper-box" id="cropperBox">
         <canvas id="cropperCanvas" class="cropper-canvas"></canvas>
@@ -821,7 +820,7 @@
     <!-- Actions -->
     <div class="cropper-actions">
       <button type="button" class="cropper-btn-cancel" onclick="cancelImageCrop()">Cancel</button>
-      <button type="button" class="cropper-btn-apply" onclick="applyImageCrop()">Done (Crop 4:3) ✓</button>
+      <button type="button" class="cropper-btn-apply" onclick="applyImageCrop()">Done (Crop 3:4) ✓</button>
     </div>
   </div>
 </div>

@@ -317,7 +317,7 @@ window.addEventListener('popstate',()=>{
  handleHomeBackPress();
 });
 installCampusBackGuard();
-let postCroppedImageData = null;
+let postCroppedPhotos = []; // Array of cropped base64 data URLs for post
 let cropperOriginalImageSrc = null;
 let cropperImg = null;
 let cropperRotation = 0; // 0, 90, 180, 270
@@ -325,23 +325,96 @@ let cropperZoom = 1; // 1 to 3
 let cropperMinScale = 1;
 let cropperPosX = 0;
 let cropperPosY = 0;
-let cropperBoxW = 320;
-let cropperBoxH = 240;
+let cropperBoxW = 280;
+let cropperBoxH = 373; // 3:4 portrait ratio
 
 function clearSelectedPhoto(e) {
   if (e) {
     try { e.stopPropagation(); e.preventDefault(); } catch {}
   }
-  postCroppedImageData = null;
+  postCroppedPhotos = [];
   cropperOriginalImageSrc = null;
   const photoInput = $('photo');
   if (photoInput) photoInput.value = '';
-  const preview = $('photoPreview');
-  if (preview) preview.src = '';
+  renderPostPhotoPreviews();
+}
+
+function removePostPhoto(index, e) {
+  if (e) {
+    try { e.stopPropagation(); e.preventDefault(); } catch {}
+  }
+  if (index >= 0 && index < postCroppedPhotos.length) {
+    postCroppedPhotos.splice(index, 1);
+    renderPostPhotoPreviews();
+    toast('Photo deleted');
+  }
+  const photoInput = $('photo');
+  if (photoInput) photoInput.value = '';
+}
+
+function triggerPostPhotoSelect() {
+  if (postCroppedPhotos.length >= 5) {
+    toast('Maximum 5 photos allowed per post.');
+    return;
+  }
+  const input = $('photo');
+  if (input) {
+    input.value = '';
+    input.click();
+  }
+}
+
+function renderPostPhotoPreviews() {
   const container = $('photoPreviewContainer');
-  if (container) container.classList.add('hide');
   const uploadBox = $('photoUploadBox');
-  if (uploadBox) uploadBox.classList.remove('hide');
+  const grid = $('photoPreviewGrid');
+  if (!container || !grid) return;
+
+  if (!postCroppedPhotos || postCroppedPhotos.length === 0) {
+    container.classList.add('hide');
+    grid.innerHTML = '';
+    if (uploadBox) uploadBox.classList.remove('hide');
+    return;
+  }
+
+  if (uploadBox) uploadBox.classList.add('hide');
+  container.classList.remove('hide');
+
+  const maxPhotos = 5;
+  let html = '';
+
+  postCroppedPhotos.forEach((src, idx) => {
+    html += `
+      <div class="photo-preview-card" data-idx="${idx}">
+        <div class="photo-preview-thumb-wrap">
+          <img src="${src}" class="photo-preview-thumb-img" alt="Photo ${idx + 1}" onclick="viewFullImage('${esc(src)}')" title="Click to view full photo">
+          <span class="photo-preview-idx-badge">${idx + 1}</span>
+          <button type="button" class="photo-delete-icon-btn" onclick="removePostPhoto(${idx}, event)" aria-label="Delete photo ${idx + 1}" title="Delete photo">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+    `;
+  });
+
+  if (postCroppedPhotos.length < maxPhotos) {
+    html += `
+      <div class="photo-preview-card photo-add-more-card" onclick="triggerPostPhotoSelect()" role="button" tabindex="0" title="Add another photo">
+        <div class="photo-add-more-inner">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>Add Photo</span>
+          <small>${postCroppedPhotos.length}/${maxPhotos}</small>
+        </div>
+      </div>
+    `;
+  }
+
+  grid.innerHTML = html;
 }
 
 function openImageCropper(imageSrc) {
@@ -361,7 +434,8 @@ function openImageCropper(imageSrc) {
   };
   img.onerror = () => {
     toast('Could not open image for cropping.');
-    clearSelectedPhoto();
+    const photoInput = $('photo');
+    if (photoInput) photoInput.value = '';
   };
   img.src = imageSrc;
 }
@@ -378,9 +452,8 @@ function reopenImageCropper() {
 
 function cancelImageCrop() {
   $('imageCropperModal')?.classList.add('hide');
-  if (!postCroppedImageData) {
-    clearSelectedPhoto();
-  }
+  const photoInput = $('photo');
+  if (photoInput) photoInput.value = '';
 }
 
 function initCropperDimensions() {
@@ -389,8 +462,8 @@ function initCropperDimensions() {
   if (!box || !canvas || !cropperImg) return;
   
   const rect = box.getBoundingClientRect();
-  cropperBoxW = Math.round(rect.width) || 320;
-  cropperBoxH = Math.round(cropperBoxW * 0.75); // 4:3 ratio
+  cropperBoxW = Math.round(rect.width) || 280;
+  cropperBoxH = Math.round(rect.height) || Math.round(cropperBoxW * (4 / 3)); // 3:4 portrait ratio
   
   const dpr = window.devicePixelRatio || 1;
   canvas.width = cropperBoxW * dpr;
@@ -467,8 +540,8 @@ function applyImageCrop() {
   if (!cropperImg) return;
   clampCropperPosition();
   
-  const outW = 800;
-  const outH = 600; // Exact 4:3
+  const outW = 600;
+  const outH = 800; // Exact 3:4 portrait ratio
   const outCanvas = document.createElement('canvas');
   outCanvas.width = outW;
   outCanvas.height = outH;
@@ -482,17 +555,14 @@ function applyImageCrop() {
   outCtx.scale(currentScale, currentScale);
   outCtx.drawImage(cropperImg, -cropperImg.naturalWidth / 2, -cropperImg.naturalHeight / 2);
   
-  postCroppedImageData = outCanvas.toDataURL('image/jpeg', 0.82);
-  
-  const preview = $('photoPreview');
-  if (preview) {
-    preview.src = postCroppedImageData;
-    $('photoPreviewContainer')?.classList.remove('hide');
-    $('photoUploadBox')?.classList.add('hide');
-  }
+  const croppedData = outCanvas.toDataURL('image/jpeg', 0.82);
+  postCroppedPhotos.push(croppedData);
+  renderPostPhotoPreviews();
   
   $('imageCropperModal')?.classList.add('hide');
-  toast('Photo cropped to 4:3 ratio! ✓');
+  const photoInput = $('photo');
+  if (photoInput) photoInput.value = '';
+  toast(`Photo cropped to 3:4 (${postCroppedPhotos.length}/5) ✓`);
 }
 
 (function initCropperGestures() {
@@ -914,6 +984,99 @@ function filterStats(which){statFilter=which;chosenType='';myReportsOnly=false;d
 function toggleMyReports(){statFilter='';myReportsOnly=!myReportsOnly;if($('myReports'))$('myReports').textContent=myReportsOnly?'Show all reports':'My reports';load()}
 function showMyReports(e){if(e)e.preventDefault();showNavPopup('myReports')}
 function passesFilters(r){const q=($('q')?.value||'').trim().toLowerCase(),cat=$('filterCategory')?.value||'',loc=($('filterLocation')?.value||'').trim().toLowerCase(),from=$('dateFrom')?.value||'',to=$('dateTo')?.value||'';const text=[r.title,r.category,r.location,r.description].join(' ').toLowerCase();if(q&&!text.includes(q))return false;if(cat&&r.category!==cat)return false;if(loc&&!String(r.location||'').toLowerCase().includes(loc))return false;if(from&&r.itemDate&&r.itemDate<from)return false;if(to&&r.itemDate&&r.itemDate>to)return false;return true}
+
+function getReportPhotos(r) {
+  if (!r) return [];
+  const raw = r.imageData || r.imageUrl;
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.filter(Boolean);
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) return parsed.filter(Boolean);
+      } catch {}
+    }
+    if (trimmed.includes('|||')) {
+      return trimmed.split('|||').map(s => s.trim()).filter(Boolean);
+    }
+    return [trimmed];
+  }
+  return [];
+}
+
+function renderReportMedia(r) {
+  const photos = getReportPhotos(r);
+  if (!photos || photos.length === 0) {
+    return `<div class="insta-post-no-media"><div class="insta-no-media-icon">${categoryEmoji(r.category)}</div><div class="insta-no-media-text"><b>${esc(r.category||'Item')}</b><small>No photo attached by reporter</small></div></div>`;
+  }
+  if (photos.length === 1) {
+    return `<div class="insta-post-media" onclick="viewFullImage('${esc(photos[0])}')" title="Click to view full photo"><img src="${esc(photos[0])}" alt="Photo of ${esc(r.title)}" loading="lazy"></div>`;
+  }
+  // Multiple photos -> Instagram-style swipeable carousel
+  return `
+    <div class="insta-carousel-wrap" id="instaCarousel_${r.id}">
+      <div class="insta-carousel-track" id="instaCarouselTrack_${r.id}" onscroll="onInstaCarouselScroll(${r.id}, this)">
+        ${photos.map((src, idx) => `
+          <div class="insta-carousel-slide" onclick="viewFullImage('${esc(src)}')" title="Click to view full photo (${idx + 1}/${photos.length})">
+            <img src="${esc(src)}" alt="Photo ${idx + 1} of ${esc(r.title)}" loading="lazy">
+          </div>
+        `).join('')}
+      </div>
+      <div class="insta-carousel-counter" id="instaCarouselCounter_${r.id}">1/${photos.length}</div>
+      <button type="button" class="insta-carousel-nav prev hide" id="instaCarouselPrev_${r.id}" onclick="slideInstaCarousel(${r.id}, -1, event)" aria-label="Previous photo">‹</button>
+      <button type="button" class="insta-carousel-nav next" id="instaCarouselNext_${r.id}" onclick="slideInstaCarousel(${r.id}, 1, event)" aria-label="Next photo">›</button>
+      <div class="insta-carousel-dots" id="instaCarouselDots_${r.id}">
+        ${photos.map((_, idx) => `<span class="insta-carousel-dot ${idx === 0 ? 'active' : ''}" onclick="goToInstaCarouselSlide(${r.id}, ${idx}, event)" aria-label="Slide ${idx + 1}"></span>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function slideInstaCarousel(postId, dir, e) {
+  if (e) {
+    try { e.stopPropagation(); e.preventDefault(); } catch {}
+  }
+  const track = document.getElementById(`instaCarouselTrack_${postId}`);
+  if (!track) return;
+  const slideW = track.clientWidth || 320;
+  track.scrollBy({ left: dir * slideW, behavior: 'smooth' });
+}
+
+function goToInstaCarouselSlide(postId, slideIndex, e) {
+  if (e) {
+    try { e.stopPropagation(); e.preventDefault(); } catch {}
+  }
+  const track = document.getElementById(`instaCarouselTrack_${postId}`);
+  if (!track) return;
+  const slideW = track.clientWidth || 320;
+  track.scrollTo({ left: slideIndex * slideW, behavior: 'smooth' });
+}
+
+function onInstaCarouselScroll(postId, track) {
+  if (!track) return;
+  const slideW = track.clientWidth || 1;
+  const currentIndex = Math.max(0, Math.round(track.scrollLeft / slideW));
+  const slides = track.querySelectorAll('.insta-carousel-slide');
+  const total = slides.length;
+  
+  const counter = document.getElementById(`instaCarouselCounter_${postId}`);
+  if (counter) counter.textContent = `${currentIndex + 1}/${total}`;
+  
+  const dots = document.getElementById(`instaCarouselDots_${postId}`)?.querySelectorAll('.insta-carousel-dot');
+  if (dots) {
+    dots.forEach((dot, idx) => {
+      dot.classList.toggle('active', idx === currentIndex);
+    });
+  }
+  
+  const prevBtn = document.getElementById(`instaCarouselPrev_${postId}`);
+  const nextBtn = document.getElementById(`instaCarouselNext_${postId}`);
+  if (prevBtn) prevBtn.classList.toggle('hide', currentIndex <= 0);
+  if (nextBtn) nextBtn.classList.toggle('hide', currentIndex >= total - 1);
+}
+
 function renderPostCardMarkup(r, all) {
   const m = bestMatch(r, all || cachedAllReports || []);
   const authorName = String(r.ownerDisplayName || r.reporterName || 'CampUs user').trim() || 'CampUs user';
@@ -956,7 +1119,7 @@ function renderPostCardMarkup(r, all) {
         ${!canEdit?statusControl:''}
       </div>
     </div>
-    ${(r.imageUrl || r.imageData)?`<div class="insta-post-media" onclick="viewFullImage('${esc(r.imageUrl || r.imageData)}')" title="Click to view full photo"><img src="${esc(r.imageUrl || r.imageData)}" alt="Photo of ${esc(r.title)}" loading="lazy"></div>`:`<div class="insta-post-no-media"><div class="insta-no-media-icon">${categoryEmoji(r.category)}</div><div class="insta-no-media-text"><b>${esc(r.category||'Item')}</b><small>No photo attached by reporter</small></div></div>`}
+    ${renderReportMedia(r)}
     <div class="insta-post-body">
       <div class="insta-post-tags">
         <span class="insta-meta-tag">${categoryEmoji(r.category)} ${esc(r.category)}</span>
@@ -1189,14 +1352,10 @@ async function triggerFeedRefresh() {
   }, { passive: true });
 })();
 $('photo').addEventListener('change', () => {
-  const file = $('photo').files[0];
-  if (!file) {
-    clearSelectedPhoto();
-    return;
-  }
+  const file = $('photo').files?.[0];
+  if (!file) return;
   if (!file.type.startsWith('image/')) {
     toast('Please choose an image file.');
-    clearSelectedPhoto();
     return;
   }
   const reader = new FileReader();
@@ -1205,7 +1364,6 @@ $('photo').addEventListener('change', () => {
   };
   reader.onerror = () => {
     toast('Could not read the photo. Please try another image.');
-    clearSelectedPhoto();
   };
   reader.readAsDataURL(file);
 });
@@ -1224,22 +1382,28 @@ $('form').addEventListener('submit', async e => {
   }
 
   try {
-    const file = $('photo').files[0];
-    let imageData = postCroppedImageData;
-    if (!imageData && file) {
-      try {
-        imageData = await compressProfileImage(file, 800, 600, 0.75);
-      } catch {
+    let imageData = null;
+    if (postCroppedPhotos && postCroppedPhotos.length > 1) {
+      imageData = JSON.stringify(postCroppedPhotos);
+    } else if (postCroppedPhotos && postCroppedPhotos.length === 1) {
+      imageData = postCroppedPhotos[0];
+    } else {
+      const file = $('photo').files?.[0];
+      if (file) {
         try {
-          imageData = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
+          imageData = await compressProfileImage(file, 600, 800, 0.75);
         } catch {
-          $('error').textContent = 'Could not read the photo. Please try another image.';
-          return;
+          try {
+            imageData = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result);
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+          } catch {
+            $('error').textContent = 'Could not read the photo. Please try another image.';
+            return;
+          }
         }
       }
     }
@@ -1833,8 +1997,14 @@ function renderExploreGrid() {
       : `<span class="explore-tile-badge lost"><span class="status-dot"></span> LOST</span>`);
     const likes = r.likeCount || 0;
     const comments = r.commentCount || 0;
-    const imgUrl = r.imageUrl || r.imageData;
-    const hasImage = Boolean(imgUrl);
+    const photos = getReportPhotos(r);
+    const imgUrl = photos.length > 0 ? photos[0] : (r.imageUrl || r.imageData || '');
+    const hasImage = Boolean(imgUrl && !imgUrl.startsWith('['));
+    const isMultiPhoto = photos.length > 1;
+
+    const multiPhotoBadge = isMultiPhoto
+      ? `<span class="explore-multi-photo-badge" title="Multiple photos"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3"><rect x="7" y="7" width="14" height="14" rx="2" ry="2"></rect><path d="M4 17V5a2 2 0 0 1 2-2h12"></path></svg></span>`
+      : '';
 
     const mediaMarkup = hasImage
       ? `<img src="${esc(imgUrl)}" alt="${esc(r.title)}" class="explore-tile-img" loading="lazy">`
@@ -1846,6 +2016,7 @@ function renderExploreGrid() {
     return `<button type="button" class="explore-tile" onclick="openPostDetail(${r.id})" aria-label="View ${esc(r.title)}">
       ${mediaMarkup}
       ${badgeMarkup}
+      ${multiPhotoBadge}
       <div class="explore-tile-overlay">
         <div class="explore-tile-overlay-stats">
           <span><svg class="ui-icon" viewBox="0 0 24 24" width="12" height="12" fill="#FFF" stroke="#FFF" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg> ${likes}</span>
@@ -4507,6 +4678,8 @@ function renderPublicProfile(data){
  const postCards=posts.length?posts.map(post=>{
   const type=String(post.type||'').toUpperCase();
   const status=String(post.status||'OPEN').toUpperCase();
+  const postPhotos = getReportPhotos(post);
+  const postPhotoSrc = postPhotos[0] || post.imageData || '';
   return `<article class="public-profile-post" id="profile-post-${post.id}" data-post-status="${status}">
     <div class="public-profile-post-top">
       <span class="pill ${type==='FOUND'?'found':''}">${type==='FOUND'?'● FOUND ITEM':'● LOST ITEM'}</span>
@@ -4514,7 +4687,7 @@ function renderPublicProfile(data){
     </div>
     <h3>${esc(post.title||'Untitled item')}</h3>
     <div class="meta">${esc(post.category||'Other')} · 📍 ${esc(post.location||'Location not specified')}</div>
-    ${post.imageData?`<img class="public-profile-post-image" src="${esc(post.imageData)}" alt="${esc(post.title||'Reported item')}" loading="lazy">`:''}
+    ${postPhotoSrc?`<img class="public-profile-post-image" src="${esc(postPhotoSrc)}" alt="${esc(post.title||'Reported item')}" loading="lazy">`:''}
     ${post.description?`<p>${esc(post.description)}</p>`:''}
     <small class="public-profile-post-date">${esc(post.itemDate||'Date not specified')}</small>
     <div class="profile-post-owner-bar">
@@ -5567,12 +5740,14 @@ async function fetchAdminReportsList() {
                 ? '<span class="role-badge member" style="background:#FEF3C7;color:#D97706;">📁 ARCHIVED</span>'
                 : `<span class="role-badge ${r.status === 'RETURNED' ? 'moderator' : 'leader'}">${esc(r.status || 'OPEN')}</span>`);
 
+          const rPhotos = getReportPhotos(r);
+          const rThumb = rPhotos[0] || r.imageData || '';
           return `
             <div class="admin-item-card" style="${isDeleted ? 'opacity:0.85;border-color:#FECACA;' : ''}">
               <div class="admin-item-top">
                 <div style="display:flex;gap:10px;align-items:center;">
-                  ${r.imageData ? `
-                    <img src="${esc(r.imageData)}" alt="" style="width:48px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0;">
+                  ${rThumb ? `
+                    <img src="${esc(rThumb)}" alt="" style="width:48px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0;">
                   ` : `
                     <div style="width:48px;height:48px;border-radius:10px;background:#F1F5F9;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">
                       ${categoryEmoji(r.category)}
