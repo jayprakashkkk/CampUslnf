@@ -816,14 +816,12 @@ async function triggerFeedRefresh() {
   isFeedRefreshing = true;
 
   const pullEl = $('feedPullRefresh');
-  const btn = $('feedManualRefreshBtn');
   if (pullEl) {
     pullEl.classList.remove('pulling');
     pullEl.classList.add('refreshing');
     pullEl.style.transform = 'translateY(18px)';
     pullEl.style.opacity = '1';
   }
-  if (btn) btn.classList.add('spinning');
   if ('vibrate' in navigator) {
     try { navigator.vibrate(14); } catch {}
   }
@@ -851,7 +849,6 @@ async function triggerFeedRefresh() {
         pullEl.style.removeProperty('transition');
       }, 300);
     }
-    if (btn) btn.classList.remove('spinning');
     const arc = $('pullRefreshArc');
     if (arc) arc.style.removeProperty('stroke-dashoffset');
     isFeedRefreshing = false;
