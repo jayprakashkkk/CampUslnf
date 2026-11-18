@@ -7,5 +7,6 @@
 
     <style name="Theme.CampUs.Fullscreen" parent="Theme.CampUs">
         <item name="android:windowBackground">@color/campus_bg</item>
+        <item name="android:windowDisablePreview">true</item>
     </style>
 </resources>
