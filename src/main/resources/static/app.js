@@ -456,6 +456,8 @@ function syncCommunityMuteControls(){
     icon.innerHTML = `<svg class="ui-icon bell-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`;
   }
  }
+ const profSoundToggle = $('profileSoundToggle');
+ if(profSoundToggle) profSoundToggle.checked = !communityMuted;
 }
 async function toggleCommunityMute(){
  communityMuted=!communityMuted;
@@ -4211,6 +4213,41 @@ async function openChatUserProfile(fullName, username){
   renderPublicProfile(data);
  }catch(error){if(token===profileLoadToken)content.innerHTML=`<div class="empty"><b>Profile unavailable</b><p>${esc(error.message||'Please try again.')}</p><button type="button" onclick="retryCommunityProfile()">Retry</button></div>`;}
 }
+async function markProfilePostReturned(id) {
+  if (!confirm('Mark this item as successfully returned / resolved?')) return;
+  try {
+    const r = await fetch(`/api/reports/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'RETURNED' })
+    });
+    if (!r.ok) throw 0;
+    toast('Item marked as Returned! Great karma! 💜');
+    load();
+    if ($('communityProfilePage') && !$('communityProfilePage').classList.contains('hide')) {
+      openOwnPublicProfile();
+    }
+  } catch {
+    toast('Could not update status.');
+  }
+}
+
+function filterProfileViewPosts(filter) {
+  document.querySelectorAll('.profile-posts-filter-tabs .prof-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
+  });
+  document.querySelectorAll('.public-profile-post').forEach(el => {
+    const isReturned = el.dataset.postStatus === 'RETURNED';
+    if (filter === 'all') {
+      el.style.display = '';
+    } else if (filter === 'active') {
+      el.style.display = !isReturned ? '' : 'none';
+    } else if (filter === 'returned') {
+      el.style.display = isReturned ? '' : 'none';
+    }
+  });
+}
+
 function renderPublicProfile(data){
  const content=$('communityProfileContent');
  const name=String(data.displayName||data.username||'CampUs user');
@@ -4223,10 +4260,12 @@ function renderPublicProfile(data){
  const targetUsername=String(data.username||'').toLowerCase();
  const isOwnProfile=!!targetUsername&&targetUsername===viewerUsername;
  const posts=Array.isArray(data.posts)?data.posts:[];
+ const activePosts = posts.filter(p => String(p.status || '').toUpperCase() !== 'RETURNED');
+ const returnedPosts = posts.filter(p => String(p.status || '').toUpperCase() === 'RETURNED');
  const postCards=posts.length?posts.map(post=>{
   const type=String(post.type||'').toUpperCase();
   const status=String(post.status||'OPEN').toUpperCase();
-  return `<article class="public-profile-post" id="profile-post-${post.id}">
+  return `<article class="public-profile-post" id="profile-post-${post.id}" data-post-status="${status}">
     <div class="public-profile-post-top">
       <span class="pill ${type==='FOUND'?'found':''}">${type==='FOUND'?'● FOUND ITEM':'● LOST ITEM'}</span>
       <span class="status ${status==='RETURNED'?'returned':status==='MATCHED'?'matched':'open'}">${esc(status)}</span>
@@ -4240,6 +4279,11 @@ function renderPublicProfile(data){
       <button type="button" class="prof-act-btn" onclick="openPostComments(${post.id})">💬 Comments</button>
       <button type="button" class="prof-act-btn" onclick="sharePost(${post.id}, '${esc(post.title)}')">🔗 Share</button>
       ${isOwnProfile ? `
+        ${status !== 'RETURNED' ? `
+          <button type="button" class="prof-act-btn success" onclick="markProfilePostReturned(${post.id})">✅ Mark as Returned</button>
+        ` : `
+          <span class="prof-returned-tag">✅ Returned</span>
+        `}
         <button type="button" class="prof-act-btn" onclick="archiveReport(${post.id})" title="Archive post (hides from feed)">📁 Archive</button>
         <button type="button" class="prof-act-btn del" onclick="deleteReport(${post.id})" title="Move to Recently Deleted (restorable for 30 days)">🗑 Delete</button>
       ` : ''}
@@ -4250,7 +4294,46 @@ function renderPublicProfile(data){
  const targetRole=String(data.role||'MEMBER').toUpperCase();
  const bannerMarkup=hasBanner?`<div class="public-profile-banner"><img src="${esc(data.bannerImageUrl)}" alt="${esc(name)} profile banner" loading="lazy"></div>`:'';
  const editButton=isOwnProfile?'<div class="public-profile-own-actions"><button type="button" class="public-profile-edit-button" onclick="openProfileEditorPage()">Edit profile</button></div>':'';
- content.innerHTML=`<section class="public-profile-hero${hasBanner?' has-profile-banner':' no-profile-banner'}">${bannerMarkup}<div class="public-profile-avatar" aria-label="${esc(name)} avatar">${avatarInner(data.avatarId,name,data.profileImageUrl)}</div><h2>${esc(name)} ${roleBadgeMarkup(data.role)}</h2><p class="public-profile-handle">@${esc(data.username||'')}</p><div class="public-profile-course">${esc(data.course||'Course not provided')}</div><div class="public-profile-stats"><div><b>${Number(data.totalPosts)||0}</b><span>Posts</span></div><div><b>${Number(data.itemsReceivedBack)||0}</b><span>Received</span></div><div><b>${Number(data.itemsReturnedToOthers)||0}</b><span>Returned</span></div><div style="cursor:pointer;" onclick="openLeaderboardModal()" title="View Karma Leaderboard"><b style="color:var(--insta-primary);">⭐ ${Number(data.karmaPoints)||0}</b><span>${esc(data.karmaBadge||'Campus Friend')}</span></div></div>${editButton}</section><section class="public-profile-posts"><div class="public-profile-posts-heading"><h2>Posts</h2><span>${posts.length}</span></div><div class="public-profile-post-grid">${postCards}</div></section>`;
+
+ const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
+ const settingsSection = isOwnProfile ? `
+  <section class="public-profile-settings-card">
+    <div class="profile-settings-heading">
+      <h3>⚙️ App Settings &amp; Preferences</h3>
+    </div>
+    <div class="profile-setting-row">
+      <div class="profile-setting-label">
+        <b>🌙 Dark Theme</b>
+        <small>Comfortable AMOLED dark interface</small>
+      </div>
+      <label class="campus-toggle-switch" aria-label="Toggle dark theme">
+        <input type="checkbox" id="profileDarkThemeToggle" onchange="toggleTheme()" ${isDarkTheme ? 'checked' : ''}>
+        <span class="campus-toggle-slider"></span>
+      </label>
+    </div>
+    <div class="profile-setting-row">
+      <div class="profile-setting-label">
+        <b>🔔 Chat Alerts &amp; Sounds</b>
+        <small>Live community notification chimes</small>
+      </div>
+      <label class="campus-toggle-switch" aria-label="Toggle chat sounds">
+        <input type="checkbox" id="profileSoundToggle" onchange="toggleCommunityMute()" ${!communityMuted ? 'checked' : ''}>
+        <span class="campus-toggle-slider"></span>
+      </label>
+    </div>
+  </section>
+ ` : '';
+
+ const postsHeading = isOwnProfile ? 'My Posts &amp; Activity' : 'Posts';
+ const filterTabs = (isOwnProfile && posts.length > 0) ? `
+  <div class="profile-posts-filter-tabs">
+    <button type="button" class="prof-tab-btn active" data-filter="all" onclick="filterProfileViewPosts('all')">All (${posts.length})</button>
+    <button type="button" class="prof-tab-btn" data-filter="active" onclick="filterProfileViewPosts('active')">Active (${activePosts.length})</button>
+    <button type="button" class="prof-tab-btn" data-filter="returned" onclick="filterProfileViewPosts('returned')">Returned (${returnedPosts.length})</button>
+  </div>
+ ` : '';
+
+ content.innerHTML=`<section class="public-profile-hero${hasBanner?' has-profile-banner':' no-profile-banner'}">${bannerMarkup}<div class="public-profile-avatar" aria-label="${esc(name)} avatar">${avatarInner(data.avatarId,name,data.profileImageUrl)}</div><h2>${esc(name)} ${roleBadgeMarkup(data.role)}</h2><p class="public-profile-handle">@${esc(data.username||'')}</p><div class="public-profile-course">${esc(data.course||'Course not provided')}</div><div class="public-profile-stats"><div><b>${Number(data.totalPosts)||0}</b><span>Posts</span></div><div><b>${Number(data.itemsReceivedBack)||0}</b><span>Received</span></div><div><b>${Number(data.itemsReturnedToOthers)||0}</b><span>Returned</span></div><div style="cursor:pointer;" onclick="openLeaderboardModal()" title="View Karma Leaderboard"><b style="color:var(--insta-primary);">⭐ ${Number(data.karmaPoints)||0}</b><span>${esc(data.karmaBadge||'Campus Friend')}</span></div></div>${editButton}</section>${settingsSection}<section class="public-profile-posts"><div class="public-profile-posts-heading"><h2>${postsHeading}</h2><span>${posts.length}</span></div>${filterTabs}<div class="public-profile-post-grid">${postCards}</div></section>`;
  $('communityProfilePageTitle').textContent=isOwnProfile?'Your profile':'Profile';
  const controls=$('publicProfileOwnerActions');
  if(controls)controls.classList.add('hide');
@@ -6042,6 +6125,8 @@ function applyTheme(theme) {
     const dPill = $('drawerThemePill');
     if (dPill) dPill.textContent = 'DARK';
   }
+  const profThemeToggle = $('profileDarkThemeToggle');
+  if (profThemeToggle) profThemeToggle.checked = theme === 'dark';
 }
 
 function toggleTheme() {

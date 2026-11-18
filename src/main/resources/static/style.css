@@ -10897,3 +10897,194 @@ input[type="submit"]:active,
   100% { transform: rotate(360deg); }
 }
 
+/* ==========================================================================
+   PROFILE PREFERENCES & SETTINGS (DARK MODE, SOUND TOGGLES, MY POSTS TABS)
+   ========================================================================== */
+.public-profile-settings-card {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(230, 218, 207, 0.75) !important;
+  border-radius: 16px !important;
+  padding: 16px !important;
+  margin: 16px 0 !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03) !important;
+}
+
+[data-theme="dark"] .public-profile-settings-card {
+  background: #1A1512 !important;
+  border-color: rgba(60, 50, 42, 0.8) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.profile-settings-heading h3 {
+  margin: 0 0 12px 0 !important;
+  font-size: 14.5px !important;
+  font-weight: 800 !important;
+  color: #2D1F12 !important;
+}
+
+[data-theme="dark"] .profile-settings-heading h3 {
+  color: #F8F5F1 !important;
+}
+
+.profile-setting-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 10px 0 !important;
+  border-bottom: 1px solid rgba(240, 230, 220, 0.6) !important;
+}
+
+.profile-setting-row:last-child {
+  border-bottom: none !important;
+  padding-bottom: 2px !important;
+}
+
+[data-theme="dark"] .profile-setting-row {
+  border-bottom-color: rgba(60, 50, 42, 0.5) !important;
+}
+
+.profile-setting-label b {
+  display: block !important;
+  font-size: 13.5px !important;
+  font-weight: 750 !important;
+  color: #2D1F12 !important;
+}
+
+[data-theme="dark"] .profile-setting-label b {
+  color: #F8F5F1 !important;
+}
+
+.profile-setting-label small {
+  display: block !important;
+  font-size: 11.5px !important;
+  color: #8C7565 !important;
+  margin-top: 2px !important;
+}
+
+[data-theme="dark"] .profile-setting-label small {
+  color: #A39080 !important;
+}
+
+/* iOS/Material Style Sleek Toggle Switch */
+.campus-toggle-switch {
+  position: relative !important;
+  display: inline-block !important;
+  width: 44px !important;
+  height: 25px !important;
+  flex-shrink: 0 !important;
+  cursor: pointer !important;
+}
+
+.campus-toggle-switch input {
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.campus-toggle-slider {
+  position: absolute !important;
+  cursor: pointer !important;
+  inset: 0 !important;
+  background-color: #D1D5DB !important;
+  transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border-radius: 999px !important;
+}
+
+.campus-toggle-slider:before {
+  position: absolute !important;
+  content: "" !important;
+  height: 19px !important;
+  width: 19px !important;
+  left: 3px !important;
+  bottom: 3px !important;
+  background-color: #FFFFFF !important;
+  transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border-radius: 50% !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25) !important;
+}
+
+.campus-toggle-switch input:checked + .campus-toggle-slider {
+  background-color: #F0913C !important;
+}
+
+.campus-toggle-switch input:checked + .campus-toggle-slider:before {
+  transform: translateX(19px) !important;
+}
+
+[data-theme="dark"] .campus-toggle-slider {
+  background-color: #374151 !important;
+}
+
+/* Profile Posts Filter Tabs */
+.profile-posts-filter-tabs {
+  display: flex !important;
+  gap: 6px !important;
+  margin: 12px 0 14px !important;
+  border-bottom: 1px solid rgba(230, 218, 207, 0.7) !important;
+  padding-bottom: 10px !important;
+  overflow-x: auto !important;
+}
+
+[data-theme="dark"] .profile-posts-filter-tabs {
+  border-bottom-color: rgba(60, 50, 42, 0.8) !important;
+}
+
+.prof-tab-btn {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  padding: 6px 14px !important;
+  border-radius: 20px !important;
+  font-size: 12.5px !important;
+  font-weight: 750 !important;
+  color: #786252 !important;
+  cursor: pointer !important;
+  transition: all 0.16s ease !important;
+  white-space: nowrap !important;
+}
+
+.prof-tab-btn.active {
+  background: #FFF7EE !important;
+  color: #D97706 !important;
+  border-color: rgba(240, 145, 60, 0.35) !important;
+}
+
+[data-theme="dark"] .prof-tab-btn {
+  color: #A39080 !important;
+}
+
+[data-theme="dark"] .prof-tab-btn.active {
+  background: #231B15 !important;
+  color: #FBBF24 !important;
+  border-color: rgba(240, 145, 60, 0.45) !important;
+}
+
+/* Action Buttons on Profile Cards */
+.prof-act-btn.success {
+  background: #DCFCE7 !important;
+  color: #15803D !important;
+  border: 1px solid rgba(22, 163, 74, 0.3) !important;
+  font-weight: 750 !important;
+}
+
+.prof-act-btn.success:hover {
+  background: #BBF7D0 !important;
+}
+
+[data-theme="dark"] .prof-act-btn.success {
+  background: rgba(22, 163, 74, 0.2) !important;
+  color: #4ADE80 !important;
+  border-color: rgba(22, 163, 74, 0.4) !important;
+}
+
+.prof-returned-tag {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 3px !important;
+  font-size: 11px !important;
+  font-weight: 750 !important;
+  color: #16A34A !important;
+  background: rgba(22, 163, 74, 0.1) !important;
+  border-radius: 8px !important;
+  padding: 4px 8px !important;
+}
+
