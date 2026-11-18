@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "dev.pages.campuslnf.twa",
+        "sha256_cert_fingerprints": ["81:A0:A3:64:BB:CE:6F:CA:61:B3:0A:C8:AB:27:E2:5B:4E:CA:76:30:25:12:93:10:0D:36:FD:53:D8:9F:BB:AE"]
+      }
+    }]
