@@ -317,10 +317,23 @@ window.addEventListener('popstate',()=>{
  handleHomeBackPress();
 });
 installCampusBackGuard();
+let postCroppedImageData = null;
+let cropperOriginalImageSrc = null;
+let cropperImg = null;
+let cropperRotation = 0; // 0, 90, 180, 270
+let cropperZoom = 1; // 1 to 3
+let cropperMinScale = 1;
+let cropperPosX = 0;
+let cropperPosY = 0;
+let cropperBoxW = 320;
+let cropperBoxH = 240;
+
 function clearSelectedPhoto(e) {
   if (e) {
     try { e.stopPropagation(); e.preventDefault(); } catch {}
   }
+  postCroppedImageData = null;
+  cropperOriginalImageSrc = null;
   const photoInput = $('photo');
   if (photoInput) photoInput.value = '';
   const preview = $('photoPreview');
@@ -330,6 +343,237 @@ function clearSelectedPhoto(e) {
   const uploadBox = $('photoUploadBox');
   if (uploadBox) uploadBox.classList.remove('hide');
 }
+
+function openImageCropper(imageSrc) {
+  cropperOriginalImageSrc = imageSrc;
+  const img = new Image();
+  img.onload = () => {
+    cropperImg = img;
+    cropperRotation = 0;
+    cropperZoom = 1;
+    const slider = $('cropperZoomSlider');
+    if (slider) slider.value = '1';
+    
+    const modal = $('imageCropperModal');
+    if (modal) modal.classList.remove('hide');
+    
+    setTimeout(initCropperDimensions, 40);
+  };
+  img.onerror = () => {
+    toast('Could not open image for cropping.');
+    clearSelectedPhoto();
+  };
+  img.src = imageSrc;
+}
+
+function reopenImageCropper() {
+  if (cropperOriginalImageSrc) {
+    openImageCropper(cropperOriginalImageSrc);
+  } else if ($('photo')?.files?.[0]) {
+    const reader = new FileReader();
+    reader.onload = () => openImageCropper(reader.result);
+    reader.readAsDataURL($('photo').files[0]);
+  }
+}
+
+function cancelImageCrop() {
+  $('imageCropperModal')?.classList.add('hide');
+  if (!postCroppedImageData) {
+    clearSelectedPhoto();
+  }
+}
+
+function initCropperDimensions() {
+  const box = $('cropperBox');
+  const canvas = $('cropperCanvas');
+  if (!box || !canvas || !cropperImg) return;
+  
+  const rect = box.getBoundingClientRect();
+  cropperBoxW = Math.round(rect.width) || 320;
+  cropperBoxH = Math.round(cropperBoxW * 0.75); // 4:3 ratio
+  
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = cropperBoxW * dpr;
+  canvas.height = cropperBoxH * dpr;
+  
+  recalcCropperScaleAndCenter();
+  drawCropperCanvas();
+}
+
+function recalcCropperScaleAndCenter() {
+  if (!cropperImg) return;
+  const isRotated90 = (cropperRotation === 90 || cropperRotation === 270);
+  const effW = isRotated90 ? cropperImg.naturalHeight : cropperImg.naturalWidth;
+  const effH = isRotated90 ? cropperImg.naturalWidth : cropperImg.naturalHeight;
+  
+  cropperMinScale = Math.max(cropperBoxW / effW, cropperBoxH / effH);
+  cropperPosX = cropperBoxW / 2;
+  cropperPosY = cropperBoxH / 2;
+}
+
+function clampCropperPosition() {
+  if (!cropperImg) return;
+  const isRotated90 = (cropperRotation === 90 || cropperRotation === 270);
+  const effW = isRotated90 ? cropperImg.naturalHeight : cropperImg.naturalWidth;
+  const effH = isRotated90 ? cropperImg.naturalWidth : cropperImg.naturalHeight;
+  
+  const currentScale = cropperMinScale * cropperZoom;
+  const halfW = (effW * currentScale) / 2;
+  const halfH = (effH * currentScale) / 2;
+  
+  const minX = cropperBoxW - halfW;
+  const maxX = halfW;
+  const minY = cropperBoxH - halfH;
+  const maxY = halfH;
+  
+  cropperPosX = Math.max(minX, Math.min(maxX, cropperPosX));
+  cropperPosY = Math.max(minY, Math.min(maxY, cropperPosY));
+}
+
+function drawCropperCanvas() {
+  const canvas = $('cropperCanvas');
+  if (!canvas || !cropperImg) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  
+  ctx.save();
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, cropperBoxW, cropperBoxH);
+  
+  clampCropperPosition();
+  
+  ctx.translate(cropperPosX, cropperPosY);
+  ctx.rotate((cropperRotation * Math.PI) / 180);
+  const currentScale = cropperMinScale * cropperZoom;
+  ctx.scale(currentScale, currentScale);
+  ctx.drawImage(cropperImg, -cropperImg.naturalWidth / 2, -cropperImg.naturalHeight / 2);
+  
+  ctx.restore();
+}
+
+function onCropperZoomInput(val) {
+  cropperZoom = parseFloat(val) || 1;
+  clampCropperPosition();
+  drawCropperCanvas();
+}
+
+function rotateCropperImage() {
+  cropperRotation = (cropperRotation + 90) % 360;
+  recalcCropperScaleAndCenter();
+  drawCropperCanvas();
+}
+
+function applyImageCrop() {
+  if (!cropperImg) return;
+  clampCropperPosition();
+  
+  const outW = 800;
+  const outH = 600; // Exact 4:3
+  const outCanvas = document.createElement('canvas');
+  outCanvas.width = outW;
+  outCanvas.height = outH;
+  const outCtx = outCanvas.getContext('2d');
+  
+  const k = outW / cropperBoxW;
+  outCtx.scale(k, k);
+  outCtx.translate(cropperPosX, cropperPosY);
+  outCtx.rotate((cropperRotation * Math.PI) / 180);
+  const currentScale = cropperMinScale * cropperZoom;
+  outCtx.scale(currentScale, currentScale);
+  outCtx.drawImage(cropperImg, -cropperImg.naturalWidth / 2, -cropperImg.naturalHeight / 2);
+  
+  postCroppedImageData = outCanvas.toDataURL('image/jpeg', 0.82);
+  
+  const preview = $('photoPreview');
+  if (preview) {
+    preview.src = postCroppedImageData;
+    $('photoPreviewContainer')?.classList.remove('hide');
+    $('photoUploadBox')?.classList.add('hide');
+  }
+  
+  $('imageCropperModal')?.classList.add('hide');
+  toast('Photo cropped to 4:3 ratio! ✓');
+}
+
+(function initCropperGestures() {
+  let isDragging = false;
+  let startX = 0, startY = 0;
+  let initialPinchDist = 0;
+  let initialZoom = 1;
+
+  function onPointerDown(e) {
+    const modal = $('imageCropperModal');
+    if (!modal || modal.classList.contains('hide')) return;
+    const box = $('cropperBox');
+    if (!box || !e.target.closest('#cropperBox')) return;
+    
+    if (e.touches && e.touches.length === 2) {
+      isDragging = false;
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      initialPinchDist = Math.hypot(dx, dy);
+      initialZoom = cropperZoom;
+      return;
+    }
+    
+    isDragging = true;
+    const pt = e.touches ? e.touches[0] : e;
+    startX = pt.clientX;
+    startY = pt.clientY;
+  }
+
+  function onPointerMove(e) {
+    const modal = $('imageCropperModal');
+    if (!modal || modal.classList.contains('hide')) return;
+    
+    if (e.touches && e.touches.length === 2 && initialPinchDist > 0) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy);
+      const ratio = dist / initialPinchDist;
+      cropperZoom = Math.max(1, Math.min(3, initialZoom * ratio));
+      if ($('cropperZoomSlider')) $('cropperZoomSlider').value = String(cropperZoom);
+      drawCropperCanvas();
+      return;
+    }
+    
+    if (!isDragging) return;
+    const pt = e.touches ? e.touches[0] : e;
+    const dx = pt.clientX - startX;
+    const dy = pt.clientY - startY;
+    startX = pt.clientX;
+    startY = pt.clientY;
+    
+    cropperPosX += dx;
+    cropperPosY += dy;
+    clampCropperPosition();
+    drawCropperCanvas();
+  }
+
+  function onPointerUp() {
+    isDragging = false;
+    initialPinchDist = 0;
+  }
+
+  window.addEventListener('mousedown', onPointerDown);
+  window.addEventListener('mousemove', onPointerMove);
+  window.addEventListener('mouseup', onPointerUp);
+  
+  window.addEventListener('touchstart', onPointerDown, { passive: true });
+  window.addEventListener('touchmove', onPointerMove, { passive: true });
+  window.addEventListener('touchend', onPointerUp, { passive: true });
+  
+  window.addEventListener('wheel', (e) => {
+    const modal = $('imageCropperModal');
+    if (!modal || modal.classList.contains('hide')) return;
+    if (!e.target.closest('#cropperBox')) return;
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.08 : 0.92;
+    cropperZoom = Math.max(1, Math.min(3, cropperZoom * factor));
+    if ($('cropperZoomSlider')) $('cropperZoomSlider').value = String(cropperZoom);
+    drawCropperCanvas();
+  }, { passive: false });
+})();
 
 function setQuickLocation(loc) {
   const input = $('location');
@@ -957,9 +1201,7 @@ $('photo').addEventListener('change', () => {
   }
   const reader = new FileReader();
   reader.onload = () => {
-    $('photoPreview').src = reader.result;
-    $('photoPreviewContainer')?.classList.remove('hide');
-    $('photoUploadBox')?.classList.add('hide');
+    openImageCropper(reader.result);
   };
   reader.onerror = () => {
     toast('Could not read the photo. Please try another image.');
@@ -983,10 +1225,10 @@ $('form').addEventListener('submit', async e => {
 
   try {
     const file = $('photo').files[0];
-    let imageData = null;
-    if (file) {
+    let imageData = postCroppedImageData;
+    if (!imageData && file) {
       try {
-        imageData = await compressProfileImage(file, 800, 800, 0.72);
+        imageData = await compressProfileImage(file, 800, 600, 0.75);
       } catch {
         try {
           imageData = await new Promise((resolve, reject) => {
