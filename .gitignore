@@ -9,3 +9,12 @@ Thumbs.db
 .vscode/
 .env
 *.log
+node_modules/
+mobile/www/
+CampUs.apk
+.gradle/
+android/.gradle/
+android/**/build/
+android/local.properties
+.gradle/
+build/

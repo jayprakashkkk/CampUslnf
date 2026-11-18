@@ -1,0 +1,11 @@
+<resources>
+    <style name="Theme.CampUs" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:statusBarColor">#FFF8EF</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:navigationBarColor">#FFF8EF</item>
+    </style>
+
+    <style name="Theme.CampUs.Fullscreen" parent="Theme.CampUs">
+        <item name="android:windowBackground">@color/campus_bg</item>
+    </style>
+</resources>

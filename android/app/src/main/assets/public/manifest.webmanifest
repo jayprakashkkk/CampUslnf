@@ -1,0 +1,32 @@
+{
+  "id": "/",
+  "name": "CampUs Lost & Found",
+  "short_name": "CampUs",
+  "description": "Report and find lost belongings on campus.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FFF8EF",
+  "theme_color": "#FFF8EF",
+  "icons": [
+    {
+      "src": "/campus-favicon-orange-20261022.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/campusfind-512.png?v=campus-favicon-orange-20261022",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/campusfind-1024.png?v=campus-favicon-orange-20261022",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

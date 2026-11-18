@@ -1,0 +1,1586 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <title>CampUs | Lost & Found Community Hub</title>
+  <link rel="icon" href="/campus-favicon-orange-20261022.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="./campus-favicon-orange-20261022.png">
+  <link rel="apple-touch-icon" href="./campus-apple-touch-orange-20261022.png">
+  <link rel="manifest" href="./manifest.webmanifest?v=campus-favicon-orange-20261022">
+  <meta name="theme-color" content="#FFF8EF">
+  <meta name="application-name" content="CampUs">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="CampUs">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="stylesheet" href="./style.css?v=campus-20261117-bulletproof6">
+</head>
+<body class="auth-locked">
+
+<!-- Auth Gate Screen (Login / Register / Forgot Password) -->
+<div id="authGate" class="auth-gate hide" role="main" aria-label="CampUs account access">
+  <section class="auth-card">
+    <div class="auth-brand" aria-label="CampUs logo">
+      <img class="auth-brand-mark" src="/icons/campusfind-mark-cream-orange.svg?v=campus-20261118-logo" alt="CampUs logo">
+      <div class="auth-brand-name">Camp<span>Us</span><small>LOST &amp; FOUND</small></div>
+    </div>
+    <p class="auth-kicker">ONE CAMPUS. ONE COMMUNITY.</p>
+    <h1 id="authWelcomeTitle">Welcome to CampUs</h1>
+
+    <!-- Direct Segmented Tabs: Instant Switch between Login & Register -->
+    <div id="authChoices" class="auth-mode-tabs" role="tablist" aria-label="Authentication mode">
+      <button type="button" id="showLoginButton" class="auth-tab active" role="tab" aria-selected="true" onclick="chooseAuthMode('login')">Log In</button>
+      <button type="button" id="showRegisterButton" class="auth-tab" role="tab" aria-selected="false" onclick="chooseAuthMode('register')">Create Account</button>
+    </div>
+
+    <!-- Direct Form Panel: No Double-Click Needed -->
+    <section id="authFormPanel" aria-labelledby="authFormTitle">
+      <h2 id="authFormTitle" class="visually-hidden">Log In</h2>
+      <form id="authForm" novalidate autocomplete="on">
+        
+        <!-- Registration Fields (Revealed when Create Account is tapped) -->
+        <div id="authRegisterFields" class="auth-register-fields" hidden>
+          <label for="authFullName">Full name *</label>
+          <input id="authFullName" name="displayName" type="text" autocomplete="name" maxlength="100" disabled placeholder="e.g. Rahul Sharma" autocapitalize="words">
+          
+          <label for="authCollege">Select your College / University *</label>
+          <select id="authCollege" name="college" disabled required>
+            <option value="" disabled selected>Select your campus...</option>
+            <option value="CU">Chandigarh University (CU)</option>
+            <option value="CGC_UNIV">CGC University</option>
+            <option value="CGC_LANDRAN">CGC Landran</option>
+            <option value="LPU">Lovely Professional University (LPU)</option>
+          </select>
+          
+          <label for="authCourse">Course / Branch *</label>
+          <input id="authCourse" name="course" type="text" autocomplete="organization-title" maxlength="100" disabled placeholder="e.g. BCA, B.Tech CSE, MBA" autocapitalize="words">
+          
+          <label for="authEmail">Email address *</label>
+          <input id="authEmail" name="email" type="email" autocomplete="email" maxlength="254" disabled placeholder="e.g. name@gmail.com" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="email">
+        </div>
+
+        <label for="authUsername" id="authUsernameLabel">Username or Email *</label>
+        <input id="authUsername" name="username" type="text" autocomplete="username" maxlength="254" required placeholder="Enter username or email" autocapitalize="none" autocorrect="off" spellcheck="false">
+        <div id="authUsernameStatus" class="auth-field-status" hidden></div>
+
+        <label for="authPassword" id="authPasswordLabel">Password *</label>
+        <div class="password-input-wrap">
+          <input id="authPassword" name="password" type="password" autocomplete="current-password" required placeholder="Enter password">
+          <button type="button" id="toggleAuthPassword" class="password-toggle-btn" aria-label="Show password" title="Show password">
+            <svg class="eye-icon eye-show" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            <svg class="eye-icon eye-hide" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+          </button>
+        </div>
+
+        <!-- Confirm Password Field (Shown only in Create Account mode) -->
+        <div id="authConfirmPasswordWrap" class="auth-confirm-wrap" hidden>
+          <label for="authConfirmPassword">Confirm Password *</label>
+          <div class="password-input-wrap">
+            <input id="authConfirmPassword" type="password" autocomplete="new-password" placeholder="Re-enter your password">
+            <button type="button" id="toggleConfirmPassword" class="password-toggle-btn" aria-label="Show password" title="Show password">
+              <svg class="eye-icon eye-show" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              <svg class="eye-icon eye-hide" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+            </button>
+          </div>
+        </div>
+
+        <p id="authError" class="auth-error" role="alert" aria-live="polite"></p>
+        <button type="submit" id="authSubmitButton" class="auth-primary">Log In</button>
+        
+        <!-- Forgot Password Link: In login mode only, completely hidden in register mode -->
+        <div id="forgotPasswordWrap" class="forgot-password-wrap">
+          <button type="button" id="forgotPasswordButton" class="auth-forgot-link">Forgot password?</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Dedicated Forgot Password Panel (Only this panel shows when Forgot Password is clicked!) -->
+    <section id="forgotPasswordPanel" class="forgot-password-panel" hidden aria-label="Reset password">
+      <div class="forgot-panel-header">
+        <h2 id="forgotPasswordTitle" class="forgot-panel-title">Reset Password</h2>
+        <p class="panel-subtitle">Enter your registered email or username to receive a 6-digit OTP code.</p>
+      </div>
+
+      <div class="forgot-form-body">
+        <label for="resetEmail">Email or Username</label>
+        <input id="resetEmail" type="text" autocomplete="username" placeholder="e.g. rahul_01 or name@gmail.com" autocapitalize="none" autocorrect="off" spellcheck="false">
+        <button type="button" id="sendResetOtpButton" class="auth-primary" style="margin-top: 10px;">Send OTP</button>
+        
+        <div id="resetOtpFields" hidden>
+          <label for="resetOtp">Enter 6-digit OTP</label>
+          <input id="resetOtp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="e.g. 123456" style="letter-spacing: 4px; font-weight: 800; font-family: monospace;">
+          
+          <label for="resetNewPassword">New Password</label>
+          <div class="password-input-wrap">
+            <input id="resetNewPassword" type="password" autocomplete="new-password" minlength="6" placeholder="At least 6 characters">
+            <button type="button" id="toggleResetPassword" class="password-toggle-btn" aria-label="Show password" title="Show password">
+              <svg class="eye-icon eye-show" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              <svg class="eye-icon eye-hide" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+            </button>
+          </div>
+          <button type="button" id="verifyResetOtpButton" class="auth-primary" style="margin-top: 10px;">Verify OTP &amp; Reset Password</button>
+        </div>
+        
+        <p id="resetPasswordMessage" class="auth-error" role="status" aria-live="polite"></p>
+        <button type="button" id="cancelResetPasswordButton" class="auth-back-link">← Back to Log In</button>
+      </div>
+    </section>
+  </section>
+</div>
+
+<!-- Modern Adaptive App Header (Phone, Tablet, Laptop) -->
+<header class="app-header">
+  <div class="header-left">
+    <div class="logo">
+      <img class="brand-mark" src="/icons/campusfind-mark-cream-orange.svg?v=campus-20261118-logo" alt="CampUs logo">
+      <div class="logo-text">
+        <div class="logo-title-row">
+          <span class="logo-title-brand">Camp<span>Us</span></span>
+          <span id="campusCollegeBadge" class="college-badge" hidden>
+            <span class="college-badge-icon" aria-hidden="true">
+              <svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10h18M5 10v11M19 10v11M9 10v11M15 10v11M12 2L2 7h20L12 2z"></path></svg>
+            </span>
+            <span id="campusCollegeText">Chandigarh University</span>
+          </span>
+        </div>
+        <small class="logo-subtitle">LOST &amp; FOUND</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Integrated Desktop Search Input (Visible on Laptop & Tablet >= 860px) -->
+  <div class="header-search-wrap">
+    <input id="boardSearch" type="search" placeholder="Search item, category, location or @username..." aria-label="Search reports and members" autocomplete="off">
+    <div id="userSearchResults" class="user-search-results" role="listbox" aria-label="Matching CampUs members" hidden></div>
+  </div>
+
+  <!-- Desktop Navigation Bar (Visible on Laptop & Tablet >= 860px) -->
+  <nav class="desktop-nav" aria-label="Desktop Navigation">
+    <button type="button" class="desk-nav-btn active" data-desk-nav="feed" onclick="switchNavTab('feed')">
+      <svg class="ui-icon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      <span>Feed</span>
+    </button>
+    <button type="button" class="desk-nav-btn desk-chat-btn" data-desk-nav="chat" onclick="openCommunityChat()">
+      <svg class="ui-icon" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+      <span>Community Chat</span>
+      <span class="header-chat-dot"></span>
+    </button>
+    <button type="button" class="desk-nav-btn desk-post-btn" onclick="openForm('LOST')">
+      <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      <span>Report Item</span>
+    </button>
+  </nav>
+
+  <!-- Right Actions: Desktop "Hi, User" Greeting & 2-Line Animated Hamburger Menu -->
+  <div class="header-right-actions">
+    <!-- Desktop/Tablet User Greeting (Direct click opens Profile!) -->
+    <div class="desk-user-menu-wrap" id="deskUserMenuWrap">
+      <button type="button" class="desk-greeting-btn" id="deskUserGreetingBtn" onclick="openDesktopProfile()" aria-label="View My Profile" title="Click to view My Profile">
+        <div class="desk-greeting-avatar" id="deskGreetingAvatar">
+          <span id="headerAvatarText">U</span>
+        </div>
+        <span class="desk-greeting-text" id="deskGreetingName">Hi, Student</span>
+      </button>
+    </div>
+
+    <!-- 2-Line Animated Menu Button (Phone, Tablet, Laptop) -->
+    <button type="button" class="hamburger-menu-btn" id="menuToggleBtn" onclick="toggleNavDrawer()" aria-label="Open navigation menu" aria-expanded="false">
+      <span class="hamburger-bar"></span>
+      <span class="hamburger-bar"></span>
+    </button>
+  </div>
+</header>
+
+<!-- Full Animated Slide-Down Menu Drawer (Unique Features Only) -->
+<div id="navDrawerOverlay" class="nav-drawer-overlay hide" onclick="handleDrawerBackdropClick(event)">
+  <nav class="nav-drawer-panel" id="navDrawerPanel" aria-label="Main Navigation Drawer">
+    <div class="drawer-header">
+      <span class="drawer-title">CampUs Options</span>
+    </div>
+
+    <!-- Unique Options (Zero Duplication with Home Screen / Bottom Bar) -->
+    <div class="drawer-menu-list">
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('myReports')">
+        <span class="drawer-item-icon">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+        </span>
+        <div class="drawer-item-text">
+          <b>My Reports</b>
+          <small>View and manage items you reported</small>
+        </div>
+      </button>
+
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('activity')">
+        <span class="drawer-item-icon">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </span>
+        <div class="drawer-item-text">
+          <b>Your Activity</b>
+          <small>Archive, recently deleted &amp; likes</small>
+        </div>
+      </button>
+
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('privacySettings')">
+        <span class="drawer-item-icon">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </span>
+        <div class="drawer-item-text">
+          <b>Notification &amp; Privacy</b>
+          <small>Alerts, chat sounds &amp; privacy controls</small>
+        </div>
+      </button>
+
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('termsConditions')">
+        <span class="drawer-item-icon">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+        </span>
+        <div class="drawer-item-text">
+          <b>Terms &amp; Conditions</b>
+          <small>Campus rules, return guidelines &amp; policy</small>
+        </div>
+      </button>
+
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('campusInfo')">
+        <span class="drawer-item-icon">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10h18M5 10v11M19 10v11M9 10v11M15 10v11M12 2L2 7h20L12 2z"></path></svg>
+        </span>
+        <div class="drawer-item-text">
+          <b>Campus Community</b>
+          <small id="drawerCampusDesc">Verified University Network</small>
+        </div>
+      </button>
+
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('helpSupport')">
+        <span class="drawer-item-icon">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </span>
+        <div class="drawer-item-text">
+          <b>Help &amp; Support</b>
+          <small>Lost &amp; found guides, recovery &amp; FAQs</small>
+        </div>
+      </button>
+
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('leaderboard')">
+        <span class="drawer-item-icon">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.45 1-1 1H7"></path><path d="M14 14.66V17c0 .55.45 1 1 1h2"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path></svg>
+        </span>
+        <div class="drawer-item-text">
+          <b>Karma Leaderboard</b>
+          <small>Campus Good Samaritans &amp; badges</small>
+        </div>
+      </button>
+
+      <button type="button" class="drawer-menu-item" onclick="toggleTheme()">
+        <span class="drawer-item-icon" id="drawerThemeIcon">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </span>
+        <div class="drawer-item-text">
+          <b>Dark Mode</b>
+          <small id="drawerThemeText">Switch to Amoled Black</small>
+        </div>
+        <span class="drawer-theme-pill" id="drawerThemePill">Dark</span>
+      </button>
+
+      <button type="button" class="drawer-menu-item" onclick="handleDrawerNav('aboutCampus')">
+        <span class="drawer-item-icon">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+        </span>
+        <div class="drawer-item-text">
+          <b>About CampUs</b>
+          <small>Platform version, safety &amp; mission</small>
+        </div>
+      </button>
+    </div>
+
+    <div class="drawer-divider"></div>
+
+    <!-- Sabse Niche Logout Button as requested! -->
+    <div class="drawer-footer">
+      <button type="button" class="drawer-logout-btn" onclick="logoutFromDrawer()">
+        <span class="drawer-item-icon">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        </span>
+        <span>Log out of CampUs</span>
+      </button>
+    </div>
+  </nav>
+</div>
+
+<!-- Clean Single Search Bar on Home (Tap opens Dedicated Explore Search Page) -->
+<div class="standalone-search-wrap" id="mobileSearchWrap" onclick="openExplorePage()">
+  <div class="standalone-search-box">
+    <span class="standalone-search-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
+    <input id="mobileBoardSearch" type="search" placeholder="Search items, categories, or members..." aria-label="Search reports" autocomplete="off" readonly style="cursor: pointer;">
+  </div>
+</div>
+
+<!-- Main Feed Container (Optimized max-width: 680px for Phone, Tablet, Laptop) -->
+<main class="feed-main-container">
+  
+  <!-- Campus Main Switcher: Lost & Found vs Campus Market -->
+  <div class="campus-section-switcher" role="tablist" aria-label="Campus Section">
+    <button type="button" class="section-switch-btn active" id="secSwitchLostFound" onclick="switchFeedView('lostfound')">
+      <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+      <span>Lost &amp; Found</span>
+    </button>
+    <button type="button" class="section-switch-btn" id="secSwitchMarket" onclick="switchFeedView('market')">
+      <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+      <span>Campus Market</span>
+      <span class="market-new-badge">NEW</span>
+    </button>
+  </div>
+
+  <!-- Campus Broadcast / Emergency Alert Banner (Site-wide) -->
+  <div id="campusAlertBanner" class="campus-alert-banner hide" role="region" aria-label="Campus Alert">
+    <div class="alert-banner-inner">
+      <span id="alertBannerIcon" class="alert-banner-icon"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span>
+      <div class="alert-banner-content">
+        <b id="alertBannerTitle">Campus Alert</b>
+        <p id="alertBannerMessage">Important campus announcement...</p>
+      </div>
+      <button type="button" class="alert-banner-dismiss" onclick="dismissCampusAlert()" aria-label="Dismiss alert"><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    </div>
+  </div>
+
+  <!-- Status Filter Switcher Tabs -->
+  <div class="insta-status-tabs" aria-label="Filter reports by status">
+    <button type="button" class="status-tab active" data-tab-status="ALL" onclick="filterStats('ALL')"><span class="status-tab-dot dot-all"></span>All (<span id="total">0</span>)</button>
+    <button type="button" class="status-tab" data-tab-status="LOST" onclick="filterStats('LOST')"><span class="status-tab-dot dot-lost"></span>Lost (<span id="lost">0</span>)</button>
+    <button type="button" class="status-tab" data-tab-status="FOUND" onclick="filterStats('FOUND')"><span class="status-tab-dot dot-found"></span>Found (<span id="found">0</span>)</button>
+    <button type="button" class="status-tab" data-tab-status="RETURNED" onclick="filterStats('RETURNED')"><span class="status-tab-dot dot-returned"></span>Returned (<span id="returned">0</span>)</button>
+  </div>
+
+  <!-- Instagram Category Stories / Chips Bar -->
+  <div class="insta-stories-container">
+    <div class="insta-stories-list">
+      <button type="button" class="category-chip active" onclick="filterByCategory('')"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> All</button>
+      <button type="button" class="category-chip" onclick="filterByCategory('Electronics')"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg> Electronics</button>
+      <button type="button" class="category-chip" onclick="filterByCategory('ID card')"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg> ID Cards</button>
+      <button type="button" class="category-chip" onclick="filterByCategory('Keys')"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="4.5"></circle><path d="M10.5 12.5L20 3l3 3-2 2-2-2-2 2-2-2-2.5 2.5"></path></svg> Keys</button>
+      <button type="button" class="category-chip" onclick="filterByCategory('Wallet / purse')"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path><path d="M16 3H4a2 2 0 0 0-2 2v2"></path><circle cx="16" cy="14" r="1"></circle></svg> Wallets</button>
+      <button type="button" class="category-chip" onclick="filterByCategory('Books / stationery')"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Books</button>
+      <button type="button" class="category-chip" onclick="filterByCategory('Clothing')"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></svg> Clothing</button>
+      <button type="button" class="category-chip" onclick="filterByCategory('Water bottle')"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg> Bottles</button>
+      <button type="button" class="category-chip" onclick="filterByCategory('Other')"><svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg> Other</button>
+    </div>
+  </div>
+
+  <!-- Board Feed Section -->
+  <section id="board" class="default-list-mode">
+    <div class="board-meta">
+      <span id="resultCount">Loading campus reports…</span>
+    </div>
+
+    <!-- Live Post Grid / Instagram Feed Cards -->
+    <div id="grid" class="grid-feed-list">
+      <div class="empty">Loading campus feed…</div>
+    </div>
+  </section>
+
+  <!-- Campus Student Marketplace Section -->
+  <section id="marketSection" class="market-section hide" aria-label="Campus Buy and Sell Marketplace">
+    <div class="market-hero-card">
+      <div class="market-hero-content">
+        <div class="market-hero-badge">🎓 STUDENT MARKETPLACE</div>
+        <h2 class="market-hero-title">Campus Buy &amp; Sell</h2>
+        <p class="market-hero-subtitle">Affordable textbooks, drafters, lab coats, cycles &amp; hostel essentials from verified students.</p>
+      </div>
+      <button type="button" class="market-sell-cta-btn" onclick="openMarketModal()">
+        <span>＋ Sell an Item</span>
+      </button>
+    </div>
+
+    <!-- Market Category Filter Slider -->
+    <div class="market-categories-wrap">
+      <div class="market-categories-list">
+        <button type="button" class="market-cat-chip active" data-mcat="" onclick="filterMarketCategory('')">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          <span>All Items</span>
+        </button>
+        <button type="button" class="market-cat-chip" data-mcat="Books & Notes" onclick="filterMarketCategory('Books & Notes')">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+          <span>Books &amp; Notes</span>
+        </button>
+        <button type="button" class="market-cat-chip" data-mcat="Drafter & Lab" onclick="filterMarketCategory('Drafter & Lab')">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 22 22 22"></polygon><line x1="12" y1="6" x2="12" y2="18"></line></svg>
+          <span>Drafter &amp; Lab</span>
+        </button>
+        <button type="button" class="market-cat-chip" data-mcat="Cycles & Mobility" onclick="filterMarketCategory('Cycles & Mobility')">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5.5" cy="17.5" r="3.5"></circle><circle cx="18.5" cy="17.5" r="3.5"></circle><path d="M15 6a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-3 11.5L9 6H6m6 11.5l3.5-7h3.5"></path></svg>
+          <span>Cycles</span>
+        </button>
+        <button type="button" class="market-cat-chip" data-mcat="Hostel Essentials" onclick="filterMarketCategory('Hostel Essentials')">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"></path></svg>
+          <span>Hostel</span>
+        </button>
+        <button type="button" class="market-cat-chip" data-mcat="Electronics" onclick="filterMarketCategory('Electronics')">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"></path><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path></svg>
+          <span>Electronics</span>
+        </button>
+        <button type="button" class="market-cat-chip" data-mcat="Fashion & Merch" onclick="filterMarketCategory('Fashion & Merch')">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></svg>
+          <span>Clothing</span>
+        </button>
+        <button type="button" class="market-cat-chip" data-mcat="Free / Giveaways" onclick="filterMarketCategory('Free / Giveaways')">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
+          <span>Free Giveaways</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Market Results Meta -->
+    <div class="board-meta">
+      <span id="marketResultCount">Loading marketplace listings…</span>
+    </div>
+
+    <!-- Market Grid -->
+    <div id="marketGrid" class="market-grid">
+      <div class="empty">Loading marketplace listings…</div>
+    </div>
+  </section>
+
+  <!-- Hidden Match Poster & Legacy Elements (preserved for JS state without clutter) -->
+  <section class="hero hide" id="home" hidden aria-hidden="true">
+    <div class="art"><div class="orb"></div><div class="fakecard" id="matchPoster"><big id="matchIcon">⌕</big><b id="matchName">No match found</b><small id="matchMeta"></small><label id="matchBadge"></label></div></div>
+  </section>
+</main>
+
+<!-- Dedicated Instagram-style Explore & Search Full Page -->
+<div id="explorePage" class="explore-page hide">
+  <!-- Top Sticky Instagram Search Bar Header -->
+  <header class="explore-topbar">
+    <div class="explore-search-row">
+      <button type="button" class="explore-back-btn universal-back-circle-btn" onclick="closeExplorePage()" aria-label="Back to feed"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+      <div class="explore-search-input-wrap">
+        <span class="explore-search-icon">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </span>
+        <input id="exploreSearchInput" type="search" placeholder="Search items, categories, or members..." aria-label="Search" autocomplete="off" oninput="handleExploreSearch(this.value)">
+        <button type="button" id="exploreSearchClear" class="explore-search-clear hide" onclick="clearExploreSearch()" aria-label="Clear search">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Type Filters (All, Lost, Found, Returned) -->
+    <div class="explore-type-pills">
+      <button type="button" class="explore-type-pill active" data-exp-type="" onclick="filterExploreType('')">
+        <svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+        <span>All (<span id="exploreCountTotal">0</span>)</span>
+      </button>
+      <button type="button" class="explore-type-pill" data-exp-type="LOST" onclick="filterExploreType('LOST')">
+        <span class="status-tab-dot dot-lost"></span>
+        <span>Lost</span>
+      </button>
+      <button type="button" class="explore-type-pill" data-exp-type="FOUND" onclick="filterExploreType('FOUND')">
+        <span class="status-tab-dot dot-found"></span>
+        <span>Found</span>
+      </button>
+      <button type="button" class="explore-type-pill" data-exp-type="RETURNED" onclick="filterExploreType('RETURNED')">
+        <svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span>Returned</span>
+      </button>
+    </div>
+
+    <!-- Category Filter Chips Slider -->
+    <div class="explore-category-chips">
+      <button type="button" class="explore-cat-chip active" data-exp-cat="" onclick="filterExploreCategory('')"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> All</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Electronics" onclick="filterExploreCategory('Electronics')"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg> Electronics</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="ID card" onclick="filterExploreCategory('ID card')"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><line x1="15" y1="8" x2="17" y2="8"></line><line x1="15" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg> ID Cards</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Keys" onclick="filterExploreCategory('Keys')"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="4.5"></circle><path d="M10.5 12.5L20 3l3 3-2 2-2-2-2 2-2-2-2.5 2.5"></path></svg> Keys</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Wallet / purse" onclick="filterExploreCategory('Wallet / purse')"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"></path><path d="M16 3H4a2 2 0 0 0-2 2v2"></path><circle cx="16" cy="14" r="1"></circle></svg> Wallets</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Books / stationery" onclick="filterExploreCategory('Books / stationery')"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Books</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Clothing" onclick="filterExploreCategory('Clothing')"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.38 3.46L16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"></path></svg> Clothing</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Water bottle" onclick="filterExploreCategory('Water bottle')"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg> Bottles</button>
+      <button type="button" class="explore-cat-chip" data-exp-cat="Other" onclick="filterExploreCategory('Other')"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg> Other</button>
+    </div>
+  </header>
+
+  <!-- Member Search Suggestions (when typing member or search query) -->
+  <div id="exploreMemberResults" class="explore-member-results hide"></div>
+
+  <!-- Instagram-Style Explore Grid with Small Square Boxes -->
+  <main class="explore-grid-container">
+    <div id="exploreGrid" class="explore-grid" role="grid" aria-label="Explore posts">
+      <!-- Dynamically populated explore tiles -->
+    </div>
+  </main>
+</div>
+
+<!-- Full Post Detail Viewer (Tapped from Explore Grid) -->
+<div id="postDetailViewer" class="menu-fullscreen-page hide" role="dialog" aria-modal="true" aria-labelledby="postDetailTitle">
+  <div class="dialog info-sheet-dialog">
+    <header class="info-sheet-header">
+      <div class="info-header-left">
+        <button class="universal-back-circle-btn" type="button" onclick="closePostDetailViewer()" aria-label="Back to explore"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+        <div>
+          <h2 id="postDetailTitle">Post Details</h2>
+          <small class="info-sheet-subtitle" id="postDetailSubtitle">CampUs Lost &amp; Found</small>
+        </div>
+      </div>
+    </header>
+    <div class="info-sheet-body" id="postDetailBody" style="max-width: 680px; margin: 0 auto; padding-top: 16px;">
+      <!-- Post card content rendered here -->
+    </div>
+  </div>
+</div>
+
+<!-- Fixed Mobile Bottom Navigation Bar (Hidden on Desktop >= 860px) -->
+<nav class="bottom-app-nav" aria-label="Bottom Navigation">
+  <button type="button" class="bottom-nav-item active" data-nav="feed" onclick="switchNavTab('feed')">
+    <span class="bottom-nav-icon">
+      <svg class="ui-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+    </span>
+    <span>Feed</span>
+  </button>
+  <button type="button" class="bottom-nav-item" data-nav="chat" onclick="openCommunityChat()">
+    <span class="bottom-nav-icon">
+      <svg class="ui-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+    </span>
+    <span>Chat</span>
+    <span class="bottom-nav-dot"></span>
+  </button>
+  <button type="button" class="bottom-nav-item nav-post-cta" data-nav="post" onclick="openForm('LOST')" aria-label="Create Post">
+    <span class="nav-post-circle">
+      <svg class="ui-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#FFFFFF" stroke-width="2.6"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    </span>
+  </button>
+  <button type="button" class="bottom-nav-item" data-nav="explore" onclick="switchNavTab('explore')">
+    <span class="bottom-nav-icon">
+      <svg class="ui-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    </span>
+    <span>Search</span>
+  </button>
+  <button type="button" class="bottom-nav-item" data-nav="profile" onclick="openDesktopProfile()">
+    <span class="bottom-nav-icon" id="bottomNavAvatar">
+      <svg class="ui-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+    </span>
+    <span>Profile</span>
+  </button>
+</nav>
+
+<!-- Create Post Modal Dialog -->
+<div id="modal" class="overlay hide">
+  <div class="dialog modern-modal-card">
+    <button class="modal-close-btn x" type="button" onclick="closeForm()" aria-label="Close modal"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    <small class="eyebrow">HELP AN ITEM FIND ITS WAY</small>
+    <h2 id="formTitle">Report an Item</h2>
+    
+    <form id="form">
+      <input id="type" type="hidden">
+      
+      <!-- Type Switcher Tabs in Modal -->
+      <div class="modal-type-switcher">
+        <button type="button" id="modalTypeLost" class="modal-type-btn active-lost" onclick="setFormType('LOST')"><span class="status-tab-dot dot-lost"></span> I Lost an Item</button>
+        <button type="button" id="modalTypeFound" class="modal-type-btn" onclick="setFormType('FOUND')"><span class="status-tab-dot dot-found"></span> I Found an Item</button>
+      </div>
+
+      <div class="fields">
+        <label>Item name *<input id="title" required placeholder="e.g. Boat Airdopes or Student ID Card"></label>
+        
+        <label>Category *
+          <select id="category" required>
+            <option value="">Choose category</option>
+            <option>Electronics</option>
+            <option>ID card</option>
+            <option>Keys</option>
+            <option>Wallet / purse</option>
+            <option>Books / stationery</option>
+            <option>Clothing</option>
+            <option>Water bottle</option>
+            <option>Other</option>
+          </select>
+        </label>
+        
+        <label>Where on campus? *<input id="location" required placeholder="e.g. Central Library, Block 3, 2nd Floor"></label>
+        <label>Date<input id="itemDate" type="date"></label>
+        <label>Your name *<input id="name" required></label>
+        <label>Mobile / WhatsApp number <span class="optional">(optional)</span>
+          <input id="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="e.g. 9876543210 (enables 1-click WhatsApp!)">
+        </label>
+        <label class="wide">Description
+          <textarea id="description" rows="3" placeholder="Color, brand, distinguishing marks or identifiers..."></textarea>
+        </label>
+        <div id="foundSecretQuestionWrap" class="wide hide">
+          <label>Founder's Secret Question <span class="optional">(Fake Claim Prevention)</span>
+            <input id="secretQuestion" placeholder="e.g. What is the lock screen wallpaper? / Which key is missing?">
+            <small class="hint">When someone claims this item, they must answer this question to prove genuine ownership.</small>
+          </label>
+        </div>
+        <label class="wide">Item photo <span class="optional">(optional)</span>
+          <input id="photo" type="file" accept="image/*">
+          <small class="hint">Upload a photo to show the community. Automatically compressed.</small>
+          <img id="photoPreview" class="photo-preview hide" alt="Selected item photo preview">
+        </label>
+      </div>
+      
+      <p id="error" class="auth-error"></p>
+      
+      <!-- Single Clean Action Button (Removed Redundant Cancel Button) -->
+      <div class="modal-single-action">
+        <button type="submit" id="submitReportButton" class="auth-primary">Post to Campus Feed →</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Community Chat Overlay / View -->
+<div id="communityChatOverlay" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="communityChatTitle">
+  <section class="dialog community-chat-dialog modern-chat-card">
+    <!-- Clean, Branded Chat Topbar with Back, Logo, College Name & Notification Bell -->
+    <div class="chat-topbar">
+      <div class="chat-topbar-left">
+        <button class="chat-back-btn universal-back-circle-btn" type="button" onclick="closeCommunityChat()" aria-label="Back to Feed" title="Back to Feed">
+          <svg class="ui-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <div class="chat-brand-avatar" title="CampUs Live Community">
+          <img class="chat-brand-img" src="/icons/campusfind-mark-cream-orange.svg?v=campus-20261118-logo" alt="CampUs logo">
+          <span class="chat-pulse-dot" title="Live Campus Connection"></span>
+        </div>
+        <div class="chat-page-heading">
+          <div class="chat-title-line">
+            <h2 id="communityChatTitle">Community Chat</h2>
+            <span class="chat-online-pill">LIVE</span>
+          </div>
+          <div class="chat-college-line">
+            <svg class="ui-icon chat-campus-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10h18M5 10v11M19 10v11M9 10v11M15 10v11M12 2L2 7h20L12 2z"></path></svg>
+            <span id="chatCampusSubtitle" class="chat-college-name">Live Campus Hub</span>
+          </div>
+        </div>
+      </div>
+      <div class="chat-topbar-right">
+        <button class="chat-mute-toggle" id="chatMuteButton" type="button" onclick="toggleCommunityMute()" aria-pressed="false" aria-label="Mute notifications" title="Notification Alerts">
+          <span id="chatMuteIcon" class="chat-mute-icon-wrap" aria-hidden="true">
+            <svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.1"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Chat Messages Scroll Container -->
+    <div id="chatMessages" class="chat-messages" aria-live="polite">
+      <div class="empty">Loading campus messages…</div>
+    </div>
+
+    <!-- Reply Preview (Instagram Style 2-Line Banner) -->
+    <div id="chatReplyPreview" class="chat-reply-bar hide">
+      <div class="chat-reply-content">
+        <span class="chat-reply-to">Replying to <b id="chatReplyName">User</b></span>
+        <span class="chat-reply-snippet" id="chatReplyText"></span>
+      </div>
+      <button type="button" id="chatReplyDismissBtn" onclick="clearChatReply(event)" aria-label="Cancel reply" class="chat-reply-dismiss-btn" title="Cancel reply">
+        <svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <!-- Chat Input Form (Enter creates new line; Send button sends) -->
+    <form id="communityChatForm" class="chat-compose">
+      <textarea id="communityChatInput" rows="1" maxlength="2000" placeholder="Message your campus community…" required></textarea>
+      <button type="submit" aria-label="Send message" class="chat-send-btn">
+        <svg class="ui-icon send-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        <span>Send</span>
+      </button>
+    </form>
+
+    <!-- Instagram-style Floating Reaction Popover -->
+    <div id="chatReactionPopover" class="chat-react-popover hide" role="toolbar" aria-label="Emoji reactions" style="display: none !important; visibility: hidden !important; pointer-events: none !important; opacity: 0 !important;">
+      <button type="button" class="chat-emoji-item" data-emoji="❤️" aria-label="Love">❤️</button>
+      <button type="button" class="chat-emoji-item" data-emoji="😂" aria-label="Laugh">😂</button>
+      <button type="button" class="chat-emoji-item" data-emoji="😮" aria-label="Surprised">😮</button>
+      <button type="button" class="chat-emoji-item" data-emoji="😢" aria-label="Sad">😢</button>
+      <button type="button" class="chat-emoji-item" data-emoji="👏" aria-label="Clap">👏</button>
+      <button type="button" class="chat-emoji-item" data-emoji="🔥" aria-label="Fire">🔥</button>
+      <button type="button" class="chat-emoji-item" data-emoji="👍" aria-label="Thumbs up">👍</button>
+    </div>
+
+    <!-- Instagram-style Floating More Options Popover -->
+    <div id="chatMoreMenu" class="chat-more-popover hide" role="menu" style="display: none !important; visibility: hidden !important; pointer-events: none !important; opacity: 0 !important;">
+      <button type="button" class="chat-more-item chat-more-delete" id="chatMoreDeleteBtn" role="menuitem">
+        <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        <span>Delete</span>
+      </button>
+      <button type="button" class="chat-more-item chat-more-copy" id="chatMoreCopyBtn" role="menuitem">
+        <svg class="ui-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </section>
+</div>
+
+<!-- Instagram-Style Unsend Message Confirmation Dialog -->
+<div id="unsendConfirmModal" class="unsend-modal-overlay hide" role="dialog" aria-modal="true" aria-labelledby="unsendModalTitle" onclick="handleUnsendBackdropClick(event)">
+  <div class="unsend-modal-card">
+    <div class="unsend-modal-body">
+      <h3 id="unsendModalTitle" class="unsend-title">Unsend message?</h3>
+      <p class="unsend-desc">This will remove the message for everyone but people may have seen it already. Unsent messages may still be included if the conversation is reported.</p>
+    </div>
+    <div class="unsend-actions">
+      <button type="button" id="confirmUnsendBtn" class="unsend-btn-danger" onclick="confirmUnsendMessage()">Unsend</button>
+      <button type="button" id="cancelUnsendBtn" class="unsend-btn-cancel" onclick="closeUnsendModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- WhatsApp / Instagram Style Reaction Details Modal / Bottom Sheet -->
+<div id="reactionDetailModal" class="reaction-detail-overlay hide" role="dialog" aria-modal="true" aria-labelledby="reactionDetailTitle" onclick="handleReactionDetailBackdrop(event)">
+  <div class="reaction-detail-sheet" onclick="event.stopPropagation()">
+    <!-- Mobile Grab Handle -->
+    <div class="reaction-sheet-grabber" aria-hidden="true"></div>
+    
+    <!-- Header -->
+    <div class="reaction-sheet-header">
+      <h3 id="reactionDetailTitle" class="reaction-sheet-title">Reactions</h3>
+      <button type="button" class="reaction-sheet-close" onclick="closeReactionDetailSheet()" aria-label="Close reactions">
+        <svg class="ui-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+
+    <!-- Filter Tabs (All, ❤️ 2, 🔥 1, etc.) -->
+    <div id="reactionFilterTabs" class="reaction-filter-tabs" role="tablist"></div>
+
+    <!-- Users List -->
+    <div id="reactionUserList" class="reaction-user-list" role="tabpanel"></div>
+  </div>
+</div>
+
+<!-- Public User Profile Modal -->
+<section id="communityProfilePage" class="community-profile-page hide" role="dialog" aria-modal="true" aria-labelledby="communityProfilePageTitle">
+  <header class="community-profile-topbar">
+    <button type="button" class="community-profile-back" onclick="closeChatUserProfile()" aria-label="Back"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+    <h2 id="communityProfilePageTitle">Member Profile</h2>
+    <span></span>
+  </header>
+  <div id="communityProfileContent" class="community-profile-content">
+    <div class="empty">Loading profile…</div>
+  </div>
+</section>
+
+<!-- Edit Profile Page / Modal -->
+<section id="profileEditorPage" class="profile-editor-page hide" role="dialog" aria-modal="true" aria-labelledby="profileEditorTitle">
+  <header class="profile-editor-topbar">
+    <button type="button" class="profile-editor-back" onclick="closeProfileEditorPage()" aria-label="Back"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+    <h2 id="profileEditorTitle">Edit Profile</h2>
+    <span></span>
+  </header>
+  
+  <div class="profile-editor-scroll">
+    <section class="profile-editor-card">
+      
+      <!-- Profile Banner Field -->
+      <div id="profileBannerField" class="profile-editor-banner-field">
+        <div id="profileEditorBannerPreview" class="profile-editor-banner-preview" role="img" aria-label="Profile banner preview">Banner Preview</div>
+        <input id="profileBannerFile" type="file" accept="image/*" aria-label="Choose profile banner" style="display:none;">
+        <div class="profile-editor-banner-actions">
+          <button type="button" onclick="$('profileBannerFile').click()">📸 Change Banner</button>
+          <button type="button" class="light" onclick="clearProfileBanner()">Remove</button>
+        </div>
+      </div>
+
+      <!-- Identity & Avatar -->
+      <div class="profile-editor-identity">
+        <div id="profileEditorAvatar" class="profile-editor-avatar" aria-label="Your avatar">J</div>
+        <h1 id="profileEditorPreviewName">Jay</h1>
+        <p id="profileEditorRoleLabel">Student Member</p>
+      </div>
+
+      <!-- Custom Profile Photo Upload -->
+      <div id="privilegedProfileMedia" class="privileged-profile-media" style="margin:16px 0;text-align:center;">
+        <div id="profilePhotoField">
+          <input id="profilePhotoFile" type="file" accept="image/*" style="display:none;">
+          <button type="button" onclick="$('profilePhotoFile').click()" class="upload-photo-btn">📷 Upload Profile Photo</button>
+        </div>
+        <p id="profileMediaPermissionText" style="display:none;"></p>
+      </div>
+
+      <!-- Avatar Picker Gallery -->
+      <div class="profile-avatar-picker-wrap">
+        <div class="profile-avatar-picker-heading">
+          <b>Or choose an avatar</b>
+          <span>30 campus choices</span>
+        </div>
+        <div id="profileAvatarPicker" class="profile-avatar-picker" role="listbox" aria-label="Choose an avatar"></div>
+      </div>
+
+      <!-- Profile Form with LIVE Username Check -->
+      <form id="profileEditorForm" class="profile-editor-form" onsubmit="saveProfileEditor(event)">
+        <div class="profile-editor-fields">
+          <label>Full name *
+            <input id="profileDisplayName" type="text" maxlength="100" autocomplete="name" required placeholder="Your full name">
+          </label>
+          
+          <label>Course / Branch *
+            <input id="profileCourse" type="text" maxlength="100" autocomplete="organization-title" required placeholder="e.g. BCA, B.Tech, MBA">
+          </label>
+          
+          <label>Username *
+            <input id="profileUsername" type="text" maxlength="50" autocomplete="username" required placeholder="Choose a username">
+            <small id="usernameChangeHint" class="username-change-hint" aria-live="polite">You can change your username anytime. It must be unique across campus.</small>
+          </label>
+          
+          <label>Mobile / WhatsApp number (optional)
+            <input id="profilePhone" type="tel" maxlength="30" autocomplete="tel" placeholder="e.g. 9876543210">
+          </label>
+        </div>
+        
+        <p id="profileEditorError" class="auth-error" role="alert" aria-live="polite"></p>
+        
+        <div class="profile-editor-actions">
+          <button type="submit" id="profileEditorSave">Save Changes</button>
+        </div>
+      </form>
+    </section>
+  </div>
+</section>
+
+<!-- Post Comments & Threaded Replies Modal -->
+<div id="commentsModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="commentsModalTitle">
+  <div class="dialog comments-dialog">
+    <header class="comments-header">
+      <div class="comments-header-info">
+        <h2 id="commentsModalTitle">Comments</h2>
+        <span id="commentsPostSubtitle" class="comments-post-subtitle">On report</span>
+      </div>
+      <button class="modal-close-btn" type="button" onclick="closeCommentsModal()" aria-label="Close comments"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    </header>
+
+    <div id="commentsPostSnippet" class="comments-post-snippet"></div>
+
+    <div id="commentsList" class="comments-list" aria-live="polite">
+      <div class="empty">Loading comments…</div>
+    </div>
+
+    <!-- Active Reply Banner -->
+    <div id="commentReplyBanner" class="comment-reply-banner hide">
+      <span class="reply-banner-text"><b>Replying to</b> <span id="commentReplyTarget">@user</span></span>
+      <button type="button" class="reply-banner-cancel" onclick="cancelCommentReply()" aria-label="Cancel reply"><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    </div>
+
+    <!-- Compose Comment Bar -->
+    <form id="commentComposeForm" class="comment-compose-bar" onsubmit="submitPostComment(event)">
+      <div class="comment-user-avatar" id="commentUserAvatar">U</div>
+      <input id="commentInput" type="text" maxlength="1000" placeholder="Add a comment or reply..." autocomplete="off" required>
+      <button type="submit" id="commentSubmitBtn" class="comment-send-btn" aria-label="Send comment">Post</button>
+    </form>
+  </div>
+</div>
+
+<!-- Your Activity Center Modal (Archive, Recently Deleted, Likes) -->
+<div id="activityCenterModal" class="menu-fullscreen-page hide" role="dialog" aria-modal="true" aria-labelledby="activityCenterTitle">
+  <div class="dialog activity-center-dialog">
+    <header class="activity-center-header">
+      <div class="activity-header-left">
+        <button class="activity-back universal-back-circle-btn" type="button" onclick="closeActivityCenter()" aria-label="Back"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+        <div>
+          <h2 id="activityCenterTitle">Your Activity</h2>
+          <small class="activity-subtitle">Manage your campus reports &amp; interactions</small>
+        </div>
+      </div>
+    </header>
+
+    <!-- Activity Sub-Tabs -->
+    <div class="activity-tabs" role="tablist">
+      <button type="button" class="activity-tab active" data-act-tab="archive" onclick="switchActivityTab('archive')">
+        <span><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg> Archive</span>
+        <span id="activityArchiveBadge" class="activity-pill-badge">0</span>
+      </button>
+      <button type="button" class="activity-tab" data-act-tab="deleted" onclick="switchActivityTab('deleted')">
+        <span><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Recently Deleted</span>
+        <span id="activityDeletedBadge" class="activity-pill-badge">0</span>
+      </button>
+      <button type="button" class="activity-tab" data-act-tab="likes" onclick="switchActivityTab('likes')">
+        <span><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg> Likes</span>
+        <span id="activityLikesBadge" class="activity-pill-badge">0</span>
+      </button>
+    </div>
+
+    <!-- Dynamic Activity Content View -->
+    <div id="activityContent" class="activity-content" aria-live="polite">
+      <div class="empty">Loading activity…</div>
+    </div>
+  </div>
+</div>
+
+<!-- Notification & Privacy Modal -->
+<div id="privacySettingsModal" class="menu-fullscreen-page hide" role="dialog" aria-modal="true" aria-labelledby="privacySettingsTitle">
+  <div class="dialog info-sheet-dialog">
+    <header class="info-sheet-header">
+      <div class="info-header-left">
+        <button class="universal-back-circle-btn" type="button" onclick="closePrivacySettingsModal()" aria-label="Back"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+        <div>
+          <h2 id="privacySettingsTitle">Notification &amp; Privacy</h2>
+          <small class="info-sheet-subtitle">Alerts, chat sounds &amp; profile visibility</small>
+        </div>
+      </div>
+    </header>
+
+    <div class="info-sheet-body">
+      <!-- Section 1: Notifications -->
+      <div class="pref-card-group">
+        <div class="pref-group-title">
+          <span>🔔</span> Notifications &amp; Alerts
+        </div>
+
+        <div class="pref-row">
+          <div class="pref-info">
+            <b>Campus Post Alerts</b>
+            <small>Receive notifications when new lost or found items are posted</small>
+          </div>
+          <label class="campus-switch">
+            <input type="checkbox" id="prefPostAlerts" checked onchange="savePrivacyPreferences()">
+            <span class="campus-slider"></span>
+          </label>
+        </div>
+
+        <div class="pref-row">
+          <div class="pref-info">
+            <b>Community Chat Alerts</b>
+            <small>Receive push banners when peers message in campus chat</small>
+          </div>
+          <label class="campus-switch">
+            <input type="checkbox" id="prefChatAlerts" checked onchange="savePrivacyPreferences()">
+            <span class="campus-slider"></span>
+          </label>
+        </div>
+
+        <div class="pref-row">
+          <div class="pref-info">
+            <b>Chat Sounds &amp; Chimes</b>
+            <small>Play subtle audio tone when new messages or reports arrive</small>
+          </div>
+          <label class="campus-switch">
+            <input type="checkbox" id="prefSoundAlerts" checked onchange="toggleSoundPreference(this.checked)">
+            <span class="campus-slider"></span>
+          </label>
+        </div>
+
+        <div class="pref-row">
+          <div class="pref-info">
+            <b>Status &amp; Claim Updates</b>
+            <small>Get notified when your item is marked Returned or verified</small>
+          </div>
+          <label class="campus-switch">
+            <input type="checkbox" id="prefClaimAlerts" checked onchange="savePrivacyPreferences()">
+            <span class="campus-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Section 2: Privacy Controls -->
+      <div class="pref-card-group">
+        <div class="pref-group-title">
+          <span>🔒</span> Privacy &amp; Contact Visibility
+        </div>
+
+        <div class="pref-block">
+          <div class="pref-info" style="margin-bottom: 8px;">
+            <b>Phone Number on Reports</b>
+            <small>Choose who can view your mobile number on your lost/found cards</small>
+          </div>
+          <div class="pref-radio-group">
+            <label class="pref-radio-label">
+              <input type="radio" name="phoneVisibility" value="campus" checked onchange="savePrivacyPreferences()">
+              <div class="pref-radio-text">
+                <b>Verified Campus Members (Recommended)</b>
+                <small>Only logged-in university students can see your phone number</small>
+              </div>
+            </label>
+            <label class="pref-radio-label">
+              <input type="radio" name="phoneVisibility" value="public" onchange="savePrivacyPreferences()">
+              <div class="pref-radio-text">
+                <b>Everyone (Public)</b>
+                <small>Visible to all visitors for fastest WhatsApp or direct calls</small>
+              </div>
+            </label>
+            <label class="pref-radio-label">
+              <input type="radio" name="phoneVisibility" value="hidden" onchange="savePrivacyPreferences()">
+              <div class="pref-radio-text">
+                <b>Hide Phone Number</b>
+                <small>Keep phone private; students reach you via CampUs Chat &amp; Comments</small>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="pref-row">
+          <div class="pref-info">
+            <b>Show Active Status</b>
+            <small>Let other campus members see when you are online</small>
+          </div>
+          <label class="campus-switch">
+            <input type="checkbox" id="prefActiveStatus" checked onchange="savePrivacyPreferences()">
+            <span class="campus-slider"></span>
+          </label>
+        </div>
+
+        <div class="pref-row">
+          <div class="pref-info">
+            <b>Include Profile in Member Search</b>
+            <small>Allow fellow students to look up your profile by name</small>
+          </div>
+          <label class="campus-switch">
+            <input type="checkbox" id="prefMemberSearch" checked onchange="savePrivacyPreferences()">
+            <span class="campus-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Section 3: Data & Retention Info -->
+      <div class="pref-card-group">
+        <div class="pref-group-title">
+          <span>🛡️</span> Data &amp; Safety Retention
+        </div>
+        <div class="pref-note-card">
+          <div class="pref-note-icon">⏳</div>
+          <div class="pref-note-text">
+            <b>30-Day Soft Delete Guarantee</b>
+            <p>Whenever you delete a report, it stays protected in your <b>Recently Deleted</b> vault for 30 days before permanent wipeout. You can restore it anytime.</p>
+            <button type="button" class="pref-shortcut-btn" onclick="openActivityFromPrivacy('deleted')">Open Recently Deleted →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pref-actions">
+        <button type="button" class="btn-primary pref-save-btn" onclick="savePrivacyPreferences(true)">Save &amp; Apply Preferences</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Terms & Conditions Modal -->
+<div id="termsModal" class="menu-fullscreen-page hide" role="dialog" aria-modal="true" aria-labelledby="termsModalTitle">
+  <div class="dialog info-sheet-dialog">
+    <header class="info-sheet-header">
+      <div class="info-header-left">
+        <button class="universal-back-circle-btn" type="button" onclick="closeTermsModal()" aria-label="Back"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+        <div>
+          <h2 id="termsModalTitle">Terms &amp; Conditions</h2>
+          <small class="info-sheet-subtitle">CampUs Student Community Guidelines &amp; Code of Conduct</small>
+        </div>
+      </div>
+    </header>
+
+    <div class="info-sheet-body">
+      <div class="terms-hero-badge">
+        <span class="terms-badge-icon">🏛️</span>
+        <div>
+          <b>Verified University Platform</b>
+          <p>Effective for all students, staff, and faculty on the CampUs network.</p>
+        </div>
+      </div>
+
+      <div class="terms-clauses-list">
+        <div class="terms-clause-card">
+          <div class="clause-num">1</div>
+          <div class="clause-content">
+            <b>Acceptance &amp; Campus Membership</b>
+            <p>By creating an account or posting on CampUs, you confirm that you are an active student, faculty, or staff member of the university network and agree to follow university discipline rules.</p>
+          </div>
+        </div>
+
+        <div class="terms-clause-card">
+          <div class="clause-num">2</div>
+          <div class="clause-content">
+            <b>Authenticity of Lost &amp; Found Reports</b>
+            <p>All items reported as Lost or Found must be genuine. Submitting false reports, prank posts, deceptive photos, or claiming property belonging to another student is strictly forbidden and subject to administrative disciplinary action.</p>
+          </div>
+        </div>
+
+        <div class="terms-clause-card">
+          <div class="clause-num">3</div>
+          <div class="clause-content">
+            <b>Mandatory Ownership Verification</b>
+            <p>Before handing over a found item, finders must require claimants to show verifiable proof (e.g., student ID verification, unlocking the phone / laptop screen, matching unique stickers or serial marks, or describing exact pouch contents).</p>
+          </div>
+        </div>
+
+        <div class="terms-clause-card">
+          <div class="clause-num">4</div>
+          <div class="clause-content">
+            <b>Safe Public Campus Handoffs</b>
+            <p>Physical exchanges of recovered items must take place in well-lit, central campus public areas (such as Central Library Reception, Security Guard Gate, Student Center, or Campus Department Helpdesks) during normal daytime hours.</p>
+          </div>
+        </div>
+
+        <div class="terms-clause-card">
+          <div class="clause-num">5</div>
+          <div class="clause-content">
+            <b>Community Chat &amp; Comment Conduct</b>
+            <p>CampUs maintains zero tolerance for cyber-bullying, harassment, abusive language, inappropriate photo uploads, spamming, unauthorized commercial advertisements, or solicitation in chat or comments.</p>
+          </div>
+        </div>
+
+        <div class="terms-clause-card">
+          <div class="clause-num">6</div>
+          <div class="clause-content">
+            <b>Privacy &amp; Contact Information Protection</b>
+            <p>Phone numbers, course details, and names shared on reports are strictly for returning lost items. Scraping, harvesting, or misusing student contact data for unsolicited outreach is a violation of user privacy and university regulations.</p>
+          </div>
+        </div>
+
+        <div class="terms-clause-card">
+          <div class="clause-num">7</div>
+          <div class="clause-content">
+            <b>30-Day Post Retention &amp; Permanent Wipeout</b>
+            <p>Deleted posts are preserved in 'Recently Deleted' for 30 calendar days to protect against accidental deletion. After 30 days, reports and associated media are permanently purged from the system.</p>
+          </div>
+        </div>
+
+        <div class="terms-clause-card">
+          <div class="clause-num">8</div>
+          <div class="clause-content">
+            <b>Limitation of Liability</b>
+            <p>CampUs provides the communication tools to help peers connect. The university and platform developers do not hold custodial possession of items and are not liable for unrecovered belongings or interpersonal disputes.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="terms-footer-action">
+        <button type="button" class="btn-primary terms-accept-btn" onclick="acceptCampusTerms()">I Agree &amp; Understand</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Help & Support Modal -->
+<div id="helpSupportModal" class="menu-fullscreen-page hide" role="dialog" aria-modal="true" aria-labelledby="helpSupportTitle">
+  <div class="dialog info-sheet-dialog">
+    <header class="info-sheet-header">
+      <div class="info-header-left">
+        <button class="universal-back-circle-btn" type="button" onclick="closeHelpSupportModal()" aria-label="Back"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+        <div>
+          <h2 id="helpSupportTitle">Help &amp; Support</h2>
+          <small class="info-sheet-subtitle">Guides, FAQs &amp; Campus Emergency Helpdesk</small>
+        </div>
+      </div>
+    </header>
+
+    <div class="info-sheet-body">
+      <div class="faq-group">
+        <div class="faq-group-title">Frequently Asked Questions</div>
+
+        <details class="faq-accordion" open>
+          <summary><b>How do I report an item I lost or found?</b></summary>
+          <p>Tap the <b>＋ Report Item</b> button in the top navigation or bottom bar. Select <b>Lost</b> or <b>Found</b>, enter a clear title, select the item category, campus location (e.g. Block 3, Canteen, Library), and upload a photo if available.</p>
+        </details>
+
+        <details class="faq-accordion">
+          <summary><b>How do I mark an item as Returned?</b></summary>
+          <p>Go to the 3-line menu → <b>My Reports</b>. Click <b>Mark Returned ✨</b> on your post. This lets the whole campus know the item has been safely returned to its owner.</p>
+        </details>
+
+        <details class="faq-accordion">
+          <summary><b>Can I restore a post I deleted accidentally?</b></summary>
+          <p>Yes! Every deleted post is safely stored in <b>Recently Deleted</b> for 30 days. Open the 3-line menu → <b>Your Activity</b> → <b>Recently Deleted</b> tab, and tap <b>Restore 🔄</b>.</p>
+        </details>
+
+        <details class="faq-accordion">
+          <summary><b>How do I share a post on WhatsApp or Instagram?</b></summary>
+          <p>Every post card has a <b>Share</b> button at the bottom. Tap it to copy the link or share directly to your campus groups.</p>
+        </details>
+
+        <details class="faq-accordion">
+          <summary><b>What should I do if I find high-value items (laptops, gold, purse)?</b></summary>
+          <p>We recommend creating a Found report on CampUs, but depositing the physical item immediately with the <b>Central Campus Security Office</b> for secure safekeeping.</p>
+        </details>
+      </div>
+
+      <!-- Campus Emergency / Helpdesk Contact Card -->
+      <div class="support-contact-card">
+        <div class="support-card-header">
+          <span class="support-icon">🆘</span>
+          <div>
+            <b>Campus Security &amp; Proctor Office</b>
+            <small>For urgent campus assistance or lost high-value items</small>
+          </div>
+        </div>
+        <div class="support-contact-rows">
+          <div class="support-row">
+            <span>📍 Location:</span>
+            <b>Main Gate Security Office, Campus Center</b>
+          </div>
+          <div class="support-row">
+            <span>⏰ Hours:</span>
+            <b>24/7 Security Desk</b>
+          </div>
+          <div class="support-row">
+            <span>📧 Inquiries:</span>
+            <b>security-support@campus.edu</b>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- About CampUs Modal -->
+<div id="aboutCampusModal" class="menu-fullscreen-page hide" role="dialog" aria-modal="true" aria-labelledby="aboutCampusTitle">
+  <div class="dialog info-sheet-dialog">
+    <header class="info-sheet-header">
+      <div class="info-header-left">
+        <button class="universal-back-circle-btn" type="button" onclick="closeAboutCampusModal()" aria-label="Back"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+        <div>
+          <h2 id="aboutCampusTitle">About CampUs</h2>
+          <small class="info-sheet-subtitle">University Community Platform</small>
+        </div>
+      </div>
+    </header>
+
+    <div class="info-sheet-body" style="text-align: center; padding: 24px 20px;">
+      <div class="about-logo-badge">🎓</div>
+      <h3 style="margin: 12px 0 4px; font-size: 20px; font-weight: 850; color: var(--insta-text-main);">CampUs</h3>
+      <p style="font-size: 13px; color: var(--insta-primary); font-weight: 750; margin: 0 0 16px;">Version 2.5 (Campus Edition)</p>
+      
+      <div class="about-desc-card">
+        <p>CampUs is an intelligent, peer-to-peer lost and found and student community network designed exclusively for university campuses.</p>
+        <p>Our mission is to help every lost student possession find its way back home safely, quickly, and with total campus trust.</p>
+      </div>
+
+      <div class="about-highlights-grid">
+        <div class="about-highlight-box">
+          <b>⚡ Real-Time</b>
+          <small>Instant campus feed &amp; live chat</small>
+        </div>
+        <div class="about-highlight-box">
+          <b>🛡️ Verified</b>
+          <small>Authenticated college network</small>
+        </div>
+        <div class="about-highlight-box">
+          <b>🔒 Privacy-First</b>
+          <small>Configurable phone &amp; contact visibility</small>
+        </div>
+        <div class="about-highlight-box">
+          <b>🔄 30-Day Recovery</b>
+          <small>Recently Deleted safety guarantee</small>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px; font-size: 12px; color: var(--insta-text-muted);">
+        Made with 🧡 for college students &amp; university communities.
+      </div>
+
+      <footer class="app-footer about-app-footer" style="margin-top: 20px; padding: 16px 0 6px; border-top: 1px solid var(--insta-border, #E6D8CF); text-align: center; color: var(--insta-text-muted); font-size: 12px; display: flex; flex-direction: column; gap: 4px;">
+        <span>CampUs · University Lost &amp; Found Hub</span>
+        <span id="copyrightNotice">Copyright © 2026 CampUs Lost &amp; Found. All rights Reserved.</span>
+      </footer>
+    </div>
+  </div>
+</div>
+
+<!-- Master Admin Control Center & Site Dashboard -->
+<div id="adminDashboardModal" class="menu-fullscreen-page admin-dashboard-modal hide" role="dialog" aria-modal="true" aria-labelledby="adminDashboardTitle">
+  <div class="dialog admin-dashboard-dialog">
+    <!-- Top Executive Header -->
+    <header class="admin-topbar">
+      <div class="admin-topbar-left">
+        <button class="universal-back-circle-btn" type="button" onclick="closeAdminDashboard()" aria-label="Close admin dashboard"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+        <div class="admin-title-wrap">
+          <div class="admin-title-row">
+            <h2 id="adminDashboardTitle">CampUs Control Center</h2>
+            <span class="admin-status-badge">● MASTER ADMIN</span>
+          </div>
+          <small class="admin-subtitle">Site-Wide Operations, Security &amp; Moderation</small>
+        </div>
+      </div>
+      <div class="admin-topbar-right">
+        <div class="admin-user-pill" id="adminUserPill">
+          <span class="admin-role-tag" id="adminRoleBadge">ADMIN</span>
+          <span id="adminUsernameDisplay">@admin</span>
+        </div>
+        <button type="button" class="admin-refresh-btn" onclick="refreshAdminData()" title="Refresh Dashboard" aria-label="Refresh Data">
+          <span>🔄</span>
+          <span class="desk-only-text">Refresh</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Admin Sub-Navigation Tabs Bar -->
+    <div class="admin-nav-tabs-bar">
+      <nav class="admin-nav-tabs" role="tablist">
+        <button type="button" class="admin-tab-btn active" data-admin-tab="overview" onclick="switchAdminTab('overview')">
+          <span>📊 Overview</span>
+        </button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="users" onclick="switchAdminTab('users')">
+          <span>👥 Users</span>
+          <span class="admin-count-pill" id="adminTabUsersCount">0</span>
+        </button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="reports" onclick="switchAdminTab('reports')">
+          <span>📦 Reports &amp; Posts</span>
+          <span class="admin-count-pill" id="adminTabReportsCount">0</span>
+        </button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="comments" onclick="switchAdminTab('comments')">
+          <span>💬 Comments</span>
+          <span class="admin-count-pill" id="adminTabCommentsCount">0</span>
+        </button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="chat" onclick="switchAdminTab('chat')">
+          <span>📱 Community Chat</span>
+        </button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="broadcast" onclick="switchAdminTab('broadcast')">
+          <span>📢 Broadcast Alerts</span>
+        </button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="settings" onclick="switchAdminTab('settings')">
+          <span>⚙️ System &amp; Security</span>
+        </button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="logs" onclick="switchAdminTab('logs')">
+          <span>📜 Audit Logs</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Admin Content View -->
+    <div id="adminTabContent" class="admin-tab-content">
+      <div class="empty">Loading Control Center…</div>
+    </div>
+  </div>
+</div>
+
+<!-- Image Zoom Lightbox Container -->
+<div id="imageLightbox" class="image-lightbox hide" onclick="closeLightbox()" aria-modal="true" role="dialog">
+  <img id="lightboxImg" src="" alt="Enlarged photo preview">
+</div>
+
+<!-- Nav Popup Dialog -->
+<div id="navPopup" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="navPopupTitle">
+  <div class="dialog nav-dialog">
+    <button class="nav-popup-back" type="button" onclick="closeNavPopup()" aria-label="Back"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+    <small class="eyebrow" id="navPopupEyebrow">CAMPUS</small>
+    <h2 id="navPopupTitle">Welcome</h2>
+    <div id="navPopupBody"></div>
+    <div class="actions">
+      <button type="button" class="light" onclick="closeNavPopup()">Cancel</button>
+      <button type="button" id="navPopupOk" onclick="confirmNavPopup()">Okay →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Post to Market Modal -->
+<div id="marketModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="marketModalTitle">
+  <div class="dialog modern-modal-card">
+    <button class="modal-close-btn x" type="button" onclick="closeMarketModal()" aria-label="Close modal"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    <small class="eyebrow">CAMPUS MARKETPLACE</small>
+    <h2 id="marketModalTitle">Sell or Give Away an Item</h2>
+    
+    <form id="marketForm" onsubmit="handleMarketSubmit(event)">
+      <div class="fields">
+        <label>Item Name *
+          <input id="marketTitle" required placeholder="e.g. ED Drafter / Notes / Lab Coat / Cycle">
+        </label>
+        
+        <label>Category *
+          <select id="marketCategory" required>
+            <option value="">Select category</option>
+            <option value="Books & Notes">Books &amp; Notes</option>
+            <option value="Drafter & Lab">Drafter &amp; Lab Gear</option>
+            <option value="Cycles & Mobility">Cycles &amp; Mobility</option>
+            <option value="Hostel Essentials">Hostel Essentials (Kettle, Mattress, etc.)</option>
+            <option value="Electronics">Electronics &amp; Accessories</option>
+            <option value="Fashion & Merch">Fashion &amp; Campus Merch</option>
+            <option value="Free / Giveaways">Free Giveaways (₹0)</option>
+            <option value="Other">Other Items</option>
+          </select>
+        </label>
+
+        <label>Condition *
+          <select id="marketCondition" required>
+            <option value="Like New">Like New (Barely used)</option>
+            <option value="Good" selected>Good (Working fine)</option>
+            <option value="Fair">Fair (Noticeable wear)</option>
+            <option value="Brand New">Brand New (Unopened)</option>
+          </select>
+        </label>
+
+        <label>Price (₹) *
+          <div class="price-input-row" style="display:flex; align-items:center; gap:10px;">
+            <input id="marketPrice" type="number" min="0" step="1" placeholder="e.g. 250" required style="flex:1;">
+            <label class="free-item-checkbox" style="display:flex; align-items:center; gap:6px; font-weight:600; cursor:pointer; font-size:13px;">
+              <input type="checkbox" id="marketIsFree" onchange="toggleMarketFree(this)"> Free (₹0)
+            </label>
+          </div>
+        </label>
+
+        <label>Campus Location / Hostel *
+          <input id="marketLocation" required placeholder="e.g. Boys Hostel 4 / Central Library">
+        </label>
+
+        <label>Mobile / WhatsApp Number *
+          <input id="marketPhone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="e.g. 9876543210 (Buyers will chat on WhatsApp)">
+        </label>
+
+        <label class="wide">Description
+          <textarea id="marketDescription" rows="3" placeholder="Condition details, reason for selling, semester, etc."></textarea>
+        </label>
+
+        <label class="wide">Item Photo <span class="optional">(Recommended)</span>
+          <input id="marketPhoto" type="file" accept="image/*" onchange="previewMarketPhoto(this)">
+          <small class="hint">Photos help sell items 5x faster!</small>
+          <img id="marketPhotoPreview" class="photo-preview hide" alt="Item preview">
+        </label>
+      </div>
+
+      <p id="marketError" class="auth-error"></p>
+
+      <div class="modal-single-action">
+        <button type="submit" id="marketSubmitBtn" class="auth-primary">List in Campus Market →</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Claim Item / Proof of Ownership Modal -->
+<div id="claimItemModal" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="claimModalTitle">
+  <div class="dialog modern-modal-card">
+    <button class="modal-close-btn x" type="button" onclick="closeClaimModal()" aria-label="Close claim modal"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    <small class="eyebrow">VERIFY OWNERSHIP</small>
+    <h2 id="claimModalTitle">Claim This Item</h2>
+    <p class="modal-claim-subtitle" id="claimItemTargetTitle" style="margin:4px 0 14px; font-size:13px; color:var(--insta-text-muted);">Submitting proof for item</p>
+    
+    <form id="claimForm" onsubmit="handleClaimSubmit(event)">
+      <input type="hidden" id="claimReportId">
+
+      <div id="claimSecretQuestionBox" class="claim-secret-box hide" style="margin-bottom:12px; padding:12px; border-radius:12px; background:rgba(255,107,0,0.08); border:1px dashed var(--insta-primary);">
+        <div class="secret-box-header" style="font-weight:700; font-size:12px; color:var(--insta-primary); margin-bottom:4px;">
+          <span>🔒 Founder's Verification Question:</span>
+        </div>
+        <p id="claimSecretQuestionText" class="secret-box-question" style="font-size:14px; font-weight:600; margin:0; color:var(--insta-text-main);"></p>
+      </div>
+
+      <div class="fields">
+        <label>Answer / Specific Identifying Details *
+          <textarea id="claimAnswer" rows="3" required placeholder="Describe details only the genuine owner would know: lock screen wallpaper, specific scratches, unique sticker, keychain color, engraved initials, or serial marks..."></textarea>
+        </label>
+
+        <label>Additional Proof or Notes <span class="optional">(optional)</span>
+          <textarea id="claimAdditionalProof" rows="2" placeholder="Where/when you lost it, purchase details, brand specifics..."></textarea>
+        </label>
+
+        <label>Your Mobile / WhatsApp Number *
+          <input id="claimPhone" type="tel" inputmode="tel" required placeholder="e.g. 9876543210 (Founder will contact you to return)">
+        </label>
+
+        <label class="wide">Proof Image <span class="optional">(optional)</span>
+          <input id="claimProofImage" type="file" accept="image/*" onchange="previewClaimProof(this)">
+          <small class="hint">Upload purchase bill, box picture, or an old photo showing you with the item.</small>
+          <img id="claimPhotoPreview" class="photo-preview hide" alt="Claim proof preview">
+        </label>
+      </div>
+
+      <p id="claimError" class="auth-error"></p>
+
+      <div class="modal-single-action">
+        <button type="submit" id="claimSubmitBtn" class="auth-primary">Submit Ownership Claim →</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Received Claims Viewer Modal for Founder -->
+<div id="claimsViewerModal" class="menu-fullscreen-page hide" role="dialog" aria-modal="true" aria-labelledby="claimsViewerTitle">
+  <div class="dialog info-sheet-dialog">
+    <header class="info-sheet-header">
+      <div class="info-header-left">
+        <button class="universal-back-circle-btn" type="button" onclick="closeClaimsViewer()" aria-label="Back"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+        <div>
+          <h2 id="claimsViewerTitle">Ownership Claims</h2>
+          <small class="info-sheet-subtitle" id="claimsViewerSubtitle">Review proofs submitted by claimants</small>
+        </div>
+      </div>
+    </header>
+
+    <div class="info-sheet-body" style="max-width: 680px; margin: 0 auto; padding-top: 16px;">
+      <div id="claimsListContainer" class="claims-list-container">
+        <div class="empty">Loading submitted claims…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Campus Good Samaritans Karma Leaderboard Modal -->
+<div id="leaderboardModal" class="menu-fullscreen-page hide" role="dialog" aria-modal="true" aria-labelledby="leaderboardTitle">
+  <div class="dialog info-sheet-dialog">
+    <header class="info-sheet-header">
+      <div class="info-header-left">
+        <button class="universal-back-circle-btn" type="button" onclick="closeLeaderboardModal()" aria-label="Back"><svg class="ui-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+        <div>
+          <h2 id="leaderboardTitle">Campus Good Samaritans</h2>
+          <small class="info-sheet-subtitle">Kindness &amp; Returns Hall of Fame</small>
+        </div>
+      </div>
+    </header>
+
+    <div class="info-sheet-body" style="max-width: 680px; margin: 0 auto; padding-top: 16px;">
+      <!-- Hero Karma Banner -->
+      <div class="karma-hero-banner">
+        <div class="karma-hero-trophy">
+          <svg class="ui-icon trophy-svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path><path d="M4 22h16"></path><path d="M10 14.66V17c0 .55-.45 1-1 1H7"></path><path d="M14 14.66V17c0 .55.45 1 1 1h2"></path><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path></svg>
+        </div>
+        <h3>Campus Karma Points &amp; Badges</h3>
+        <p>Earn Karma points every time you report found items, verify ownership, and safely reunite lost belongings with campus students.</p>
+        <div class="karma-rules-row">
+          <span class="karma-rule-pill"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#16A34A" stroke-width="2.3"><polyline points="20 6 9 17 4 12"></polyline></svg> Return an Item: +50 Karma</span>
+          <span class="karma-rule-pill"><svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#E06D10" stroke-width="2.3"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> Verified Claim: +20 Karma</span>
+        </div>
+      </div>
+
+      <!-- Leaderboard List -->
+      <div id="leaderboardList" class="leaderboard-list">
+        <div class="empty">Loading leaderboard…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notifications -->
+<div id="toast"></div>
+
+<!-- Hidden inputs for legacy filtering support -->
+<div id="legacyFilters" hidden aria-hidden="true">
+  <input id="q">
+  <select id="filterCategory">
+    <option value=""></option>
+    <option>Electronics</option>
+    <option>ID card</option>
+    <option>Keys</option>
+    <option>Wallet / purse</option>
+    <option>Books / stationery</option>
+    <option>Clothing</option>
+    <option>Water bottle</option>
+    <option>Other</option>
+  </select>
+  <input id="filterLocation">
+  <input id="dateFrom" type="date">
+  <input id="dateTo" type="date">
+</div>
+
+<!-- Authentic Apple iOS 12-Blade Activity Loading Indicator (Network-Driven, No Box) -->
+<div id="appleLoadingOverlay" class="apple-loading-overlay hide" aria-hidden="true" role="status">
+  <svg class="apple-spinner-svg" viewBox="0 0 36 36" width="42" height="42" xmlns="http://www.w3.org/2000/svg" aria-label="Loading...">
+    <g stroke="#3C3C43" stroke-width="2.75" stroke-linecap="round">
+      <line x1="18" y1="4.5" x2="18" y2="10.5" opacity="1.0" />
+      <line x1="24.75" y1="6.31" x2="21.75" y2="11.51" opacity="0.916" />
+      <line x1="29.69" y1="11.25" x2="24.49" y2="14.25" opacity="0.833" />
+      <line x1="31.5" y1="18" x2="25.5" y2="18" opacity="0.75" />
+      <line x1="29.69" y1="24.75" x2="24.49" y2="21.75" opacity="0.666" />
+      <line x1="24.75" y1="29.69" x2="21.75" y2="24.49" opacity="0.583" />
+      <line x1="18" y1="31.5" x2="18" y2="25.5" opacity="0.5" />
+      <line x1="11.25" y1="29.69" x2="14.25" y2="24.49" opacity="0.416" />
+      <line x1="6.31" y1="24.75" x2="11.51" y2="21.75" opacity="0.333" />
+      <line x1="4.5" y1="18" x2="10.5" y2="18" opacity="0.25" />
+      <line x1="6.31" y1="11.25" x2="11.51" y2="14.25" opacity="0.166" />
+      <line x1="11.25" y1="6.31" x2="14.25" y2="11.51" opacity="0.083" />
+    </g>
+  </svg>
+</div>
+
+<script>
+  window.CAMPUS_API_BASE = "https://campuslnf-production.up.railway.app";
+  const _nativeFetch = window.fetch;
+  window.fetch = function(url, options) {
+    if (typeof url === 'string' && url.startsWith('/api/')) {
+      url = window.CAMPUS_API_BASE + url;
+    }
+    return _nativeFetch.call(this, url, options);
+  };
+</script>
+<script src="./app.js?v=campus-20261117-bulletproof6"></script>
+
+</body>
+</html>
