@@ -317,12 +317,37 @@ window.addEventListener('popstate',()=>{
  handleHomeBackPress();
 });
 installCampusBackGuard();
+function clearSelectedPhoto(e) {
+  if (e) {
+    try { e.stopPropagation(); e.preventDefault(); } catch {}
+  }
+  const photoInput = $('photo');
+  if (photoInput) photoInput.value = '';
+  const preview = $('photoPreview');
+  if (preview) preview.src = '';
+  const container = $('photoPreviewContainer');
+  if (container) container.classList.add('hide');
+  const uploadBox = $('photoUploadBox');
+  if (uploadBox) uploadBox.classList.remove('hide');
+}
+
+function setQuickLocation(loc) {
+  const input = $('location');
+  if (!input) return;
+  input.value = loc;
+  input.focus();
+  if ('vibrate' in navigator) {
+    try { navigator.vibrate(10); } catch {}
+  }
+}
+
 function openForm(type){
   $('form').reset();
-  $('name').value=currentUser?.displayName||currentUser?.username||'';
-  $('phone').value=currentUser?.phone||'';
-  $('photoPreview').src='';
-  $('photoPreview').classList.add('hide');
+  const savedName = currentUser?.displayName || currentUser?.username || localStorage.getItem('campus_user_name') || '';
+  const savedPhone = currentUser?.phone || localStorage.getItem('campus_user_phone') || '';
+  $('name').value = savedName;
+  $('phone').value = savedPhone;
+  clearSelectedPhoto();
   if($('itemDate')){
     const today = new Date().toISOString().split('T')[0];
     $('itemDate').max = today;
@@ -792,13 +817,18 @@ async function triggerFeedRefresh() {
 
   const pullEl = $('feedPullRefresh');
   const btn = $('feedManualRefreshBtn');
-  if (pullEl) pullEl.classList.add('refreshing');
+  if (pullEl) {
+    pullEl.classList.remove('pulling');
+    pullEl.classList.add('refreshing');
+    pullEl.style.transform = 'translateY(18px)';
+    pullEl.style.opacity = '1';
+  }
   if (btn) btn.classList.add('spinning');
   if ('vibrate' in navigator) {
-    try { navigator.vibrate(12); } catch {}
+    try { navigator.vibrate(14); } catch {}
   }
 
-  const minDelay = new Promise(resolve => setTimeout(resolve, 600));
+  const minDelay = new Promise(resolve => setTimeout(resolve, 800));
 
   try {
     const refreshTasks = [load()];
@@ -810,10 +840,16 @@ async function triggerFeedRefresh() {
     console.warn('Feed refresh error:', err);
   } finally {
     if (pullEl) {
-      pullEl.classList.remove('refreshing');
-      pullEl.classList.remove('pulling');
-      pullEl.style.removeProperty('transform');
-      pullEl.style.removeProperty('opacity');
+      pullEl.style.transition = 'transform 0.28s ease, opacity 0.22s ease';
+      pullEl.style.transform = 'translateY(-50px)';
+      pullEl.style.opacity = '0';
+      setTimeout(() => {
+        pullEl.classList.remove('refreshing');
+        pullEl.classList.remove('pulling');
+        pullEl.style.removeProperty('transform');
+        pullEl.style.removeProperty('opacity');
+        pullEl.style.removeProperty('transition');
+      }, 300);
     }
     if (btn) btn.classList.remove('spinning');
     const arc = $('pullRefreshArc');
@@ -909,11 +945,108 @@ async function triggerFeedRefresh() {
     }
   }, { passive: true });
 })();
-$('photo').addEventListener('change',()=>{const file=$('photo').files[0];if(!file){$('photoPreview').src='';$('photoPreview').classList.add('hide');return}if(!file.type.startsWith('image/')){toast('Please choose an image file.');$('photo').value='';return}const reader=new FileReader();reader.onload=()=>{$('photoPreview').src=reader.result;$('photoPreview').classList.remove('hide')};reader.onerror=()=>{toast('Could not read the photo. Please try another image.');$('photo').value='';$('photoPreview').src='';$('photoPreview').classList.add('hide')};reader.readAsDataURL(file)});
-$('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeForm()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeForm()});
-$('form').addEventListener('submit',async e=>{e.preventDefault();const file=$('photo').files[0];let imageData=null;if(file){try{imageData=await compressProfileImage(file,800,800,0.72)}catch{try{imageData=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)})}catch{$('error').textContent='Could not read the photo. Please try another image.';return}}}
-let payload={imageData,type:$('type').value,title:$('title').value.trim(),category:$('category').value,location:$('location').value.trim(),itemDate:$('itemDate').value||null,reporterName:$('name').value.trim(),reporterPhone:$('phone').value.trim(),description:$('description').value.trim(),secretQuestion:$('secretQuestion')?$('secretQuestion').value.trim():''};
-try{let res=await fetch('/api/reports',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!res.ok){let d=await res.json().catch(()=>({}));throw Error(d.message||'Please check the form and try again.')}const created=await res.json().catch(()=>null);$('form').reset();if($('secretQuestion'))$('secretQuestion').value='';$('photoPreview').src='';$('photoPreview').classList.add('hide');closeForm();toast('Report submitted. Thanks for helping your campus! 💜');load()}catch(err){$('error').textContent=err.message||'Could not submit report.'}});
+$('photo').addEventListener('change', () => {
+  const file = $('photo').files[0];
+  if (!file) {
+    clearSelectedPhoto();
+    return;
+  }
+  if (!file.type.startsWith('image/')) {
+    toast('Please choose an image file.');
+    clearSelectedPhoto();
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    $('photoPreview').src = reader.result;
+    $('photoPreviewContainer')?.classList.remove('hide');
+    $('photoUploadBox')?.classList.add('hide');
+  };
+  reader.onerror = () => {
+    toast('Could not read the photo. Please try another image.');
+    clearSelectedPhoto();
+  };
+  reader.readAsDataURL(file);
+});
+
+$('modal').addEventListener('click', e => { if (e.target === $('modal')) closeForm(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeForm(); });
+
+$('form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const submitBtn = $('submitReportButton');
+  const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Post to Campus Feed →';
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.classList.add('btn-loading');
+    submitBtn.innerHTML = '<span class="btn-spinner"></span> Posting to Campus Feed…';
+  }
+
+  try {
+    const file = $('photo').files[0];
+    let imageData = null;
+    if (file) {
+      try {
+        imageData = await compressProfileImage(file, 800, 800, 0.72);
+      } catch {
+        try {
+          imageData = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+        } catch {
+          $('error').textContent = 'Could not read the photo. Please try another image.';
+          return;
+        }
+      }
+    }
+
+    const reporterName = $('name').value.trim();
+    const reporterPhone = $('phone').value.trim();
+    if (reporterName) localStorage.setItem('campus_user_name', reporterName);
+    if (reporterPhone) localStorage.setItem('campus_user_phone', reporterPhone);
+
+    const payload = {
+      imageData,
+      type: $('type').value,
+      title: $('title').value.trim(),
+      category: $('category').value,
+      location: $('location').value.trim(),
+      itemDate: $('itemDate').value || null,
+      reporterName,
+      reporterPhone,
+      description: $('description').value.trim(),
+      secretQuestion: $('secretQuestion') ? $('secretQuestion').value.trim() : ''
+    };
+
+    const res = await fetch('/api/reports', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw Error(d.message || 'Please check the form and try again.');
+    }
+    await res.json().catch(() => null);
+    $('form').reset();
+    if ($('secretQuestion')) $('secretQuestion').value = '';
+    clearSelectedPhoto();
+    closeForm();
+    toast('Report submitted. Thanks for helping your campus! 💜');
+    load();
+  } catch (err) {
+    $('error').textContent = err.message || 'Could not submit report.';
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.classList.remove('btn-loading');
+      submitBtn.innerHTML = originalBtnText;
+    }
+  }
+});
 async function updateStatus(id,status){try{let r=await fetch(`/api/reports/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});if(!r.ok)throw 0;toast('Status updated');load()}catch{toast('Could not update status')}}
 
 /* --------------------------------------------------------------------------

@@ -10728,9 +10728,10 @@ input[type="submit"]:active,
 }
 
 .pull-refresh-spinner {
-  width: 24px !important;
-  height: 24px !important;
-  transform: rotate(-90deg) !important;
+  width: 26px !important;
+  height: 26px !important;
+  display: block !important;
+  transform-origin: 50% 50% !important;
 }
 
 .pull-refresh-bg {
@@ -10745,6 +10746,7 @@ input[type="submit"]:active,
   stroke: #F0913C !important;
   stroke-dasharray: 88 !important;
   stroke-dashoffset: 88 !important;
+  transform-origin: 50% 50% !important;
   transition: stroke-dashoffset 0.08s linear !important;
 }
 
@@ -10753,13 +10755,16 @@ input[type="submit"]:active,
 }
 
 .pull-refresh-container.refreshing .pull-refresh-arc {
-  stroke-dashoffset: 25 !important;
-  stroke-dasharray: 60, 28 !important;
+  stroke-dashoffset: 22 !important;
+  stroke-dasharray: 62, 26 !important;
 }
 
 @keyframes pullRefreshSpin {
+  0% {
+    transform: rotate(0deg);
+  }
   100% {
-    transform: rotate(270deg) !important;
+    transform: rotate(360deg);
   }
 }
 
@@ -10783,6 +10788,11 @@ input[type="submit"]:active,
   flex-shrink: 0 !important;
 }
 
+.feed-refresh-tab-btn .refresh-icon {
+  display: inline-block !important;
+  transform-origin: 50% 50% !important;
+}
+
 .feed-refresh-tab-btn:hover {
   background: rgba(240, 145, 60, 0.12) !important;
   color: #B45309 !important;
@@ -10797,8 +10807,11 @@ input[type="submit"]:active,
 }
 
 @keyframes feedBtnSpin {
+  0% {
+    transform: rotate(0deg);
+  }
   100% {
-    transform: rotate(360deg) !important;
+    transform: rotate(360deg);
   }
 }
 
@@ -10809,5 +10822,134 @@ input[type="submit"]:active,
 
 [data-theme="dark"] .feed-refresh-tab-btn:hover {
   background: rgba(240, 145, 60, 0.2) !important;
+}
+
+/* ==========================================================================
+   POST CREATION ENHANCEMENTS: PHOTO PREVIEW, REMOVE BTN, QUICK LOCATIONS, SPINNER
+   ========================================================================== */
+.quick-location-chips {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  margin-top: 7px !important;
+  margin-bottom: 3px !important;
+}
+
+.quick-loc-chip {
+  background: #FFF7EE !important;
+  border: 1px solid rgba(240, 145, 60, 0.3) !important;
+  color: #B45309 !important;
+  padding: 4px 10px !important;
+  border-radius: 999px !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  white-space: nowrap !important;
+  user-select: none !important;
+}
+
+.quick-loc-chip:hover {
+  background: #FFEEDD !important;
+  border-color: #F0913C !important;
+  transform: translateY(-1px) !important;
+}
+
+.quick-loc-chip:active {
+  transform: scale(0.96) !important;
+}
+
+[data-theme="dark"] .quick-loc-chip {
+  background: #231B15 !important;
+  border-color: rgba(240, 145, 60, 0.35) !important;
+  color: #FBBF24 !important;
+}
+
+.photo-upload-box {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 14px !important;
+  border: 1.5px dashed rgba(240, 145, 60, 0.5) !important;
+  border-radius: 12px !important;
+  background: #FFFBF7 !important;
+  color: #C25E17 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease !important;
+  margin-top: 4px !important;
+}
+
+.photo-upload-box:hover {
+  background: #FFF3E6 !important;
+  border-color: #F0913C !important;
+}
+
+[data-theme="dark"] .photo-upload-box {
+  background: #1C1713 !important;
+  border-color: rgba(240, 145, 60, 0.4) !important;
+  color: #FBBF24 !important;
+}
+
+.photo-preview-container {
+  position: relative !important;
+  display: inline-block !important;
+  max-width: 100% !important;
+  margin-top: 8px !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1) !important;
+}
+
+.photo-preview-img {
+  display: block !important;
+  max-width: 100% !important;
+  max-height: 220px !important;
+  object-fit: cover !important;
+  border-radius: 14px !important;
+}
+
+.photo-remove-btn {
+  position: absolute !important;
+  top: 8px !important;
+  right: 8px !important;
+  width: 28px !important;
+  height: 28px !important;
+  border-radius: 50% !important;
+  background: rgba(0, 0, 0, 0.65) !important;
+  color: #FFFFFF !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
+  font-size: 14px !important;
+  font-weight: bold !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.15s ease !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+.photo-remove-btn:hover {
+  background: #DC2626 !important;
+  transform: scale(1.08) !important;
+}
+
+.btn-spinner {
+  display: inline-block !important;
+  width: 14px !important;
+  height: 14px !important;
+  border: 2px solid rgba(255, 255, 255, 0.4) !important;
+  border-top-color: #FFFFFF !important;
+  border-radius: 50% !important;
+  animation: btnSpin 0.65s linear infinite !important;
+  vertical-align: middle !important;
+  margin-right: 7px !important;
+}
+
+@keyframes btnSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
