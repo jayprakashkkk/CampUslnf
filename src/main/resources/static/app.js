@@ -651,7 +651,6 @@ function renderPostCardMarkup(r, all) {
   const waText = encodeURIComponent(`Hi ${authorName}! I saw your ${r.type} report for "${r.title}" on CampUs.`);
   const waUrl = cleanPhone ? `https://wa.me/${waPhone}?text=${waText}` : '';
   const postTime = timeAgo(r.createdAt || r.itemDate);
-  const collegeTag = r.college ? collegeDisplayName(r.college) : (currentUser ? currentUser.collegeName : 'Campus');
 
   const statusControl = canEdit
    ? `<select class="action-status-select" onchange="updateStatus(${r.id},this.value)" aria-label="Update status"><option value="OPEN" ${r.status==='OPEN'?'selected':''}>● Open</option><option value="MATCHED" ${r.status==='MATCHED'?'selected':''}>● Matched</option><option value="RETURNED" ${r.status==='RETURNED'?'selected':''}>✓ Returned</option></select>`
@@ -672,7 +671,7 @@ function renderPostCardMarkup(r, all) {
         <div class="insta-post-avatar">${avatarContent}</div>
         <div class="insta-post-author-text">
           <span class="insta-post-author-name">${esc(authorName)} ${roleBadge}</span>
-          <span class="insta-post-author-sub">@${esc(ownerUsername||'student')} · ${esc(postTime)} · ${esc(collegeTag)}</span>
+          <span class="insta-post-author-sub">@${esc(ownerUsername||'student')} · ${esc(postTime)}</span>
         </div>
       </button>
       <div class="insta-post-badges">
@@ -744,7 +743,7 @@ async function load(retryCount = 0){
     if(!allRes.ok){
       if(allRes.status===401){
         $('total').textContent='0';$('lost').textContent='0';$('found').textContent='0';$('returned').textContent='0';$('resultCount').textContent='Log in to view campus reports';
-        $('grid').innerHTML='<div class="empty"><b>Campus Network</b><p>Please log in or create an account to view lost &amp; found items from your college.</p><button type="button" class="auth-primary" onclick="openAuthChoices()" style="margin-top:12px;">Log In / Sign Up →</button></div>';
+        $('grid').innerHTML='<div class="empty"><b>Campus Network</b><p>Please log in or create an account to view lost &amp; found items from your campus.</p><button type="button" class="auth-primary" onclick="openAuthChoices()" style="margin-top:12px;">Log In / Sign Up →</button></div>';
         return;
       }
       throw new Error(`HTTP ${allRes.status}`);
@@ -1258,7 +1257,7 @@ async function searchExploreMembers(query) {
         <div class="explore-member-avatar">${avatarInner(m.avatarId, name, m.profileImageUrl)}</div>
         <div class="explore-member-info">
           <b>${esc(name)} ${roleBadgeMarkup(m.role)}</b>
-          <small>@${esc(m.username || 'user')} · ${esc(m.course || collegeDisplayName(m.college) || 'Student')}</small>
+          <small>@${esc(m.username || 'user')} · ${esc(m.course || 'Student')}</small>
         </div>
       </button>`;
     }).join('');
@@ -1785,8 +1784,7 @@ function handleDrawerBackdropClick(event) {
 
 function handleDrawerNav(action) {
   if (action === 'campusInfo') {
-    const college = currentUser ? currentUser.collegeName : 'University Network';
-    toast(`Verified Campus: ${college} 🏛️`);
+    toast(`Verified Campus Community 🏛️`);
     return;
   }
   if (action === 'logout') {
@@ -2005,38 +2003,22 @@ function firstNameOfUser(user=currentUser){
 }
 
 function formatCollegeFullName(raw) {
-  if (!raw) return 'Chandigarh University';
-  const str = String(raw).trim();
-  const match = str.match(/\(([^)]+)\)/);
-  if (match && match[1]) return match[1].trim();
-  const upper = str.toUpperCase();
-  if (upper === 'CU' || upper.includes('CHANDIGARH')) return 'Chandigarh University';
-  if (upper === 'LPU' || upper.includes('LOVELY')) return 'Lovely Professional University';
-  if (upper === 'CGC_UNIV' || upper.includes('CGC UNIV')) return 'CGC University';
-  if (upper === 'CGC_LANDRAN' || upper.includes('LANDRAN')) return 'CGC Landran';
-  return str;
+  return '';
 }
 
 function collegeDisplayName(code) {
-  return formatCollegeFullName(code);
+  return '';
 }
 
 function renderCollegeBadge() {
   const badge = $('campusCollegeBadge');
-  const badgeText = $('campusCollegeText');
-  const fullName = formatCollegeFullName(currentUser?.collegeName || currentUser?.college);
   if (badge) {
-    if (badgeText) {
-      badgeText.textContent = fullName;
-    } else {
-      badge.textContent = fullName;
-    }
-    badge.title = `Verified Campus: ${fullName}`;
-    badge.hidden = false;
+    badge.hidden = true;
+    badge.style.display = 'none';
   }
   const chatSubtitle = $('chatCampusSubtitle');
   if (chatSubtitle) {
-    chatSubtitle.textContent = fullName || 'Live Campus Hub';
+    chatSubtitle.textContent = 'Live Campus Hub';
   }
 }
 
@@ -2064,7 +2046,7 @@ function updateGreeting(){
 
  const campusDesc = $('drawerCampusDesc');
  if (campusDesc) {
-   campusDesc.textContent = currentUser?.collegeName || 'Verified University Network';
+   campusDesc.textContent = 'Verified Student Network';
  }
 
  const isMuted = $('chatMuteButton')?.getAttribute('aria-pressed') === 'true';
@@ -2462,7 +2444,7 @@ function chooseAuthMode(mode) {
   const fields = $('authRegisterFields');
   if (fields) {
     fields.hidden = !creating;
-    ['authFullName', 'authCollege', 'authCourse', 'authEmail'].forEach(id => {
+    ['authFullName', 'authCourse', 'authEmail'].forEach(id => {
       const field = $(id);
       if (field) {
         field.disabled = !creating;
@@ -2470,6 +2452,7 @@ function chooseAuthMode(mode) {
         if (!creating) field.value = '';
       }
     });
+    if ($('authCollege')) $('authCollege').value = 'CU';
   }
 
   // Confirm password field (register only)
@@ -2554,7 +2537,7 @@ function enterApp(user) {
     phone: user.phone || '',
     course: user.course || '',
     college: user.college || 'CU',
-    collegeName: user.collegeName || 'CU (Chandigarh University)',
+    collegeName: user.collegeName || 'CampUs',
     avatarId: validAvatarId(user.avatarId),
     profileImageData: user.profileImageData || '',
     bannerImageData: user.bannerImageData || '',
@@ -2569,7 +2552,7 @@ function enterApp(user) {
   renderCollegeBadge();
   const chatSubtitle = $('chatCampusSubtitle');
   if (chatSubtitle) {
-    chatSubtitle.textContent = 'CampUs · ' + formatCollegeFullName(currentUser.collegeName);
+    chatSubtitle.textContent = 'Live Campus Hub';
   }
 
   document.body.classList.remove('auth-locked');
@@ -2815,7 +2798,7 @@ $('authForm')?.addEventListener('submit',async event=>{
   const username = ($('authUsername')?.value || '').trim().toLowerCase();
   const password = $('authPassword')?.value || '';
   const displayName = ($('authFullName')?.value || '').trim();
-  const college = $('authCollege')?.value || '';
+  const college = $('authCollege')?.value || 'CU';
   const course = ($('authCourse')?.value || '').trim();
   const email = ($('authEmail')?.value || '').trim().toLowerCase();
   const confirmPassword = ($('authConfirmPassword')?.value || '');
@@ -2827,10 +2810,6 @@ $('authForm')?.addEventListener('submit',async event=>{
     }
     if (displayName.length > 100) {
       showAuthError('Full name must be 100 characters or fewer.', $('authFullName'));
-      return;
-    }
-    if (!college) {
-      showAuthError('Please select your College / University.', $('authCollege'));
       return;
     }
     if (!course) {
@@ -3029,8 +3008,7 @@ function openCommunityChat(){
 
   const chatSubtitle = $('chatCampusSubtitle');
   if (chatSubtitle) {
-    const clg = (currentUser && (collegeDisplayName(currentUser.college) || currentUser.college)) || 'Verified Campus Network';
-    chatSubtitle.textContent = clg;
+    chatSubtitle.textContent = 'Live Campus Hub';
   }
 
   const input = $('communityChatInput');
@@ -3248,8 +3226,7 @@ function renderReactionDetailContent(){
   listEl.innerHTML = filtered.map(r => {
     const isMe = Boolean(currentUname && String(r.username).toLowerCase() === currentUname);
     const name = r.displayName || r.username || 'CampUs User';
-    const college = r.college ? formatCollegeFullName(r.college) : 'Verified Campus';
-    const sub = isMe ? 'Tap to remove reaction' : `@${r.username || 'user'} · ${college}`;
+    const sub = isMe ? 'Tap to remove reaction' : `@${r.username || 'user'}`;
     const initial = (name.trim().charAt(0) || 'U').toUpperCase();
     const avatarContent = r.profileImageUrl
       ? `<img src="${esc(r.profileImageUrl)}" alt="${esc(name)}">`
@@ -3382,7 +3359,7 @@ async function setChatMessageReaction(messageId, emoji){
       id: Date.now(),
       username: uName,
       displayName: dName,
-      college: currentUser?.collegeName || 'CGC University',
+      college: 'CU',
       avatarId: currentUser?.avatarId || '',
       profileImageUrl: currentUser?.profileImageUrl || '',
       emoji: emoji,
@@ -4675,7 +4652,7 @@ async function renderAdminUsers(force = false) {
 
       <!-- Search & Filters -->
       <div class="admin-filter-bar">
-        <input type="search" id="adminUserSearchInput" class="admin-search-input" placeholder="Search by username, name, email, college..." oninput="handleAdminUserSearch()">
+        <input type="search" id="adminUserSearchInput" class="admin-search-input" placeholder="Search by username, name, email, course..." oninput="handleAdminUserSearch()">
         <select id="adminUserRoleFilter" class="admin-select" onchange="fetchAdminUsersList()">
           <option value="ALL">All Roles</option>
           <option value="OWNER">Owner</option>
@@ -4742,7 +4719,7 @@ async function fetchAdminUsersList() {
           <thead>
             <tr>
               <th>Member</th>
-              <th>College &amp; Course</th>
+              <th>Course</th>
               <th>Contact</th>
               <th>Role</th>
               <th>Status</th>
@@ -4768,8 +4745,7 @@ async function fetchAdminUsersList() {
                     </div>
                   </td>
                   <td>
-                    <b>${esc(u.college || 'CU')}</b><br>
-                    <small style="color:#64748B;">${esc(u.course || 'Not specified')}</small>
+                    <b>${esc(u.course || 'Not specified')}</b>
                   </td>
                   <td>
                     <small>${esc(u.email || 'No email')}</small><br>
@@ -5220,15 +5196,7 @@ async function renderAdminChat(force = false) {
         <button type="button" class="admin-btn admin-btn-danger" onclick="adminClearChatChannel()">🧹 Clear Channel</button>
       </div>
 
-      <div class="admin-filter-bar">
-        <select id="adminChatCollegeFilter" class="admin-select" onchange="fetchAdminChatList()">
-          <option value="ALL">All Colleges</option>
-          <option value="CU">Chandigarh University (CU)</option>
-          <option value="CGC_LANDRAN">CGC Landran</option>
-          <option value="CGC_UNIV">CGC University</option>
-          <option value="LPU">Lovely Professional University (LPU)</option>
-        </select>
-      </div>
+      <input type="hidden" id="adminChatCollegeFilter" value="ALL">
 
       <div id="adminChatWrap">
         <div class="empty">Loading chat messages…</div>
@@ -5264,7 +5232,6 @@ async function fetchAdminChatList() {
           <thead>
             <tr>
               <th>Author</th>
-              <th>College</th>
               <th>Message</th>
               <th>Time</th>
               <th>Actions</th>
@@ -5277,7 +5244,6 @@ async function fetchAdminChatList() {
                   <b>${esc(m.displayName || m.username)}</b><br>
                   <small style="color:#64748B;">@${esc(m.username)}</small>
                 </td>
-                <td><span class="role-badge member">${esc(m.college || 'CU')}</span></td>
                 <td>
                   ${m.replyText ? `<small style="color:#64748B;display:block;margin-bottom:2px;">↳ Replying to: ${esc(m.replyText.slice(0, 40))}…</small>` : ''}
                   ${esc(m.message)}
@@ -5367,16 +5333,7 @@ async function renderAdminBroadcast(force = false) {
             </select>
           </div>
 
-          <div class="admin-form-row">
-            <label for="adminAnnounceCollege">Target Campus</label>
-            <select id="adminAnnounceCollege" class="admin-select">
-              <option value="ALL">All Campuses</option>
-              <option value="CU">Chandigarh University (CU)</option>
-              <option value="CGC_LANDRAN">CGC Landran</option>
-              <option value="CGC_UNIV">CGC University</option>
-              <option value="LPU">Lovely Professional University (LPU)</option>
-            </select>
-          </div>
+          <input type="hidden" id="adminAnnounceCollege" value="ALL">
         </div>
 
         <button type="submit" id="adminAnnounceSubmitBtn" class="admin-action-btn-lg primary" style="align-self:flex-start;margin-top:6px;">
@@ -5431,7 +5388,7 @@ async function fetchAdminAnnouncementsList() {
               </div>
               <p style="font-size:12.5px;margin:4px 0 8px;line-height:1.45;">${esc(a.message)}</p>
               <div class="admin-item-meta">
-                <span>🏛️ Target: ${esc(a.college || 'ALL')} · 👤 By: @${esc(a.createdBy || 'admin')}</span>
+                <span>👤 By: @${esc(a.createdBy || 'admin')}</span>
                 <span>📅 Published: ${formatDateNice(a.createdAt)}</span>
               </div>
               <div class="admin-btn-group" style="margin-top:8px;">
@@ -6418,7 +6375,7 @@ async function fetchLeaderboard() {
           <div class="leaderboard-avatar">${avatarInner(u.avatarId, u.displayName, u.profileImageUrl)}</div>
           <div class="leaderboard-user-details">
             <div class="leaderboard-user-name">${esc(u.displayName)}</div>
-            <div class="leaderboard-user-sub">@${esc(u.username)} · ${esc(u.college || 'Campus')}</div>
+            <div class="leaderboard-user-sub">@${esc(u.username)}</div>
           </div>
           <div class="leaderboard-points-wrap">
             <span class="leaderboard-points"><svg class="ui-icon star-icon" viewBox="0 0 24 24" width="13" height="13" fill="#F59E0B" stroke="#D97706" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg> ${u.karmaPoints || 0} pts</span>

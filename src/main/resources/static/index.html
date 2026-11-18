@@ -185,14 +185,7 @@
           <label for="authFullName">Full name *</label>
           <input id="authFullName" name="displayName" type="text" autocomplete="name" maxlength="100" disabled placeholder="e.g. Rahul Sharma" autocapitalize="words">
           
-          <label for="authCollege">Select your College / University *</label>
-          <select id="authCollege" name="college" disabled required>
-            <option value="" disabled selected>Select your campus...</option>
-            <option value="CU">Chandigarh University (CU)</option>
-            <option value="CGC_UNIV">CGC University</option>
-            <option value="CGC_LANDRAN">CGC Landran</option>
-            <option value="LPU">Lovely Professional University (LPU)</option>
-          </select>
+          <input type="hidden" id="authCollege" name="college" value="CU">
           
           <label for="authCourse">Course / Branch *</label>
           <input id="authCourse" name="course" type="text" autocomplete="organization-title" maxlength="100" disabled placeholder="e.g. BCA, B.Tech CSE, MBA" autocapitalize="words">
@@ -278,11 +271,8 @@
       <div class="logo-text">
         <div class="logo-title-row">
           <span class="logo-title-brand">Camp<span>Us</span></span>
-          <span id="campusCollegeBadge" class="college-badge" hidden>
-            <span class="college-badge-icon" aria-hidden="true">
-              <svg class="ui-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10h18M5 10v11M19 10v11M9 10v11M15 10v11M12 2L2 7h20L12 2z"></path></svg>
-            </span>
-            <span id="campusCollegeText">Chandigarh University</span>
+          <span id="campusCollegeBadge" class="college-badge" style="display:none !important;" hidden>
+            <span id="campusCollegeText" style="display:none !important;"></span>
           </span>
         </div>
         <small class="logo-subtitle">LOST &amp; FOUND</small>
@@ -388,7 +378,7 @@
         </span>
         <div class="drawer-item-text">
           <b>Campus Community</b>
-          <small id="drawerCampusDesc">Verified University Network</small>
+          <small id="drawerCampusDesc">Verified Student Network</small>
         </div>
       </button>
 
@@ -1381,7 +1371,7 @@
         </div>
         <div class="about-highlight-box">
           <b>🛡️ Verified</b>
-          <small>Authenticated college network</small>
+          <small>Authenticated student community</small>
         </div>
         <div class="about-highlight-box">
           <b>🔒 Privacy-First</b>
@@ -1394,11 +1384,11 @@
       </div>
 
       <div style="margin-top: 24px; font-size: 12px; color: var(--insta-text-muted);">
-        Made with 🧡 for college students &amp; university communities.
+        Made with 🧡 for students &amp; campus communities.
       </div>
 
       <footer class="app-footer about-app-footer" style="margin-top: 20px; padding: 16px 0 6px; border-top: 1px solid var(--insta-border, #E6D8CF); text-align: center; color: var(--insta-text-muted); font-size: 12px; display: flex; flex-direction: column; gap: 4px;">
-        <span>CampUs · University Lost &amp; Found Hub</span>
+        <span>CampUs · Lost &amp; Found Hub</span>
         <span id="copyrightNotice">Copyright © 2026 CampUs Lost &amp; Found. All rights Reserved.</span>
       </footer>
     </div>
