@@ -6512,3 +6512,44 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000);
 
+
+// Smart Android hardware back button handler
+window.handleNativeBackPressed = function() {
+  const imgOverlay = document.getElementById('imageModalOverlay');
+  if (imgOverlay && !imgOverlay.classList.contains('hide')) {
+    imgOverlay.classList.add('hide');
+    return true;
+  }
+  const chat = document.getElementById('communityChatOverlay');
+  if (chat && !chat.classList.contains('hide')) {
+    if (typeof closeCommunityChat === 'function') closeCommunityChat();
+    return true;
+  }
+  const modal = document.getElementById('modal');
+  if (modal && !modal.classList.contains('hide')) {
+    if (typeof closeForm === 'function') closeForm();
+    return true;
+  }
+  const drawer = document.getElementById('navDrawerOverlay');
+  if (drawer && !drawer.classList.contains('hide')) {
+    if (typeof closeNavDrawer === 'function') closeNavDrawer();
+    return true;
+  }
+  const prof = document.getElementById('communityProfilePage');
+  if (prof && !prof.classList.contains('hide')) {
+    prof.classList.add('hide');
+    return true;
+  }
+  return false;
+};
+
+// Smooth Splash Screen Dismissal (1.1s)
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    const splash = document.getElementById('campusSplashScreen');
+    if (splash) {
+      splash.classList.add('fade-out');
+      setTimeout(() => splash.remove(), 450);
+    }
+  }, 1100);
+});

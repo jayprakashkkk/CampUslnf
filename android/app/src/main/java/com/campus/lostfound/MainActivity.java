@@ -48,6 +48,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         webView = new WebView(this);
+        webView.setOverScrollMode(android.view.View.OVER_SCROLL_NEVER);
+        webView.setBackgroundColor(android.graphics.Color.parseColor("#FFF8EF"));
         setContentView(webView);
 
         WebSettings settings = webView.getSettings();
@@ -60,6 +62,9 @@ public class MainActivity extends AppCompatActivity {
         settings.setUseWideViewPort(true);
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setMediaPlaybackRequiresUserGesture(false);
+        settings.setBuiltInZoomControls(false);
+        settings.setDisplayZoomControls(false);
+        settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
 
         // Native WebViewClient to keep app inside native container
         webView.setWebViewClient(new WebViewClient() {
@@ -99,16 +104,22 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Native back gesture handler
+        // Native back gesture handler with smart modal dismissal
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                if (webView.canGoBack()) {
-                    webView.goBack();
-                } else {
-                    setEnabled(false);
-                    getOnBackPressedDispatcher().onBackPressed();
-                }
+                webView.evaluateJavascript("(function(){ return window.handleNativeBackPressed ? window.handleNativeBackPressed() : false; })()", value -> {
+                    if ("true".equals(value)) {
+                        // Successfully handled and dismissed active modal in web view
+                        return;
+                    }
+                    if (webView.canGoBack()) {
+                        webView.goBack();
+                    } else {
+                        setEnabled(false);
+                        getOnBackPressedDispatcher().onBackPressed();
+                    }
+                });
             }
         });
 
