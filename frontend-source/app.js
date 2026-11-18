@@ -9,12 +9,17 @@ const CAMPUS_API_BASE = (function() {
   const host = (window.location && window.location.hostname) || '';
   const port = (window.location && window.location.port) || '';
 
+  // Android Native App WebView (file:///android_asset/... or local packaged file://)
+  if (window.location && window.location.protocol === 'file:') {
+    return RAILWAY_BACKEND;
+  }
+
   // Auto-connect to Railway backend when hosted on Cloudflare Pages, Vercel, Netlify, GitHub Pages, or external host
   if (host.includes('pages.dev') || host.includes('vercel.app') || host.includes('netlify.app') || host.includes('github.io') || (host && host !== 'localhost' && host !== '127.0.0.1' && !host.includes('railway.app'))) {
     return RAILWAY_BACKEND;
   }
-  // Auto-connect to port 8080 when running frontend on separate dev port (e.g. 5500, 3000, 5173) or via file://
-  if ((window.location && window.location.protocol === 'file:') || (port && port !== '8080' && (host === 'localhost' || host === '127.0.0.1'))) {
+  // Auto-connect to port 8080 when running frontend on separate dev port (e.g. 5500, 3000, 5173)
+  if (port && port !== '8080' && (host === 'localhost' || host === '127.0.0.1')) {
     return 'http://localhost:8080';
   }
   return '';
@@ -118,7 +123,7 @@ window.fetch = async function(input, init) {
         }
         return response;
       } catch (err) {
-        if (!url.includes('railway.app') && window.location.hostname.includes('pages.dev')) {
+        if (!url.includes('railway.app') && (window.location.hostname.includes('pages.dev') || (window.location && window.location.protocol === 'file:'))) {
           const fallbackUrl = getFallbackUrl(url);
           return await _origFetch.call(this, fallbackUrl, init);
         }
@@ -6542,17 +6547,6 @@ window.handleNativeBackPressed = function() {
   }
   return false;
 };
-
-// Smooth Splash Screen Dismissal (1.1s)
-window.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => {
-    const splash = document.getElementById('campusSplashScreen');
-    if (splash) {
-      splash.classList.add('fade-out');
-      setTimeout(() => splash.remove(), 450);
-    }
-  }, 1100);
-});
 
 // Smooth 2-Second Animated Splash Screen Dismissal -> Reveal Login Page / Feed
 window.addEventListener('DOMContentLoaded', () => {
