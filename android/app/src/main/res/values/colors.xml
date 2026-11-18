@@ -1,4 +1,5 @@
 <resources>
     <color name="campus_bg">#FFF8EF</color>
     <color name="campus_primary">#FF7A1A</color>
+    <color name="ic_launcher_background">#FFF8EF</color>
 </resources>

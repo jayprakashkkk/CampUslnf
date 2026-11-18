@@ -1,0 +1,86 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <group
+        android:scaleX="0.75"
+        android:scaleY="0.75"
+        android:translateX="16.5"
+        android:translateY="16.5">
+
+        <!-- Magnifier Handle (angled 45deg) -->
+        <group
+            android:pivotX="68"
+            android:pivotY="68"
+            android:rotation="45">
+            <!-- Ferrule -->
+            <path
+                android:fillColor="#78909C"
+                android:pathData="M65,68 h6 v5 h-6 z" />
+            <!-- Handle -->
+            <path
+                android:fillColor="#3E2723"
+                android:pathData="M64,73 h8 v22 h-8 z" />
+        </group>
+
+        <!-- Magnifier Outer Rim -->
+        <!-- Center (50, 54), radius 28 -->
+        <path
+            android:fillColor="#FF6B18"
+            android:strokeColor="#FF8C38"
+            android:strokeWidth="1.5"
+            android:pathData="M50,26 A28,28 0 1,0 50,82 A28,28 0 1,0 50,26 Z" />
+
+        <!-- Lens Glass Interior -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M50,30 A24,24 0 1,0 50,78 A24,24 0 1,0 50,30 Z" />
+
+        <!-- Star Glow Aura -->
+        <path
+            android:fillColor="#FFF8E1"
+            android:pathData="M50,35 A19,19 0 1,0 50,73 A19,19 0 1,0 50,35 Z" />
+
+        <!-- 4-Point Radiant Discovery Star -->
+        <path
+            android:fillColor="#FFB300"
+            android:pathData="M50,40 Q50,54 40,54 Q50,54 50,68 Q50,54 60,54 Q50,54 50,40 Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M50,51.8 A2.2,2.2 0 1,0 50,56.2 A2.2,2.2 0 1,0 50,51.8 Z" />
+
+        <!-- Graduation Cap Skull Base -->
+        <path
+            android:fillColor="#212121"
+            android:strokeColor="#FF9800"
+            android:strokeWidth="1"
+            android:pathData="M36,34 Q50,37 64,34 L62,25 Q50,28 38,25 Z" />
+
+        <!-- Graduation Cap Mortarboard Plate -->
+        <path
+            android:fillColor="#262626"
+            android:strokeColor="#FF9800"
+            android:strokeWidth="1"
+            android:pathData="M50,14 L78,25 L50,36 L22,25 Z" />
+
+        <!-- Top Center Button -->
+        <path
+            android:fillColor="#FFB300"
+            android:pathData="M50,23 A3,1.5 0 1,0 50,26 A3,1.5 0 1,0 50,23 Z" />
+
+        <!-- Golden Tassel & Cord -->
+        <path
+            android:strokeColor="#FFB300"
+            android:strokeWidth="1.8"
+            android:strokeLineCap="round"
+            android:pathData="M50,24.5 Q66,22 74,29 Q78,33 76,38" />
+        <path
+            android:fillColor="#FFC107"
+            android:pathData="M76,36 A2,2 0 1,0 76,40 A2,2 0 1,0 76,36 Z" />
+        <path
+            android:fillColor="#FFA000"
+            android:pathData="M74,40 L78,40 L81,52 L72,52 Z" />
+    </group>
+</vector>
