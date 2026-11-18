@@ -6546,14 +6546,18 @@ window.handleNativeBackPressed = function() {
 };
 
 // Smooth 2-Second Animated Splash Screen Dismissal -> Reveal Login Page / Feed
-window.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => {
+(function() {
+  function dismissSplash() {
     const splash = document.getElementById('campusSplashScreen');
-    if (splash) {
-      splash.classList.add('fade-out');
-      setTimeout(() => {
-        splash.remove();
-      }, 500);
-    }
-  }, 2000);
-});
+    if (!splash || splash.__dismissed) return;
+    splash.__dismissed = true;
+    splash.classList.add('fade-out');
+    setTimeout(() => {
+      splash.remove();
+    }, 500);
+  }
+
+  const elapsed = Date.now() - (window.__campusLaunchTime || Date.now());
+  const remaining = Math.max(300, 2000 - elapsed);
+  setTimeout(dismissSplash, remaining);
+})();

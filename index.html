@@ -14,8 +14,121 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="CampUs">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="preload" as="image" href="./icons/campusfind-512.png">
+  <style>
+    /* Critical First-Frame Instant Splash CSS */
+    .campus-splash-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #FFF8EF;
+      transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.45s ease;
+    }
+    .campus-splash-screen.fade-out {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .campus-splash-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 14px;
+      max-width: 320px;
+      width: 90%;
+    }
+    .campus-splash-logo-wrap {
+      position: relative;
+      display: grid;
+      place-items: center;
+      margin-bottom: 4px;
+    }
+    .campus-splash-aura {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(232, 148, 75, 0.35) 0%, rgba(232, 148, 75, 0) 70%);
+      animation: splashAuraPulse 2s infinite ease-in-out;
+      pointer-events: none;
+    }
+    .campus-splash-logo {
+      position: relative;
+      display: block !important;
+      width: 104px !important;
+      height: 104px !important;
+      object-fit: contain !important;
+      animation: splashLogoEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+      filter: drop-shadow(0 12px 30px rgba(232, 148, 75, 0.36));
+    }
+    .campus-splash-title {
+      font-size: 42px;
+      font-weight: 900;
+      color: #38271E;
+      margin: 0;
+      letter-spacing: -1.4px;
+      line-height: 1;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      animation: splashFadeUp 0.8s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .campus-splash-title span {
+      color: #D9682B;
+    }
+    .campus-splash-tagline {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 2.2px;
+      color: #9C8878;
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      animation: splashFadeUp 0.8s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .campus-splash-progress {
+      width: 150px;
+      height: 4px;
+      background: rgba(232, 148, 75, 0.18);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-top: 14px;
+      animation: splashFadeUp 0.8s 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .campus-splash-bar {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #F29A5D, #D9682B);
+      border-radius: 6px;
+      animation: splashProgressFill 1.95s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    @keyframes splashLogoEntrance {
+      0% { transform: scale(0.55) translateY(24px); opacity: 0; }
+      60% { transform: scale(1.08) translateY(-4px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    @keyframes splashFadeUp {
+      0% { transform: translateY(16px); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes splashAuraPulse {
+      0%, 100% { transform: scale(1); opacity: 0.55; }
+      50% { transform: scale(1.35); opacity: 0.85; }
+    }
+    @keyframes splashProgressFill {
+      0% { width: 0%; }
+      25% { width: 38%; }
+      65% { width: 78%; }
+      100% { width: 100%; }
+    }
+    /* Hide feed when not authenticated */
+    html.no-session #authGate { display: grid !important; }
+    html.no-session .app-header, html.no-session .standalone-search-wrap, html.no-session .feed-main-container, html.no-session .bottom-app-nav, html.no-session header, html.no-session main, body.auth-locked .app-header, body.auth-locked .standalone-search-wrap, body.auth-locked .feed-main-container, body.auth-locked .bottom-app-nav { display: none !important; }
+  </style>
   <link rel="stylesheet" href="/style.css?v=campus-20261117-bulletproof6">
   <script>
+    window.__campusLaunchTime = Date.now();
     (function(){
       try{
         var s=localStorage.getItem('campus_auth_token')||localStorage.getItem('campus_user');
