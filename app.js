@@ -2428,6 +2428,8 @@ function setAuthGateVisibility(visible) {
   gate.style.setProperty('display', visible ? 'grid' : 'none', 'important');
   document.body.classList.toggle('auth-locked', visible);
   document.body.classList.toggle('auth-gate-active', visible);
+  document.documentElement.classList.toggle('no-session', visible);
+  document.documentElement.classList.toggle('has-session', !visible);
   const bottomNav = document.querySelector('.bottom-app-nav');
   if (bottomNav) {
     bottomNav.style.setProperty('display', visible ? 'none' : '', visible ? 'important' : '');

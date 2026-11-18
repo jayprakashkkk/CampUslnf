@@ -184,10 +184,23 @@ body.browse-mode .board-search.hidden-search{display:block!important}
 }
 
 /* First-open account gate */
+html.no-session #authGate {
+  display: grid !important;
+}
+
+html.no-session .app-header,
+html.no-session .standalone-search-wrap,
+html.no-session .feed-main-container,
+html.no-session .bottom-app-nav,
+html.no-session header,
+html.no-session main,
+body.auth-locked .app-header,
+body.auth-locked .standalone-search-wrap,
+body.auth-locked .feed-main-container,
+body.auth-locked .bottom-app-nav,
 body.auth-locked > header,
 body.auth-locked > .board-search,
 body.auth-locked > main,
-body.auth-locked .bottom-app-nav,
 body.auth-gate-active .bottom-app-nav,
 #authGate:not(.hide) ~ .bottom-app-nav,
 #authGate:not([hidden]) ~ .bottom-app-nav { display:none !important; }

@@ -15,6 +15,18 @@
   <meta name="apple-mobile-web-app-title" content="CampUs">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="stylesheet" href="./style.css?v=campus-20261117-bulletproof6">
+  <script>
+    (function(){
+      try{
+        var s=localStorage.getItem('campus_auth_token')||localStorage.getItem('campus_user');
+        if(!s){
+          document.documentElement.classList.add('no-session');
+        }else{
+          document.documentElement.classList.add('has-session');
+        }
+      }catch(e){}
+    })();
+  </script>
 </head>
 <body class="auth-locked">
 
