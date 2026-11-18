@@ -8510,10 +8510,10 @@ body[data-theme="dark"] {
 /* Chat Brand Avatar with Live Pulse Indicator */
 .chat-brand-avatar {
   position: relative !important;
-  width: 42px !important;
-  height: 42px !important;
-  min-width: 42px !important;
-  max-width: 42px !important;
+  width: 35px !important;
+  height: 35px !important;
+  min-width: 35px !important;
+  max-width: 35px !important;
   border-radius: 50% !important;
   background: #FFF7F0 !important;
   border: 1.5px solid #F0913C !important;
@@ -8524,13 +8524,13 @@ body[data-theme="dark"] {
   padding: 0 !important;
   box-sizing: border-box !important;
   margin-right: 4px !important;
-  box-shadow: 0 2px 8px rgba(240, 145, 60, 0.18) !important;
+  box-shadow: 0 2px 6px rgba(240, 145, 60, 0.14) !important;
 }
 
 [data-theme="dark"] .chat-brand-avatar {
   background: #231B15 !important;
   border-color: #B45309 !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
 }
 
 .chat-brand-circle {
@@ -8549,26 +8549,26 @@ body[data-theme="dark"] {
 }
 
 .chat-brand-img {
-  width: 100% !important;
-  height: 100% !important;
-  min-width: 100% !important;
-  max-width: 100% !important;
+  width: 90% !important;
+  height: 90% !important;
+  min-width: 90% !important;
+  max-width: 90% !important;
   object-fit: contain !important;
-  transform: scale(1.36) !important;
+  transform: scale(1.05) !important;
   display: block !important;
   background: transparent !important;
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
-  margin: 0 auto !important;
+  margin: auto !important;
 }
 
 .chat-pulse-dot {
   position: absolute !important;
   bottom: -1px !important;
   right: -1px !important;
-  width: 11px !important;
-  height: 11px !important;
+  width: 9.5px !important;
+  height: 9.5px !important;
   border-radius: 50% !important;
   background: #16A34A !important;
   border: 2px solid #FFFFFF !important;
@@ -8588,6 +8588,7 @@ body[data-theme="dark"] {
   justify-content: flex-start !important;
   min-width: 0 !important;
   margin: 0 !important;
+  margin-top: 3px !important;
   padding: 0 !important;
 }
 
@@ -9691,14 +9692,19 @@ body[data-theme="dark"] {
     overflow: hidden !important;
   }
   .chat-brand-avatar {
-    width: 39px !important;
-    height: 39px !important;
-    min-width: 39px !important;
-    max-width: 39px !important;
+    width: 33px !important;
+    height: 33px !important;
+    min-width: 33px !important;
+    max-width: 33px !important;
     padding: 0 !important;
   }
   .chat-brand-img {
-    transform: scale(1.36) !important;
+    width: 90% !important;
+    height: 90% !important;
+    transform: scale(1.05) !important;
+  }
+  .chat-page-heading {
+    margin-top: 2.5px !important;
   }
   .chat-title-line h2 {
     font-size: 15.5px !important;
