@@ -20,52 +20,8 @@ const CAMPUS_API_BASE = (function() {
   return '';
 })();
 
-let activeForegroundRequests = 0;
-let spinnerShowTimer = null;
-let spinnerHideTimer = null;
-
-function showGlobalSpinner() {
-  activeForegroundRequests++;
-  clearTimeout(spinnerHideTimer);
-  if (!spinnerShowTimer) {
-    // Apple iOS HIG debounce: do not flash spinner for snappy network responses (< 500ms)
-    spinnerShowTimer = setTimeout(() => {
-      if (activeForegroundRequests > 0) {
-        const overlay = document.getElementById('appleLoadingOverlay');
-        if (overlay) {
-          overlay.classList.remove('hide');
-          overlay.setAttribute('aria-hidden', 'false');
-          // Safety watchdog: Auto-hide spinner if requests stall beyond 4s
-          setTimeout(() => {
-            if (activeForegroundRequests > 0) {
-              activeForegroundRequests = 0;
-              overlay.classList.add('hide');
-              overlay.setAttribute('aria-hidden', 'true');
-            }
-          }, 4000);
-        }
-      }
-    }, 500);
-  }
-}
-
-function hideGlobalSpinner() {
-  activeForegroundRequests = Math.max(0, activeForegroundRequests - 1);
-  if (activeForegroundRequests === 0) {
-    clearTimeout(spinnerShowTimer);
-    spinnerShowTimer = null;
-    clearTimeout(spinnerHideTimer);
-    spinnerHideTimer = setTimeout(() => {
-      if (activeForegroundRequests === 0) {
-        const overlay = document.getElementById('appleLoadingOverlay');
-        if (overlay) {
-          overlay.classList.add('hide');
-          overlay.setAttribute('aria-hidden', 'true');
-        }
-      }
-    }, 80);
-  }
-}
+function showGlobalSpinner() {}
+function hideGlobalSpinner() {}
 
 const _origFetch = window.fetch;
 window.fetch = async function(input, init) {
@@ -1013,7 +969,7 @@ async function switchActivityTab(tab) {
   });
   const container = $('activityContent');
   if (!container) return;
-  container.innerHTML = '<div class="empty">Loading…</div>';
+  if (!container.children.length) container.innerHTML = '';
 
   try {
     if (tab === 'archive') {
@@ -1465,7 +1421,7 @@ async function openPostComments(reportId) {
 
   const listEl = $('commentsList');
   const snippetEl = $('commentsPostSnippet');
-  if (listEl) listEl.innerHTML = '<div class="empty">Loading comments…</div>';
+  if (listEl && !listEl.children.length) listEl.innerHTML = '';
 
   try {
     const [reportRes, commentsRes] = await Promise.all([
@@ -5910,7 +5866,7 @@ async function fetchMarketListings(category) {
   const countEl = $('marketResultCount');
   if (!grid) return;
 
-  grid.innerHTML = '<div class="empty">Loading marketplace listings…</div>';
+  if (!grid.children.length) grid.innerHTML = '';
 
   try {
     const url = activeMarketCategory
@@ -6280,7 +6236,7 @@ async function openClaimsViewer(reportId) {
   pushCampusUiLayer('claimsViewerModal');
   modal.classList.remove('hide');
   document.body.classList.add('fullscreen-page-open');
-  container.innerHTML = '<div class="empty">Loading submitted claims…</div>';
+  if (!container.children.length) container.innerHTML = '';
 
   try {
     const res = await fetch(`/api/reports/${reportId}/claims`);
@@ -6435,7 +6391,7 @@ function closeLeaderboardModal(fromPopstate = false) {
 async function fetchLeaderboard() {
   const listEl = $('leaderboardList');
   if (!listEl) return;
-  listEl.innerHTML = '<div class="empty">Loading leaderboard…</div>';
+  if (!listEl.children.length) listEl.innerHTML = '';
 
   try {
     let res = await fetch('/api/users/leaderboard');

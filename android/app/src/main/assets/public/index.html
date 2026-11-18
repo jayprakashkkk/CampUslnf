@@ -510,12 +510,11 @@
   <!-- Board Feed Section -->
   <section id="board" class="default-list-mode">
     <div class="board-meta">
-      <span id="resultCount">Loading campus reports…</span>
+      <span id="resultCount"></span>
     </div>
 
     <!-- Live Post Grid / Instagram Feed Cards -->
     <div id="grid" class="grid-feed-list">
-      <div class="empty">Loading campus feed…</div>
     </div>
   </section>
 
@@ -572,12 +571,11 @@
 
     <!-- Market Results Meta -->
     <div class="board-meta">
-      <span id="marketResultCount">Loading marketplace listings…</span>
+      <span id="marketResultCount"></span>
     </div>
 
     <!-- Market Grid -->
     <div id="marketGrid" class="market-grid">
-      <div class="empty">Loading marketplace listings…</div>
     </div>
   </section>
 
@@ -801,7 +799,7 @@
 
     <!-- Chat Messages Scroll Container -->
     <div id="chatMessages" class="chat-messages" aria-live="polite">
-      <div class="empty">Loading campus messages…</div>
+      <div class="empty">No messages yet. Start the conversation!</div>
     </div>
 
     <!-- Reply Preview (Instagram Style 2-Line Banner) -->
@@ -893,7 +891,6 @@
     <span></span>
   </header>
   <div id="communityProfileContent" class="community-profile-content">
-    <div class="empty">Loading profile…</div>
   </div>
 </section>
 
@@ -988,7 +985,7 @@
     <div id="commentsPostSnippet" class="comments-post-snippet"></div>
 
     <div id="commentsList" class="comments-list" aria-live="polite">
-      <div class="empty">Loading comments…</div>
+      <div class="empty">No comments yet.</div>
     </div>
 
     <!-- Active Reply Banner -->
@@ -1037,7 +1034,7 @@
 
     <!-- Dynamic Activity Content View -->
     <div id="activityContent" class="activity-content" aria-live="polite">
-      <div class="empty">Loading activity…</div>
+      <div class="empty">No recent activity.</div>
     </div>
   </div>
 </div>
@@ -1629,7 +1626,7 @@
 
     <div class="info-sheet-body" style="max-width: 680px; margin: 0 auto; padding-top: 16px;">
       <div id="claimsListContainer" class="claims-list-container">
-        <div class="empty">Loading submitted claims…</div>
+        <div class="empty">No claims submitted yet.</div>
       </div>
     </div>
   </div>
@@ -1664,7 +1661,6 @@
 
       <!-- Leaderboard List -->
       <div id="leaderboardList" class="leaderboard-list">
-        <div class="empty">Loading leaderboard…</div>
       </div>
     </div>
   </div>
@@ -1692,25 +1688,7 @@
   <input id="dateTo" type="date">
 </div>
 
-<!-- Authentic Apple iOS 12-Blade Activity Loading Indicator (Network-Driven, No Box) -->
-<div id="appleLoadingOverlay" class="apple-loading-overlay hide" aria-hidden="true" role="status">
-  <svg class="apple-spinner-svg" viewBox="0 0 36 36" width="42" height="42" xmlns="http://www.w3.org/2000/svg" aria-label="Loading...">
-    <g stroke="#3C3C43" stroke-width="2.75" stroke-linecap="round">
-      <line x1="18" y1="4.5" x2="18" y2="10.5" opacity="1.0" />
-      <line x1="24.75" y1="6.31" x2="21.75" y2="11.51" opacity="0.916" />
-      <line x1="29.69" y1="11.25" x2="24.49" y2="14.25" opacity="0.833" />
-      <line x1="31.5" y1="18" x2="25.5" y2="18" opacity="0.75" />
-      <line x1="29.69" y1="24.75" x2="24.49" y2="21.75" opacity="0.666" />
-      <line x1="24.75" y1="29.69" x2="21.75" y2="24.49" opacity="0.583" />
-      <line x1="18" y1="31.5" x2="18" y2="25.5" opacity="0.5" />
-      <line x1="11.25" y1="29.69" x2="14.25" y2="24.49" opacity="0.416" />
-      <line x1="6.31" y1="24.75" x2="11.51" y2="21.75" opacity="0.333" />
-      <line x1="4.5" y1="18" x2="10.5" y2="18" opacity="0.25" />
-      <line x1="6.31" y1="11.25" x2="11.51" y2="14.25" opacity="0.166" />
-      <line x1="11.25" y1="6.31" x2="14.25" y2="11.51" opacity="0.083" />
-    </g>
-  </svg>
-</div>
+
 
 <script>
   window.CAMPUS_API_BASE = "https://campuslnf-production.up.railway.app";
