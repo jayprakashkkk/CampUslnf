@@ -6,15 +6,15 @@
   <title>CampUs | Lost & Found Community Hub</title>
   <link rel="icon" type="image/svg+xml" href="/icons/campusfind-mark-cream-orange.svg?v=campus-borderless-1">
   <link rel="icon" href="/campus-favicon-orange-20261022.ico" sizes="any">
-  <link rel="icon" type="image/png" sizes="32x32" href="/campus-favicon-orange-20261022.png">
-  <link rel="apple-touch-icon" href="/campus-apple-touch-orange-20261022.png">
-  <link rel="manifest" href="/manifest.webmanifest?v=campus-favicon-orange-20261022">
+  <link rel="icon" type="image/png" sizes="32x32" href="./campus-favicon-orange-20261022.png">
+  <link rel="apple-touch-icon" href="./campus-apple-touch-orange-20261022.png">
+  <link rel="manifest" href="./manifest.webmanifest?v=campus-favicon-orange-20261022">
   <meta name="theme-color" content="#FFF8EF">
   <meta name="application-name" content="CampUs">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="CampUs">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="stylesheet" href="/style.css?v=campus-20261117-bulletproof6">
+  <link rel="stylesheet" href="./style.css?v=campus-20261117-bulletproof6">
 </head>
 <body class="auth-locked">
 
@@ -36,7 +36,7 @@
 
 
 <!-- Auth Gate Screen (Login / Register / Forgot Password) -->
-<div id="authGate" class="auth-gate" role="main" aria-label="CampUs account access">
+<div id="authGate" class="auth-gate hide" role="main" aria-label="CampUs account access">
   <section class="auth-card">
     <div class="auth-brand" aria-label="CampUs logo">
       <img class="auth-brand-mark" src="/icons/campusfind-mark-cream-orange.svg?v=campus-20261118-logo" alt="CampUs logo">
@@ -1588,17 +1588,17 @@
   </svg>
 </div>
 
-<script src="/app.js?v=campus-20261117-bulletproof6"></script>
 <script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/sw.js').then(function(reg) {
-      if ('periodicSync' in reg) {
-        reg.periodicSync.register('campus-chat-sync', { minInterval: 60 * 1000 }).catch(function() {});
-      }
-    }).catch(function() {});
-  });
-}
+  window.CAMPUS_API_BASE = "https://campuslnf-production.up.railway.app";
+  const _nativeFetch = window.fetch;
+  window.fetch = function(url, options) {
+    if (typeof url === 'string' && url.startsWith('/api/')) {
+      url = window.CAMPUS_API_BASE + url;
+    }
+    return _nativeFetch.call(this, url, options);
+  };
 </script>
+<script src="./app.js?v=campus-20261117-bulletproof6"></script>
+
 </body>
 </html>
