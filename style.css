@@ -8429,7 +8429,7 @@ body[data-theme="dark"] {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  padding: calc(12px + env(safe-area-inset-top, 0px)) 72px 12px 16px !important;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px 16px !important;
   background: #FFFFFF !important;
   border-bottom: 1px solid rgba(230, 218, 207, 0.75) !important;
   z-index: 100 !important;
@@ -8510,12 +8510,12 @@ body[data-theme="dark"] {
 /* Chat Brand Avatar with Live Pulse Indicator */
 .chat-brand-avatar {
   position: relative !important;
-  width: 38px !important;
-  height: 38px !important;
-  min-width: 38px !important;
-  max-width: 38px !important;
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
   border-radius: 50% !important;
-  background: linear-gradient(135deg, #FFF7F0, #FFEEDD) !important;
+  background: #FFF7F0 !important;
   border: 1.5px solid #F0913C !important;
   display: flex !important;
   align-items: center !important;
@@ -8524,35 +8524,51 @@ body[data-theme="dark"] {
   padding: 0 !important;
   box-sizing: border-box !important;
   margin-right: 4px !important;
-  box-shadow: 0 2px 6px rgba(240, 145, 60, 0.15) !important;
+  box-shadow: 0 2px 8px rgba(240, 145, 60, 0.18) !important;
 }
 
 [data-theme="dark"] .chat-brand-avatar {
-  background: linear-gradient(135deg, #241D17, #1C1712) !important;
+  background: #231B15 !important;
   border-color: #B45309 !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+}
+
+.chat-brand-circle {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: #FFF7F0 !important;
+}
+
+[data-theme="dark"] .chat-brand-circle {
+  background: #231B15 !important;
 }
 
 .chat-brand-img {
-  width: 25px !important;
-  height: 25px !important;
-  min-width: 25px !important;
-  max-width: 25px !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
   object-fit: contain !important;
+  transform: scale(1.36) !important;
   display: block !important;
   background: transparent !important;
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
-  margin: auto !important;
+  margin: 0 auto !important;
 }
 
 .chat-pulse-dot {
   position: absolute !important;
   bottom: -1px !important;
   right: -1px !important;
-  width: 10px !important;
-  height: 10px !important;
+  width: 11px !important;
+  height: 11px !important;
   border-radius: 50% !important;
   background: #16A34A !important;
   border: 2px solid #FFFFFF !important;
@@ -8563,33 +8579,32 @@ body[data-theme="dark"] {
 [data-theme="dark"] .chat-pulse-dot {
   border-color: #181512 !important;
 }
-  box-shadow: 0 0 6px rgba(22, 163, 74, 0.6) !important;
-}
 
-[data-theme="dark"] .chat-pulse-dot {
-  border-color: #181512 !important;
-}
-
-/* Title & College Name Stack */
+/* Chat Title & Header - Clean, Vertically Centered on One Single Row */
 .chat-page-heading {
   display: flex !important;
-  flex-direction: column !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
   min-width: 0 !important;
-  justify-content: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .chat-title-line {
   display: flex !important;
   align-items: center !important;
-  gap: 6px !important;
+  gap: 8px !important;
+  line-height: 1 !important;
+  margin: 0 !important;
 }
 
 .chat-title-line h2 {
   margin: 0 !important;
-  font-size: 16px !important;
-  font-weight: 800 !important;
+  font-size: 17px !important;
+  font-weight: 850 !important;
   color: #2D1F12 !important;
-  line-height: 1.25 !important;
+  line-height: 1.1 !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
@@ -8601,11 +8616,7 @@ body[data-theme="dark"] {
 }
 
 .chat-college-line {
-  display: flex !important;
-  align-items: center !important;
-  gap: 5px !important;
-  margin-top: 2px !important;
-  min-width: 0 !important;
+  display: none !important;
 }
 
 .chat-campus-icon {
@@ -9680,17 +9691,17 @@ body[data-theme="dark"] {
     overflow: hidden !important;
   }
   .chat-brand-avatar {
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
-    max-width: 36px !important;
+    width: 39px !important;
+    height: 39px !important;
+    min-width: 39px !important;
+    max-width: 39px !important;
     padding: 0 !important;
   }
   .chat-brand-img {
-    width: 23px !important;
-    height: 23px !important;
-    min-width: 23px !important;
-    max-width: 23px !important;
+    transform: scale(1.36) !important;
+  }
+  .chat-title-line h2 {
+    font-size: 15.5px !important;
   }
 }
 
@@ -10662,3 +10673,135 @@ input[type="submit"]:active,
     padding: 0 18px !important;
   }
 }
+
+/* ==========================================================================
+   INSTAGRAM-STYLE PULL-TO-REFRESH INDICATOR (Home Feed)
+   ========================================================================== */
+.pull-refresh-container {
+  position: fixed !important;
+  top: calc(54px + env(safe-area-inset-top, 0px)) !important;
+  left: 0 !important;
+  right: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  pointer-events: none !important;
+  z-index: 9999 !important;
+  transform: translateY(-50px);
+  opacity: 0;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;
+}
+
+.pull-refresh-container.pulling {
+  transition: none !important;
+}
+
+.pull-refresh-container.refreshing {
+  transform: translateY(18px) !important;
+  opacity: 1 !important;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease !important;
+}
+
+.pull-refresh-badge {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  background: #FFFFFF !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.14), 0 1px 4px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(240, 145, 60, 0.3) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+
+[data-theme="dark"] .pull-refresh-badge {
+  background: #201A15 !important;
+  border-color: rgba(240, 145, 60, 0.4) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+}
+
+.pull-refresh-spinner {
+  width: 24px !important;
+  height: 24px !important;
+  transform: rotate(-90deg) !important;
+}
+
+.pull-refresh-bg {
+  stroke: rgba(240, 145, 60, 0.18) !important;
+}
+
+[data-theme="dark"] .pull-refresh-bg {
+  stroke: rgba(255, 255, 255, 0.12) !important;
+}
+
+.pull-refresh-arc {
+  stroke: #F0913C !important;
+  stroke-dasharray: 88 !important;
+  stroke-dashoffset: 88 !important;
+  transition: stroke-dashoffset 0.08s linear !important;
+}
+
+.pull-refresh-container.refreshing .pull-refresh-spinner {
+  animation: pullRefreshSpin 0.75s linear infinite !important;
+}
+
+.pull-refresh-container.refreshing .pull-refresh-arc {
+  stroke-dashoffset: 25 !important;
+  stroke-dasharray: 60, 28 !important;
+}
+
+@keyframes pullRefreshSpin {
+  100% {
+    transform: rotate(270deg) !important;
+  }
+}
+
+/* Feed Status Bar Refresh Button */
+.feed-refresh-tab-btn {
+  border: 0 !important;
+  border-left: 1px solid rgba(230, 218, 207, 0.6) !important;
+  background: transparent !important;
+  padding: 8px 10px !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 750 !important;
+  color: #D97706 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  white-space: nowrap !important;
+  transition: all 0.15s ease !important;
+  flex-shrink: 0 !important;
+}
+
+.feed-refresh-tab-btn:hover {
+  background: rgba(240, 145, 60, 0.12) !important;
+  color: #B45309 !important;
+}
+
+.feed-refresh-tab-btn:active {
+  transform: scale(0.95) !important;
+}
+
+.feed-refresh-tab-btn.spinning .refresh-icon {
+  animation: feedBtnSpin 0.7s linear infinite !important;
+}
+
+@keyframes feedBtnSpin {
+  100% {
+    transform: rotate(360deg) !important;
+  }
+}
+
+[data-theme="dark"] .feed-refresh-tab-btn {
+  border-left-color: rgba(255, 255, 255, 0.1) !important;
+  color: #FBBF24 !important;
+}
+
+[data-theme="dark"] .feed-refresh-tab-btn:hover {
+  background: rgba(240, 145, 60, 0.2) !important;
+}
+

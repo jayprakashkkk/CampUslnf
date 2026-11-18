@@ -586,7 +586,12 @@ function switchNavTab(tab) {
   });
   if (tab === 'feed') {
     closeExplorePage(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const scrollPos = window.scrollY || document.documentElement.scrollTop || 0;
+    if (scrollPos <= 10) {
+      triggerFeedRefresh();
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     myReportsOnly = false;
     statFilter = '';
     load();
@@ -779,6 +784,131 @@ async function load(retryCount = 0){
     $('grid').innerHTML='<div class="empty"><b>Connecting to Campus Network…</b><p>The campus server is syncing. Tap below to reload the campus feed.</p><button type="button" class="auth-primary" onclick="load()" style="margin-top:12px;">🔄 Reload Campus Feed</button></div>';
   }
 }
+
+let isFeedRefreshing = false;
+async function triggerFeedRefresh() {
+  if (isFeedRefreshing) return;
+  isFeedRefreshing = true;
+
+  const pullEl = $('feedPullRefresh');
+  const btn = $('feedManualRefreshBtn');
+  if (pullEl) pullEl.classList.add('refreshing');
+  if (btn) btn.classList.add('spinning');
+  if ('vibrate' in navigator) {
+    try { navigator.vibrate(12); } catch {}
+  }
+
+  const minDelay = new Promise(resolve => setTimeout(resolve, 600));
+
+  try {
+    const refreshTasks = [load()];
+    if (typeof loadMarketListings === 'function') {
+      refreshTasks.push(loadMarketListings());
+    }
+    await Promise.all([...refreshTasks, minDelay]);
+  } catch (err) {
+    console.warn('Feed refresh error:', err);
+  } finally {
+    if (pullEl) {
+      pullEl.classList.remove('refreshing');
+      pullEl.classList.remove('pulling');
+      pullEl.style.removeProperty('transform');
+      pullEl.style.removeProperty('opacity');
+    }
+    if (btn) btn.classList.remove('spinning');
+    const arc = $('pullRefreshArc');
+    if (arc) arc.style.removeProperty('stroke-dashoffset');
+    isFeedRefreshing = false;
+  }
+}
+
+// Instagram-style Pull-to-Refresh Gestures
+(function initPullToRefresh() {
+  let startY = 0;
+  let isPulling = false;
+  const PULL_THRESHOLD = 65;
+
+  function canPullToRefresh() {
+    const overlay = $('communityChatOverlay');
+    const isChatOpen = overlay && !overlay.classList.contains('hide');
+    const isExploreOpen = !$('explorePage')?.classList.contains('hide');
+    const isModalOpen = !$('modal')?.classList.contains('hide');
+    const isProfileOpen = !$('profileEditorPage')?.classList.contains('hide');
+    const isPublicProfOpen = !$('communityProfilePage')?.classList.contains('hide');
+    if (isChatOpen || isExploreOpen || isModalOpen || isProfileOpen || isPublicProfOpen) {
+      return false;
+    }
+    const scrollPos = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    return scrollPos <= 2;
+  }
+
+  window.addEventListener('touchstart', (e) => {
+    if (isFeedRefreshing) return;
+    if (e.touches.length !== 1) return;
+    if (!canPullToRefresh()) return;
+    startY = e.touches[0].clientY;
+    isPulling = false;
+  }, { passive: true });
+
+  window.addEventListener('touchmove', (e) => {
+    if (isFeedRefreshing || !startY) return;
+    if (e.touches.length !== 1) return;
+    const y = e.touches[0].clientY;
+    const diff = y - startY;
+
+    if (diff > 0 && canPullToRefresh()) {
+      isPulling = true;
+      const pullEl = $('feedPullRefresh');
+      const arc = $('pullRefreshArc');
+      if (pullEl) {
+        pullEl.classList.add('pulling');
+        const damped = Math.pow(diff, 0.82) * 1.8;
+        const translateY = Math.min(damped - 40, 48);
+        const opacity = Math.min(diff / 50, 1);
+        pullEl.style.transform = `translateY(${translateY}px)`;
+        pullEl.style.opacity = String(opacity);
+
+        if (arc) {
+          const progress = Math.min(diff / PULL_THRESHOLD, 1);
+          arc.style.strokeDashoffset = String(88 - progress * 68);
+        }
+      }
+    } else {
+      isPulling = false;
+    }
+  }, { passive: true });
+
+  window.addEventListener('touchend', (e) => {
+    if (!isPulling || isFeedRefreshing) {
+      startY = 0;
+      isPulling = false;
+      return;
+    }
+    const endY = e.changedTouches[0]?.clientY || 0;
+    const diff = endY - startY;
+    startY = 0;
+    isPulling = false;
+
+    if (diff >= PULL_THRESHOLD) {
+      triggerFeedRefresh();
+    } else {
+      const pullEl = $('feedPullRefresh');
+      if (pullEl) {
+        pullEl.classList.remove('pulling');
+        pullEl.style.transition = 'transform 0.25s ease, opacity 0.2s ease';
+        pullEl.style.transform = 'translateY(-50px)';
+        pullEl.style.opacity = '0';
+        setTimeout(() => {
+          pullEl.style.removeProperty('transform');
+          pullEl.style.removeProperty('opacity');
+          pullEl.style.removeProperty('transition');
+          const arc = $('pullRefreshArc');
+          if (arc) arc.style.removeProperty('stroke-dashoffset');
+        }, 260);
+      }
+    }
+  }, { passive: true });
+})();
 $('photo').addEventListener('change',()=>{const file=$('photo').files[0];if(!file){$('photoPreview').src='';$('photoPreview').classList.add('hide');return}if(!file.type.startsWith('image/')){toast('Please choose an image file.');$('photo').value='';return}const reader=new FileReader();reader.onload=()=>{$('photoPreview').src=reader.result;$('photoPreview').classList.remove('hide')};reader.onerror=()=>{toast('Could not read the photo. Please try another image.');$('photo').value='';$('photoPreview').src='';$('photoPreview').classList.add('hide')};reader.readAsDataURL(file)});
 $('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeForm()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeForm()});
 $('form').addEventListener('submit',async e=>{e.preventDefault();const file=$('photo').files[0];let imageData=null;if(file){try{imageData=await compressProfileImage(file,800,800,0.72)}catch{try{imageData=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file)})}catch{$('error').textContent='Could not read the photo. Please try another image.';return}}}
@@ -2018,7 +2148,7 @@ function renderCollegeBadge() {
   }
   const chatSubtitle = $('chatCampusSubtitle');
   if (chatSubtitle) {
-    chatSubtitle.textContent = 'Live Campus Hub';
+    chatSubtitle.textContent = '';
   }
 }
 
@@ -2552,7 +2682,7 @@ function enterApp(user) {
   renderCollegeBadge();
   const chatSubtitle = $('chatCampusSubtitle');
   if (chatSubtitle) {
-    chatSubtitle.textContent = 'Live Campus Hub';
+    chatSubtitle.textContent = '';
   }
 
   document.body.classList.remove('auth-locked');
@@ -3008,7 +3138,7 @@ function openCommunityChat(){
 
   const chatSubtitle = $('chatCampusSubtitle');
   if (chatSubtitle) {
-    chatSubtitle.textContent = 'Live Campus Hub';
+    chatSubtitle.textContent = '';
   }
 
   const input = $('communityChatInput');

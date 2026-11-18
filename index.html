@@ -446,6 +446,16 @@
   </div>
 </div>
 
+<!-- Instagram-style Pull-to-Refresh Indicator -->
+<div id="feedPullRefresh" class="pull-refresh-container" aria-hidden="true">
+  <div class="pull-refresh-badge">
+    <svg class="pull-refresh-spinner" viewBox="0 0 36 36">
+      <circle class="pull-refresh-bg" cx="18" cy="18" r="14" fill="none" stroke-width="3.2"></circle>
+      <circle class="pull-refresh-arc" id="pullRefreshArc" cx="18" cy="18" r="14" fill="none" stroke-width="3.2" stroke-linecap="round"></circle>
+    </svg>
+  </div>
+</div>
+
 <!-- Main Feed Container (Optimized max-width: 680px for Phone, Tablet, Laptop) -->
 <main class="feed-main-container">
   
@@ -480,6 +490,10 @@
     <button type="button" class="status-tab" data-tab-status="LOST" onclick="filterStats('LOST')"><span class="status-tab-dot dot-lost"></span>Lost (<span id="lost">0</span>)</button>
     <button type="button" class="status-tab" data-tab-status="FOUND" onclick="filterStats('FOUND')"><span class="status-tab-dot dot-found"></span>Found (<span id="found">0</span>)</button>
     <button type="button" class="status-tab" data-tab-status="RETURNED" onclick="filterStats('RETURNED')"><span class="status-tab-dot dot-returned"></span>Returned (<span id="returned">0</span>)</button>
+    <button type="button" class="feed-refresh-tab-btn" id="feedManualRefreshBtn" onclick="triggerFeedRefresh()" aria-label="Refresh Feed" title="Refresh Feed">
+      <svg class="ui-icon refresh-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+      <span>Refresh</span>
+    </button>
   </div>
 
   <!-- Instagram Category Stories / Chips Bar -->
@@ -757,14 +771,16 @@
 <!-- Community Chat Overlay / View -->
 <div id="communityChatOverlay" class="overlay hide" role="dialog" aria-modal="true" aria-labelledby="communityChatTitle">
   <section class="dialog community-chat-dialog modern-chat-card">
-    <!-- Clean, Branded Chat Topbar with Back, Logo, College Name & Notification Bell -->
+    <!-- Clean, Branded Chat Topbar with Back, Logo & Notification Bell -->
     <div class="chat-topbar">
       <div class="chat-topbar-left">
         <button class="chat-back-btn universal-back-circle-btn" type="button" onclick="closeCommunityChat()" aria-label="Back to Feed" title="Back to Feed">
           <svg class="ui-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="15 18 9 12 15 6"></polyline></svg>
         </button>
         <div class="chat-brand-avatar" title="CampUs Live Community">
-          <img class="chat-brand-img" src="./icons/campusfind-512.png" alt="CampUs logo" onerror="this.onerror=null;this.src='./icons/campusfind-mark.png';">
+          <div class="chat-brand-circle">
+            <img class="chat-brand-img" src="./icons/campusfind-512.png" alt="CampUs logo" onerror="this.onerror=null;this.src='./icons/campusfind-mark.png';">
+          </div>
           <span class="chat-pulse-dot" title="Live Campus Connection"></span>
         </div>
         <div class="chat-page-heading">
@@ -772,10 +788,7 @@
             <h2 id="communityChatTitle">Community Chat</h2>
             <span class="chat-online-pill">LIVE</span>
           </div>
-          <div class="chat-college-line">
-            <svg class="ui-icon chat-campus-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10h18M5 10v11M19 10v11M9 10v11M15 10v11M12 2L2 7h20L12 2z"></path></svg>
-            <span id="chatCampusSubtitle" class="chat-college-name">Live Campus Hub</span>
-          </div>
+          <span id="chatCampusSubtitle" style="display:none !important;" hidden></span>
         </div>
       </div>
       <div class="chat-topbar-right">
