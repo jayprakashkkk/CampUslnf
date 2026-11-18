@@ -3012,7 +3012,10 @@ function openCommunityChat(){
   }
 
   const input = $('communityChatInput');
-  if (input) autoResizeChatInput(input);
+  if (input) {
+    autoResizeChatInput(input);
+    syncChatSendButton(input);
+  }
   syncChatViewport();
   syncCommunityMuteControls();
   refreshNotifications();
@@ -4043,8 +4046,30 @@ document.addEventListener('click',event=>{
  openChatUserProfile(target.dataset.profileName||target.dataset.chatProfileName||'',target.dataset.profileUsername||target.dataset.chatProfileUsername||target.dataset.userSearchUsername||'');
 });
 
+function syncChatSendButton(inputElem) {
+  const isNative = document.documentElement.classList.contains('is-native-app') ||
+                   document.body.classList.contains('is-native-app') ||
+                   Boolean(window.IS_NATIVE_APP || window.CAMPUS_API_BASE);
+  if (!isNative) return;
+
+  const input = inputElem || $('communityChatInput');
+  const form = $('communityChatForm');
+  const btn = $('chatSendBtn') || form?.querySelector('.chat-send-btn');
+  if (!btn || !form) return;
+
+  const hasText = Boolean(input && input.value && input.value.trim().length > 0);
+  if (hasText) {
+    btn.classList.add('chat-send-visible');
+    form.classList.add('has-chat-text');
+  } else {
+    btn.classList.remove('chat-send-visible');
+    form.classList.remove('has-chat-text');
+  }
+}
+
 function autoResizeChatInput(elem) {
   if (!elem) return;
+  syncChatSendButton(elem);
   const val = elem.value || '';
   if (!val.trim()) {
     elem.style.setProperty('height', '36px', 'important');

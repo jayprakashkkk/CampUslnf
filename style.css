@@ -8513,38 +8513,56 @@ body[data-theme="dark"] {
   width: 38px !important;
   height: 38px !important;
   min-width: 38px !important;
+  max-width: 38px !important;
   border-radius: 50% !important;
-  background: linear-gradient(135deg, #FFF6EE, #FFE9D6) !important;
-  border: 1.5px solid rgba(240, 145, 60, 0.5) !important;
+  background: linear-gradient(135deg, #FFF7F0, #FFEEDD) !important;
+  border: 1.5px solid #F0913C !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   flex-shrink: 0 !important;
-  padding: 5px !important;
+  padding: 0 !important;
   box-sizing: border-box !important;
   margin-right: 4px !important;
+  box-shadow: 0 2px 6px rgba(240, 145, 60, 0.15) !important;
 }
 
 [data-theme="dark"] .chat-brand-avatar {
   background: linear-gradient(135deg, #241D17, #1C1712) !important;
-  border-color: #78350F !important;
+  border-color: #B45309 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
 }
 
 .chat-brand-img {
-  width: 100% !important;
-  height: 100% !important;
+  width: 25px !important;
+  height: 25px !important;
+  min-width: 25px !important;
+  max-width: 25px !important;
   object-fit: contain !important;
+  display: block !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: auto !important;
 }
 
 .chat-pulse-dot {
   position: absolute !important;
-  bottom: 0px !important;
-  right: 0px !important;
-  width: 11px !important;
-  height: 11px !important;
+  bottom: -1px !important;
+  right: -1px !important;
+  width: 10px !important;
+  height: 10px !important;
   border-radius: 50% !important;
   background: #16A34A !important;
   border: 2px solid #FFFFFF !important;
+  box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.4) !important;
+  z-index: 2 !important;
+}
+
+[data-theme="dark"] .chat-pulse-dot {
+  border-color: #181512 !important;
+}
   box-shadow: 0 0 6px rgba(22, 163, 74, 0.6) !important;
 }
 
@@ -9665,6 +9683,14 @@ body[data-theme="dark"] {
     width: 36px !important;
     height: 36px !important;
     min-width: 36px !important;
+    max-width: 36px !important;
+    padding: 0 !important;
+  }
+  .chat-brand-img {
+    width: 23px !important;
+    height: 23px !important;
+    min-width: 23px !important;
+    max-width: 23px !important;
   }
 }
 
@@ -10360,8 +10386,7 @@ input[type="submit"]:active,
 .logo > .brand-mark,
 .intro-brand img,
 .intro-community-center img,
-.intro-final-mark img,
-.chat-brand-img {
+.intro-final-mark img {
   background: transparent !important;
   border: none !important;
   border-radius: 0 !important;
@@ -10562,4 +10587,78 @@ input[type="submit"]:active,
 }
 [data-theme="dark"] .campus-splash-tagline {
   color: #9C8E82;
+}
+
+/* ==========================================================================
+   APP-ONLY DYNAMIC ANIMATED CHAT SEND BUTTON (Hidden until typing)
+   ========================================================================== */
+.is-native-app .chat-compose {
+  gap: 0 !important;
+  transition: gap 0.22s ease !important;
+}
+
+.is-native-app .chat-compose.has-chat-text,
+.is-native-app .chat-compose:has(textarea:not(:placeholder-shown)) {
+  gap: 6px !important;
+}
+
+.is-native-app .chat-compose textarea {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.is-native-app .chat-compose .chat-send-btn {
+  opacity: 0 !important;
+  transform: scale(0.3) rotate(-15deg) !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  overflow: hidden !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+  visibility: hidden !important;
+  white-space: nowrap !important;
+  transition: opacity 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+              transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1),
+              width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+              min-width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+              max-width 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0.22s ease !important;
+}
+
+.is-native-app .chat-compose .chat-send-btn.chat-send-visible,
+.is-native-app .chat-compose.has-chat-text .chat-send-btn,
+.is-native-app .chat-compose:has(textarea:not(:placeholder-shown)) .chat-send-btn {
+  opacity: 1 !important;
+  transform: scale(1) rotate(0deg) !important;
+  width: auto !important;
+  min-width: 76px !important;
+  max-width: 120px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 14px !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  box-shadow: 0 4px 14px rgba(232, 101, 0, 0.28) !important;
+}
+
+@media (min-width: 701px) {
+  .is-native-app .chat-compose.has-chat-text,
+  .is-native-app .chat-compose:has(textarea:not(:placeholder-shown)) {
+    gap: 8px !important;
+  }
+  .is-native-app .chat-compose .chat-send-btn.chat-send-visible,
+  .is-native-app .chat-compose.has-chat-text .chat-send-btn,
+  .is-native-app .chat-compose:has(textarea:not(:placeholder-shown)) .chat-send-btn {
+    height: 44px !important;
+    min-height: 44px !important;
+    padding: 0 18px !important;
+  }
 }

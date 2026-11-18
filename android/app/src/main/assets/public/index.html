@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="is-native-app">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -806,7 +806,7 @@
     <!-- Chat Input Form (Enter creates new line; Send button sends) -->
     <form id="communityChatForm" class="chat-compose">
       <textarea id="communityChatInput" rows="1" maxlength="2000" placeholder="Message your campus community…" required></textarea>
-      <button type="submit" aria-label="Send message" class="chat-send-btn">
+      <button type="submit" aria-label="Send message" class="chat-send-btn" id="chatSendBtn">
         <svg class="ui-icon send-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
         <span>Send</span>
       </button>
@@ -1681,6 +1681,8 @@
 
 
 <script>
+  window.IS_NATIVE_APP = true;
+  document.documentElement.classList.add('is-native-app');
   window.CAMPUS_API_BASE = "https://campuslnf-production.up.railway.app";
   const _nativeFetch = window.fetch;
   window.fetch = function(url, options) {
