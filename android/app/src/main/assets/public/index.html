@@ -18,14 +18,20 @@
 </head>
 <body class="auth-locked">
 
-<!-- Native App Launch Splash Screen (Smooth 1.1s Intro) -->
+<!-- Native App Launch Splash Screen (Smooth 2s Intro Animation) -->
 <div id="campusSplashScreen" class="campus-splash-screen" role="dialog" aria-hidden="false">
   <div class="campus-splash-content">
-    <img class="campus-splash-logo" src="/icons/campusfind-mark-cream-orange.svg" alt="CampUs logo">
+    <div class="campus-splash-logo-wrap">
+      <img class="campus-splash-logo" src="/icons/campusfind-mark-cream-orange.svg" alt="CampUs logo">
+      <div class="campus-splash-aura" aria-hidden="true"></div>
+    </div>
     <h1 class="campus-splash-title">Camp<span>Us</span></h1>
     <p class="campus-splash-tagline">ONE CAMPUS. ONE COMMUNITY.</p>
-    <div class="campus-splash-spinner" aria-hidden="true"></div>
+    <div class="campus-splash-progress" aria-hidden="true">
+      <div class="campus-splash-bar"></div>
+    </div>
   </div>
+</div>
 </div>
 
 

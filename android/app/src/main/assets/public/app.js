@@ -6553,3 +6553,16 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }, 1100);
 });
+
+// Smooth 2-Second Animated Splash Screen Dismissal -> Reveal Login Page / Feed
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    const splash = document.getElementById('campusSplashScreen');
+    if (splash) {
+      splash.classList.add('fade-out');
+      setTimeout(() => {
+        splash.remove();
+      }, 500);
+    }
+  }, 2000);
+});
