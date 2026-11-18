@@ -10467,6 +10467,7 @@ input[type="submit"]:active,
 
 .campus-splash-logo {
   position: relative;
+  display: block !important;
   width: 104px !important;
   height: 104px !important;
   object-fit: contain !important;

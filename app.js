@@ -6543,17 +6543,6 @@ window.handleNativeBackPressed = function() {
   return false;
 };
 
-// Smooth Splash Screen Dismissal (1.1s)
-window.addEventListener('DOMContentLoaded', () => {
-  setTimeout(() => {
-    const splash = document.getElementById('campusSplashScreen');
-    if (splash) {
-      splash.classList.add('fade-out');
-      setTimeout(() => splash.remove(), 450);
-    }
-  }, 1100);
-});
-
 // Smooth 2-Second Animated Splash Screen Dismissal -> Reveal Login Page / Feed
 window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
